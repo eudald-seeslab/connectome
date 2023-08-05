@@ -1,0 +1,5 @@
+model_name: "cnn_1"
+out_channels: 1
+kernel_size: 5
+stride: 2
+padding: 1

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Black">
+    <option name="enabledOnReformat" value="true" />
+    <option name="enabledOnSave" value="true" />
+    <option name="pathToExecutable" value="C:\Users\eudald\AppData\Local\Programs\Python\Python38\Scripts\black.exe" />
+    <option name="sdkUUID" value="1ab3af5a-8776-4a6c-90c3-47ad2fcd497d" />
+  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.11 (connectome)" project-jdk-type="Python SDK" />
+</project>

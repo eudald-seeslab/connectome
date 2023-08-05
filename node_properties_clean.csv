@@ -1,0 +1,2611 @@
+celltype,additional_annotations,level_7_cluster,hemisphere,skid
+sensory,visual,0,left_id,2216445
+sensory,visual,0,left_id,2216131
+sensory,visual,0,left_id,10241716
+sensory,visual,0,left_id,2215622
+sensory,visual,0,left_id,2215447
+sensory,visual,0,left_id,2215247
+sensory,visual,0,left_id,2206279
+sensory,visual,0,left_id,37365
+sensory,visual,0,left_id,2200028
+sensory,olfactory,1,left_id,3464773
+sensory,olfactory,1,left_id,6791927
+sensory,olfactory,1,left_id,3716797
+sensory,olfactory,1,left_id,3465659
+sensory,olfactory,1,left_id,7527710
+sensory,olfactory,1,left_id,7542938
+sensory,olfactory,1,left_id,3511996
+sensory,olfactory,1,left_id,3410499
+LN,no official annotation,1,left_id,8877795
+sensory,olfactory,1,left_id,3774568
+sensory,olfactory,2,left_id,3410506
+sensory,olfactory,2,left_id,2611805
+sensory,thermo-warm,2,left_id,2610744
+sensory,olfactory,2,left_id,5090549
+sensory,olfactory,2,left_id,3158543
+sensory,olfactory,2,left_id,3771794
+sensory,olfactory,2,left_id,3768025
+sensory,thermo-warm,2,left_id,5093516
+sensory,olfactory,2,left_id,6340439
+sensory,olfactory,2,left_id,40045
+sensory,olfactory,2,left_id,3694515
+sensory,olfactory,2,left_id,3592997
+sensory,olfactory,2,left_id,3547397
+sensory,olfactory,2,left_id,3708875
+sensory,gustatory-external,3,left_id,15716934
+sensory,gustatory-external,3,left_id,15714639
+LN,no official annotation,3,left_id,12882387
+sensory,gustatory-external,3,left_id,3586984
+sensory,gustatory-external,3,left_id,4338596
+sensory,gustatory-external,3,left_id,15716701
+sensory,gustatory-external,3,left_id,15690093
+sensory,gustatory-external,3,left_id,15689373
+sensory,gustatory-external,3,left_id,15674262
+sensory,gustatory-external,3,left_id,12260696
+sensory,gustatory-external,3,left_id,15679577
+sensory,gustatory-external,3,left_id,15938337
+sensory,gustatory-external,3,left_id,15681740
+PN,gustatory-external 2nd_order PN,3,left_id,5327961
+sensory,gustatory-external,3,left_id,15677323
+sensory,gustatory-pharyngeal,3,left_id,11671564
+DN-SEZ,mPN,3,left_id,13380660
+PN,gustatory-external 2nd_order PN,3,left_id,11821320
+sensory,gustatory-external,3,left_id,11745381
+LN,no official annotation,3,left_id,5322337
+DN-SEZ,no official annotation,3,left_id,17062823
+sensory,gustatory-external,3,left_id,5186461
+sensory,gustatory-external,3,left_id,18934019
+sensory,gustatory-pharyngeal,3,left_id,3054101
+sensory,gustatory-external,4,left_id,15716309
+DN-SEZ,no official annotation,4,left_id,17814107
+DN-SEZ,no official annotation,4,left_id,3539170
+DN-SEZ,no official annotation,4,left_id,17740547
+sensory,gustatory-external,4,left_id,12073881
+DN-SEZ,no official annotation,4,left_id,13313410
+sensory,gustatory-pharyngeal,4,left_id,15995929
+sensory,gustatory-pharyngeal,4,left_id,15997645
+sensory,gustatory-pharyngeal,4,left_id,15997692
+sensory,gustatory-external,4,left_id,15715643
+sensory,gustatory-external,4,left_id,15688358
+DN-SEZ,no official annotation,4,left_id,4991243
+sensory,gustatory-external,4,left_id,15680093
+sensory,gustatory-external,4,left_id,5088293
+sensory,gustatory-external,4,left_id,11736972
+DN-SEZ,no official annotation,4,left_id,17732291
+DN-SEZ,no official annotation,4,left_id,17355745
+sensory,gustatory-external,4,left_id,15716127
+DN-SEZ,no official annotation,4,left_id,17356454
+sensory,gustatory-external,4,left_id,5116147
+sensory,gustatory-external,4,left_id,15673867
+DN-SEZ,no official annotation,4,left_id,12000033
+sensory,gustatory-external,5,left_id,3652587
+sensory,gustatory-external,5,left_id,15716094
+sensory,gustatory-external,5,left_id,15677030
+sensory,gustatory-external,5,left_id,15686512
+sensory,gustatory-external,5,left_id,15673925
+sensory,gustatory-external,5,left_id,5120097
+DN-SEZ,no official annotation,5,left_id,3797420
+DN-SEZ,no official annotation,5,left_id,18440675
+sensory,gustatory-pharyngeal,5,left_id,15590761
+DN-SEZ,PL-1,5,left_id,3486867
+sensory,thermo-cold,5,left_id,3609202
+sensory,thermo-cold,5,left_id,3639968
+sensory,gustatory-pharyngeal,5,left_id,1706716
+sensory,gustatory-pharyngeal,5,left_id,16288872
+sensory,gustatory-pharyngeal,5,left_id,7439909
+sensory,gustatory-pharyngeal,5,left_id,7556564
+sensory,gustatory-pharyngeal,5,left_id,15998817
+sensory,gustatory-pharyngeal,5,left_id,15998782
+sensory,gustatory-pharyngeal,5,left_id,15998768
+sensory,gustatory-pharyngeal,5,left_id,15998469
+DN-SEZ,no official annotation,5,left_id,17351780
+sensory,gustatory-pharyngeal,5,left_id,15998307
+sensory,gustatory-pharyngeal,5,left_id,15998218
+sensory,gustatory-pharyngeal,5,left_id,15998100
+DN-SEZ,no official annotation,5,left_id,11229136
+sensory,gustatory-pharyngeal,5,left_id,15997983
+sensory,gustatory-pharyngeal,5,left_id,15997929
+sensory,gustatory-pharyngeal,5,left_id,15997807
+sensory,gustatory-external,5,left_id,8055671
+sensory,gustatory-pharyngeal,5,left_id,15996518
+sensory,gustatory-pharyngeal,5,left_id,15995404
+sensory,gustatory-pharyngeal,5,left_id,15998261
+DN-SEZ,no official annotation,5,left_id,17359133
+sensory,gustatory-pharyngeal,5,left_id,1715990
+DN-SEZ,no official annotation,5,left_id,9842383
+sensory,gustatory-pharyngeal,5,left_id,15717736
+DN-SEZ,no official annotation,5,left_id,13830600
+sensory,thermo-cold,5,left_id,3608397
+sensory,gustatory-pharyngeal,5,left_id,15717935
+DN-SEZ,no official annotation,5,left_id,17728571
+DN-SEZ,no official annotation,5,left_id,17423125
+DN-SEZ,no official annotation,5,left_id,17728605
+sensory,gustatory-external,6,left_id,9808022
+sensory,gustatory-pharyngeal,6,left_id,1347886
+sensory,gustatory-pharyngeal,6,left_id,15723727
+sensory,gustatory-pharyngeal,6,left_id,15996160
+sensory,gustatory-external,6,left_id,15717426
+sensory,gut,6,left_id,1427012
+sensory,gustatory-external,6,left_id,5057916
+sensory,gustatory-pharyngeal,6,left_id,15718275
+sensory,gustatory-external,6,left_id,15715151
+sensory,gustatory-external,7,left_id,15690711
+sensory,gustatory-external,7,left_id,15714845
+sensory,gustatory-external,7,left_id,15712024
+sensory,gustatory-external,7,left_id,15717229
+sensory,gustatory-external,7,left_id,15711289
+sensory,gustatory-external,7,left_id,15698623
+sensory,gustatory-pharyngeal,7,left_id,15996271
+sensory,gustatory-pharyngeal,7,left_id,15727304
+sensory,gustatory-pharyngeal,7,left_id,15725545
+sensory,gustatory-external,7,left_id,15678849
+sensory,gustatory-pharyngeal,7,left_id,15725127
+sensory,gustatory-pharyngeal,7,left_id,15724636
+sensory,gustatory-pharyngeal,7,left_id,15724520
+sensory,gustatory-external,7,left_id,15713374
+sensory,gustatory-external,7,left_id,15700147
+sensory,gustatory-pharyngeal,7,left_id,17608754
+PN,gustatory-external 2nd_order PN,8,left_id,19101351
+sensory,visual,8,left_id,2216187
+sensory,visual,8,left_id,7480731
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,8,left_id,15608355
+PN,gustatory-pharyngeal 2nd_order PN,8,left_id,12089601
+sensory,visual,8,left_id,7483922
+sensory,visual,8,left_id,2209091
+sensory,gustatory-external,9,left_id,5116861
+sensory,gustatory-pharyngeal,9,left_id,15723479
+sensory,gustatory-external,9,left_id,5095269
+sensory,gut,9,left_id,15995327
+DN-SEZ,no official annotation,9,left_id,17359101
+sensory,gut,9,left_id,17380936
+sensory,gustatory-external,9,left_id,15714330
+sensory,gut,9,left_id,15994926
+sensory,gut,9,left_id,1351125
+sensory,gustatory-external,9,left_id,15690955
+sensory,gustatory-pharyngeal,9,left_id,3032520
+sensory,gustatory-external,9,left_id,15711222
+sensory,gut,9,left_id,1419315
+sensory,gustatory-external,9,left_id,15699715
+LN,no official annotation,10,left_id,5030808
+LN,no official annotation,10,left_id,8273369
+LN,no official annotation,10,left_id,5291791
+LN,no official annotation,10,left_id,7941642
+LN,_broad D1,10,left_id,7941652
+LN,no official annotation,10,left_id,8877971
+LN,no official annotation,10,left_id,7939979
+LN,no official annotation,10,left_id,7939890
+LN,no official annotation,10,left_id,8274021
+LN,no official annotation,10,left_id,8311264
+LN,no official annotation,10,left_id,10555409
+LN,no official annotation,10,left_id,8102935
+LN,no official annotation,10,left_id,7394271
+PN,mPN; mPN iACT bilateral UPPER; Multiglomerular PN 1; mPN; olfactory 2nd_order PN; thermo-warm 2nd_order PN,10,left_id,16795838
+DN-SEZ,FFN-39,10,left_id,10865025
+sensory,gustatory-pharyngeal,11,left_id,3050645
+sensory,gustatory-external,11,left_id,3267019
+sensory,gustatory-pharyngeal,11,left_id,15728017
+sensory,gustatory-pharyngeal,11,left_id,15730645
+sensory,gustatory-external,11,left_id,15730680
+sensory,gut,11,left_id,1428271
+sensory,gut,11,left_id,1432836
+sensory,gustatory-pharyngeal,11,left_id,3036249
+sensory,gustatory-external,11,left_id,15714173
+sensory,gustatory-external,11,left_id,15675901
+sensory,gustatory-external,11,left_id,15678833
+sensory,gustatory-pharyngeal,11,left_id,15995861
+PN,33a PN; uPN; olfactory 2nd_order PN,12,left_id,8021456
+PN,45a PN; uPN; olfactory 2nd_order PN,12,left_id,7852250
+PN,74a PN; uPN; olfactory 2nd_order PN,12,left_id,7843730
+PN,85c PN; uPN; olfactory 2nd_order PN,12,left_id,4354933
+PN,59a PN; uPN; olfactory 2nd_order PN,12,left_id,7864823
+PN,94a&94b PN; uPN; olfactory 2nd_order PN,12,left_id,8399890
+PN,67b PN; uPN; olfactory 2nd_order PN,12,left_id,16259595
+PN,22c PN; uPN; olfactory 2nd_order PN,12,left_id,7865652
+PN,24a PN; uPN; olfactory 2nd_order PN,12,left_id,7198338
+PN,1a PN; uPN; olfactory 2nd_order PN,12,left_id,7865696
+PN,83a PN; uPN; olfactory 2nd_order PN,12,left_id,7865767
+PN,13a PN; uPN; olfactory 2nd_order PN,12,left_id,4493199
+PN,45b PN; uPN; olfactory 2nd_order PN,12,left_id,7107433
+PN,42b PN; uPN; olfactory 2nd_order PN,12,left_id,7873135
+PN,30a PN; uPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN,12,left_id,7916593
+PN,35a PN; uPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,12,left_id,7934904
+PN,42a PN; uPN; olfactory 2nd_order PN,12,left_id,3486381
+PN,49a PN; uPN; olfactory 2nd_order PN,12,left_id,7515491
+PN,47a&33b PN; uPN; olfactory 2nd_order PN,12,left_id,7092417
+PN,82a PN; uPN; olfactory 2nd_order PN,12,left_id,7851153
+PN,63a PN; uPN; olfactory 2nd_order PN,12,left_id,7845346
+sensory,gut,13,left_id,1415168
+sensory,gustatory-external,13,left_id,19180425
+DN-SEZ,no official annotation,13,left_id,1924051
+sensory,gustatory-pharyngeal,13,left_id,15725673
+sensory,gustatory-external,13,left_id,15680710
+sensory,gustatory-external,13,left_id,15678441
+sensory,gustatory-external,13,left_id,15674083
+ascending,mechano-Ch,14,left_id,2123422
+pre-DN-VNC,no official annotation,14,left_id,11717014
+PN-somato,mechano-Ch 2nd_order PN,14,left_id,11286854
+pre-DN-VNC,no official annotation,14,left_id,5778133
+pre-DN-VNC,no official annotation,14,left_id,17360286
+PN-somato,noci 2nd_order PN,14,left_id,16490014
+PN-somato,noci 2nd_order PN,14,left_id,17729424
+pre-DN-SEZ,no official annotation,14,left_id,12923749
+pre-DN-VNC,no official annotation,14,left_id,12367135
+PN-somato,mechano-Ch 2nd_order PN,14,left_id,2910892
+ascending,mechano-Ch,14,left_id,7766016
+PN-somato,mechano-Ch 2nd_order PN,14,left_id,17729195
+DN-SEZ,mPN,15,left_id,11105182
+DN-SEZ,no official annotation,15,left_id,17356450
+DN-SEZ,no official annotation,15,left_id,11195708
+DN-SEZ,mPN,15,left_id,14437742
+sensory,gustatory-pharyngeal,16,left_id,15998753
+DN-SEZ,no official annotation,16,left_id,16588928
+sensory,gut,16,left_id,15984231
+sensory,gustatory-pharyngeal,16,left_id,15724385
+sensory,gut,16,left_id,15766999
+sensory,gut,16,left_id,15983225
+sensory,gut,16,left_id,7424178
+sensory,gut,16,left_id,15984797
+sensory,gut,16,left_id,15770945
+sensory,gut,16,left_id,1435466
+sensory,gut,16,left_id,15982306
+PN,Gustatory PN 2; gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,17,left_id,3709977
+LN,Thermo PN 2,17,left_id,4985759
+PN,Unknown PN 2; gustatory-external 2nd_order PN,17,left_id,8012953
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,17,left_id,18740553
+PN,gustatory-external 2nd_order PN,17,left_id,12336493
+PN,Gustatory PN 4; gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,17,left_id,11067379
+PN,Thermo PN 4; tPN; thermo-cold 2nd_order PN,17,left_id,4154421
+PN,Thermo PN 3; tPN; thermo-cold 2nd_order PN,17,left_id,3991518
+PN,Gustatory PN 1; gustatory-external 2nd_order PN,17,left_id,11333054
+PN-somato,mechano-Ch 2nd_order PN,18,left_id,16014701
+PN-somato,noci 2nd_order PN,18,left_id,16485518
+PN-somato,noci 2nd_order PN,18,left_id,11263687
+PN-somato,noci 2nd_order PN,18,left_id,10982951
+PN-somato,noci 2nd_order PN,18,left_id,20343986
+PN-somato,mechano-Ch 2nd_order PN,18,left_id,16595001
+PN-somato,mechano-Ch 2nd_order PN,18,left_id,11719626
+PN-somato,noci 2nd_order PN,18,left_id,17360254
+PN-somato,noci 2nd_order PN,18,left_id,12273754
+PN-somato,mechano-Ch 2nd_order PN,18,left_id,5755261
+PN-somato,mechano-Ch 2nd_order PN,18,left_id,17464168
+PN-somato,mechano-Ch 2nd_order PN,18,left_id,12367568
+pre-DN-SEZ,no official annotation,18,left_id,17224013
+PN-somato,mechano-Ch 2nd_order PN,18,left_id,17729020
+pre-DN-SEZ,no official annotation,18,left_id,9739780
+PN-somato,mechano-Ch 2nd_order PN,18,left_id,9508724
+PN-somato,noci 2nd_order PN,18,left_id,18656202
+PN-somato,mechano-Ch 2nd_order PN,18,left_id,19102929
+PN-somato,mechano-Ch 2nd_order PN,18,left_id,19919566
+ascending,noci,18,left_id,21250110
+pre-DN-VNC,no official annotation,18,left_id,8529400
+DN-VNC,no official annotation,18,left_id,17223685
+PN-somato,mechano-Ch 2nd_order PN,18,left_id,16961482
+PN-somato,mechano-Ch 2nd_order PN,18,left_id,11717001
+PN-somato,mechano-Ch 2nd_order PN,18,left_id,10714526
+PN-somato,noci 2nd_order PN,18,left_id,17105977
+ascending,mechano-Ch,18,left_id,10929797
+pre-DN-VNC,no official annotation,19,left_id,15669682
+pre-DN-SEZ,no official annotation,19,left_id,15586949
+PN-somato,noci 2nd_order PN,19,left_id,17729410
+sensory,respiratory,20,left_id,8005609
+DN-SEZ,no official annotation,20,left_id,8154054
+sensory,gut,20,left_id,1400725
+sensory,gut,20,left_id,9820270
+sensory,gut,20,left_id,1405493
+sensory,gut,20,left_id,1431256
+sensory,gut,20,left_id,1392771
+sensory,gut,20,left_id,1377586
+sensory,gut,20,left_id,1375101
+sensory,respiratory,20,left_id,19120772
+sensory,gut,20,left_id,1406463
+sensory,respiratory,20,left_id,3795424
+sensory,gut,21,left_id,9838294
+sensory,gut,21,left_id,1391179
+sensory,gut,21,left_id,1414206
+sensory,gut,21,left_id,15769680
+sensory,respiratory,21,left_id,7012280
+sensory,respiratory,21,left_id,16911458
+PN,gut 2nd_order PN,21,left_id,12740290
+sensory,respiratory,21,left_id,4363883
+sensory,gut,21,left_id,15770904
+sensory,gustatory-pharyngeal,21,left_id,15724175
+sensory,respiratory,21,left_id,7340629
+sensory,respiratory,21,left_id,19017854
+pre-DN-VNC,no official annotation,22,left_id,7168356
+DN-SEZ,no official annotation,22,left_id,11007420
+PN,LHN-22; CN-58; gustatory-external 2nd_order PN,22,left_id,8542422
+PN,mPN; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN,22,left_id,9119558
+PN,mPN; mPN seahorse; mPN; olfactory 2nd_order PN,22,left_id,8480221
+PN,mPN; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,22,left_id,9589146
+PN,mPN; Multiglomerular PN 3; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,22,left_id,2612527
+PN,mPN; mPN D; mPN; olfactory 2nd_order PN,22,left_id,6451332
+PN,LHN-19; CN-55; gustatory-external 2nd_order PN,22,left_id,2628785
+PN,FFN-30; gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,22,left_id,8349454
+PN,mPN; mPN iACT B3; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN,22,left_id,8704079
+pre-DN-SEZ,mPN,22,left_id,17545695
+PN,mPN; FFN-21; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN; thermo-warm 2nd_order PN,22,left_id,12225666
+PN,PN; gustatory-external 2nd_order PN,22,left_id,17743170
+pre-DN-VNC,no official annotation,22,left_id,13849557
+LN,no official annotation,22,left_id,17844900
+PN,mPN; mPN iACT B2; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN; thermo-warm 2nd_order PN,22,left_id,3450442
+PN,mPN; Multiglomerular PN 5; olfactory 2nd_order PN; gustatory-external 2nd_order PN,22,left_id,3450751
+PN,mPN; mPN iACT A2; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,22,left_id,5261424
+LN,no official annotation,22,left_id,9971209
+PN,mPN; mPN iACT bilateral LOWER; Multiglomerular PN 2; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN,22,left_id,3712893
+ascending,unknown modality,23,left_id,11455472
+ascending,mechano-Ch,23,left_id,8644484
+pre-DN-VNC,no official annotation,23,left_id,12366224
+DN-SEZ,no official annotation,23,left_id,10527147
+DN-VNC,no official annotation,23,left_id,10915553
+sensory,respiratory,23,left_id,16303262
+ascending,unknown modality,23,left_id,3220616
+ascending,noci,23,left_id,4555763
+ascending,mechano-Ch,23,left_id,5343578
+DN-VNC,no official annotation,23,left_id,17732270
+ascending,A00c_a5; noci,23,left_id,2816457
+pre-DN-VNC,no official annotation,23,left_id,5080991
+ascending,unknown modality,23,left_id,8057753
+sensory,gustatory-external,24,left_id,15679484
+DN-SEZ,no official annotation,24,left_id,19470184
+sensory,gustatory-external,24,left_id,15690392
+DN-SEZ,no official annotation,24,left_id,992646
+DN-SEZ,no official annotation,24,left_id,8216541
+sensory,gustatory-external,24,left_id,15715796
+sensory,gustatory-pharyngeal,24,left_id,1709802
+sensory,gut,24,left_id,15983156
+sensory,gut,24,left_id,1429969
+DN-SEZ,no official annotation,24,left_id,17951049
+LN,no official annotation,25,left_id,8700125
+DN-VNC,no official annotation,25,left_id,13422280
+PN,Pdf-LaNs; visual 2nd_order PN,25,left_id,8118929
+PN,Pdf-LaNs; visual 2nd_order PN,25,left_id,16087799
+PN,Pdf-LaNs; visual 2nd_order PN,25,left_id,9927082
+PN,Thermo PN 7; tPN; thermo-cold 2nd_order PN,25,left_id,4108016
+RGN,no official annotation,25,left_id,3928652
+PN,Pdf-LaNs; visual 2nd_order PN,25,left_id,2204467
+LN,no official annotation,25,left_id,17414715
+PN-somato,noci 2nd_order PN,26,left_id,14338439
+pre-DN-VNC,no official annotation,26,left_id,4663875
+pre-DN-SEZ,no official annotation,26,left_id,15689046
+pre-DN-VNC,no official annotation,26,left_id,9822593
+LHN,noci 2nd_order PN,26,left_id,17729088
+LHN,noci 2nd_order PN; mechano-Ch 2nd_order PN,26,left_id,5762666
+PN-somato,mechano-Ch 2nd_order PN,26,left_id,16472086
+PN-somato,noci 2nd_order PN,26,left_id,16594752
+PN-somato,Tel5; noci 2nd_order PN,27,left_id,5750884
+PN-somato,noci 2nd_order PN,27,left_id,20730780
+PN-somato,noci 2nd_order PN; mechano-Ch 2nd_order PN,27,left_id,21220994
+pre-DN-VNC,no official annotation,27,left_id,15096548
+pre-DN-VNC,no official annotation,27,left_id,9348984
+PN-somato,mechano-Ch 2nd_order PN,27,left_id,14797760
+PN-somato,noci 2nd_order PN; mechano-Ch 2nd_order PN,27,left_id,6633635
+pre-DN-VNC,no official annotation,27,left_id,16059134
+PN-somato,mechano-Ch 2nd_order PN,27,left_id,16059078
+PN-somato,mechano-Ch 2nd_order PN,27,left_id,15587533
+PN-somato,mechano-Ch 2nd_order PN,27,left_id,9481869
+PN-somato,noci 2nd_order PN; mechano-Ch 2nd_order PN,27,left_id,17165621
+LHN,no official annotation,28,left_id,16098538
+PN,Thermo PN 5; tPN; thermo-cold 2nd_order PN,28,left_id,4260935
+LHN,no official annotation,28,left_id,4279887
+LN,no official annotation,28,left_id,7582412
+PN,vPN; visual 2nd_order PN,28,left_id,7952981
+LHN,no official annotation,28,left_id,9747418
+PN,PN; tPN; gustatory-external 2nd_order PN; thermo-cold 2nd_order PN,28,left_id,8293958
+LHN,Thermo PN 1; Thermo PN 6,28,left_id,4635057
+LN,no official annotation,28,left_id,4570270
+LHN,no official annotation,28,left_id,17962513
+LN,Thermo PN 1; Thermo PN 6,28,left_id,12948470
+LHN,no official annotation,28,left_id,19611917
+LN,no official annotation,28,left_id,4926999
+LN,no official annotation,28,left_id,4636432
+LHN,no official annotation,28,left_id,17244655
+LN,no official annotation,28,left_id,17776906
+LHN,no official annotation,28,left_id,12745771
+pre-DN-SEZ,no official annotation,28,left_id,5959820
+LHN,no official annotation,28,left_id,5289042
+PN,Gustatory PN 3; gustatory-external 2nd_order PN,28,left_id,12156009
+PN,mPN; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN,29,left_id,8509534
+KC,KC,30,left_id,16444327
+KC,KC,30,left_id,16627861
+KC,KC,30,left_id,16630385
+KC,KC,30,left_id,11691603
+KC,KC,30,left_id,8262503
+KC,KC,30,left_id,16435965
+KC,KC,30,left_id,11725803
+KC,KC,30,left_id,14898816
+KC,KC,30,left_id,11725127
+KC,KC,30,left_id,15721919
+KC,KC,30,left_id,4518546
+KC,KC,30,left_id,16629788
+KC,KC,30,left_id,16630264
+KC,KC,30,left_id,15722867
+KC,KC,30,left_id,16631114
+KC,KC,30,left_id,16058860
+KC,KC,30,left_id,4412315
+KC,KC,30,left_id,16630941
+KC,KC,30,left_id,16039470
+KC,KC,30,left_id,4411505
+KC,KC,30,left_id,4412036
+KC,KC,30,left_id,16627838
+KC,KC,30,left_id,8262302
+KC,KC,30,left_id,16977881
+KC,KC,30,left_id,5937084
+pre-DN-VNC,no official annotation,31,left_id,8687096
+pre-DN-VNC,no official annotation,31,left_id,15718981
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,31,left_id,5708994
+LHN,no official annotation,31,left_id,9488991
+PN-somato,noci 2nd_order PN,31,left_id,4664256
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,31,left_id,12121795
+LHN,no official annotation,31,left_id,4393026
+pre-DN-VNC,no official annotation,31,left_id,15517247
+PN,vPN; visual 2nd_order PN,31,left_id,9940382
+LHN,no official annotation,31,left_id,8347613
+DN-SEZ,no official annotation,31,left_id,5688091
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,31,left_id,3650006
+pre-DN-SEZ,no official annotation,31,left_id,17354392
+PN,gustatory-external 2nd_order PN,31,left_id,11934107
+LHN,LHN-14; CN-50,32,left_id,12498338
+PN,mPN; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN,32,left_id,2568465
+LHN,CN-1,32,left_id,12476851
+LN,Multiglomerular PN 4; LHN-11; CN-47,32,left_id,17434825
+LN,no official annotation,32,left_id,11782821
+PN,vPN; visual 2nd_order PN,32,left_id,9567051
+LHN,LHN-15; CN-51,32,left_id,5453333
+LN,CN-2,32,left_id,8037197
+LN,LHN-6,32,left_id,9447255
+LHN,no official annotation,32,left_id,7982896
+LN,LHN-10; CN-46,32,left_id,16486385
+PN,mPN; Multiglomerular PN 7; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN; thermo-warm 2nd_order PN,32,left_id,8276782
+PN,vPN; visual 2nd_order PN,32,left_id,8340950
+LN,LHN-13; CN-49,32,left_id,4665186
+LHN,LHN-9; CN-45,32,left_id,14333495
+LHN,LHN-21; CN-57,32,left_id,14319185
+LHN,no official annotation,32,left_id,18566501
+KC,KC,33,left_id,16438190
+KC,KC,33,left_id,16210988
+KC,KC,33,left_id,14898295
+KC,KC,33,left_id,16629757
+KC,KC,33,left_id,14522124
+KC,KC,33,left_id,16629931
+KC,KC,33,left_id,14519048
+KC,KC,33,left_id,16440649
+KC,KC,33,left_id,16627773
+KC,KC,33,left_id,9983191
+KC,KC,33,left_id,8177991
+KC,KC,33,left_id,3819157
+KC,KC,33,left_id,8263140
+KC,KC,33,left_id,8263285
+KC,KC,33,left_id,8513389
+KC,KC,33,left_id,8865199
+KC,KC,33,left_id,14460113
+KC,KC,33,left_id,6704232
+KC,KC,34,left_id,17147410
+LN,PL-5,35,left_id,3820148
+pre-DN-SEZ,no official annotation,35,left_id,15639216
+LHN,no official annotation,35,left_id,2979486
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,35,left_id,11853038
+PN,FFN-37; gustatory-pharyngeal 2nd_order PN,35,left_id,16316916
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,35,left_id,5053417
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,35,left_id,11656349
+PN-somato,noci 2nd_order PN,35,left_id,5744058
+KC,KC,36,left_id,4117305
+pre-DN-VNC,no official annotation,37,left_id,8348277
+PN,gustatory-external 2nd_order PN,37,left_id,11986594
+ascending,unknown modality,37,left_id,5606265
+LHN,no official annotation,37,left_id,16141217
+LHN,no official annotation,38,left_id,12387154
+CN,no official annotation,38,left_id,4398543
+LHN,no official annotation,38,left_id,16494105
+LHN,no official annotation,38,left_id,9201911
+pre-DN-SEZ,no official annotation,38,left_id,10958210
+LHN,no official annotation,38,left_id,16474159
+LHN,no official annotation,38,left_id,14461238
+LHN,LHN-1,38,left_id,6494274
+LHN,no official annotation,38,left_id,11193510
+PN,gustatory-external 2nd_order PN,38,left_id,11146422
+LN,no official annotation,38,left_id,11144258
+LHN,no official annotation,38,left_id,14450919
+LHN,no official annotation,38,left_id,9421292
+LHN,LHN-5,38,left_id,14514597
+LHN,no official annotation,38,left_id,10955244
+DN-VNC,no official annotation,38,left_id,8755914
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,38,left_id,12424328
+pre-DN-VNC,no official annotation,38,left_id,15686444
+LHN,no official annotation,38,left_id,17420035
+pre-DN-VNC,no official annotation,38,left_id,19051762
+MB-FFN,FFN-19,38,left_id,7313896
+LHN,no official annotation,38,left_id,4778745
+DN-SEZ,no official annotation,38,left_id,3814701
+LHN,no official annotation,38,left_id,16409132
+PN,Vision PN 1; vPN; visual 2nd_order PN,38,left_id,8111135
+PN,gustatory-pharyngeal 2nd_order PN,38,left_id,12425856
+LHN,no official annotation,38,left_id,14333371
+LN,PL-4,38,left_id,9792178
+LHN,no official annotation,38,left_id,3946569
+LN,no official annotation,38,left_id,9445876
+LHN,no official annotation,38,left_id,17696578
+LHN,no official annotation,38,left_id,2379529
+KC,KC,39,left_id,4134539
+KC,KC,40,left_id,8118474
+KC,KC,40,left_id,8262372
+KC,KC,40,left_id,7187384
+KC,KC,40,left_id,12726582
+LHN,no official annotation,41,left_id,4780707
+LN,CN-5,41,left_id,5474852
+LHN,LHN-2,41,left_id,8238322
+LN,no official annotation,41,left_id,11135340
+KC,KC,42,left_id,6702830
+KC,KC,42,left_id,16631222
+KC,KC,42,left_id,8248706
+KC,KC,42,left_id,12217572
+KC,KC,42,left_id,8864096
+KC,KC,42,left_id,11785627
+KC,KC,42,left_id,16015738
+KC,KC,42,left_id,16939375
+KC,KC,42,left_id,15861524
+KC,KC,42,left_id,16630024
+KC,KC,42,left_id,8393981
+KC,KC,42,left_id,15734988
+LHN,no official annotation,43,left_id,6494382
+LHN,LHN-8,43,left_id,2439067
+LHN,mechano-Ch 2nd_order PN,43,left_id,5118060
+PN-somato,FFN-29; noci 2nd_order PN,43,left_id,12325227
+CN,no official annotation,43,left_id,16799939
+LHN,no official annotation,43,left_id,14818307
+pre-DN-VNC,no official annotation,44,left_id,2964760
+PN,gustatory-external 2nd_order PN,44,left_id,18087179
+PN,gustatory-external 2nd_order PN,44,left_id,14756000
+PN,gustatory-external 2nd_order PN,44,left_id,12360656
+CN,no official annotation,44,left_id,11029359
+DN-SEZ,no official annotation,44,left_id,17732791
+LHN,no official annotation,44,left_id,10961507
+CN,no official annotation,44,left_id,17557290
+DN-VNC,no official annotation,44,left_id,18527962
+PN,gustatory-external 2nd_order PN,44,left_id,17036160
+LHN,no official annotation,44,left_id,17732085
+CN,no official annotation,44,left_id,18648531
+pre-DN-VNC,no official annotation,44,left_id,5746180
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,44,left_id,13832416
+PN,gustatory-external 2nd_order PN,44,left_id,17036132
+pre-DN-VNC,no official annotation,44,left_id,16422744
+pre-DN-VNC,no official annotation,44,left_id,17360022
+PN,gustatory-external 2nd_order PN,44,left_id,2568522
+pre-DN-VNC,no official annotation,44,left_id,19880740
+DN-SEZ,no official annotation,44,left_id,13833814
+CN,no official annotation,44,left_id,15519213
+PN,gustatory-external 2nd_order PN,44,left_id,17277623
+LHN,noci 2nd_order PN,46,left_id,11037238
+pre-DN-VNC,no official annotation,46,left_id,14519756
+PN-somato,noci 2nd_order PN,46,left_id,10893103
+PN-somato,noci 2nd_order PN,46,left_id,5691934
+pre-DN-VNC,no official annotation,46,left_id,17732031
+PN-somato,noci 2nd_order PN,46,left_id,11291653
+pre-DN-VNC,no official annotation,46,left_id,5657004
+MB-FFN,FFN-33,46,left_id,16848497
+PN-somato,mechano-Ch 2nd_order PN,46,left_id,21136945
+pre-DN-VNC,no official annotation,46,left_id,8253620
+pre-DN-VNC,no official annotation,46,left_id,11084320
+MB-FFN,FFN-34,47,left_id,5679304
+LHN,no official annotation,47,left_id,16100461
+LHN,LHN-18; CN-54,47,left_id,12839441
+LHN,no official annotation,47,left_id,10018260
+LHN,CN-29,47,left_id,17038587
+LHN,no official annotation,47,left_id,19045334
+MB-FBN,FBN-18,47,left_id,10209260
+LHN,LHN-17; CN-53,47,left_id,11004239
+LHN,LHN-4; PL-2; noci 2nd_order PN,47,left_id,4680995
+LHN,no official annotation,47,left_id,8203947
+pre-DN-VNC,_Two-headed cobra,47,left_id,2988292
+PN-somato,noci 2nd_order PN,47,left_id,12667895
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,47,left_id,12617396
+LHN,CN-3,47,left_id,8423405
+CN,CN-40,47,left_id,8539175
+CN,no official annotation,47,left_id,4433960
+MB-FFN,FFN-32,47,left_id,8838927
+LHN,no official annotation,47,left_id,4422289
+LHN,no official annotation,47,left_id,14319498
+MB-FFN,FFN-31,47,left_id,12670738
+LHN,CN-27,47,left_id,17361757
+pre-DN-VNC,no official annotation,48,left_id,2979675
+pre-DN-VNC,no official annotation,48,left_id,8167696
+pre-DN-VNC,no official annotation,48,left_id,5745110
+pre-DN-SEZ,no official annotation,48,left_id,16096934
+KC,KC,49,left_id,16631248
+KC,KC,49,left_id,16627950
+KC,KC,49,left_id,16440704
+KC,KC,49,left_id,16017113
+KC,KC,49,left_id,15722306
+KC,KC,49,left_id,15691114
+KC,KC,49,left_id,14319960
+KC,KC,49,left_id,14255342
+KC,KC,49,left_id,3819171
+KC,KC,49,left_id,11691640
+KC,KC,49,left_id,8318678
+pre-DN-VNC,no official annotation,50,left_id,5033480
+pre-DN-VNC,no official annotation,50,left_id,17804729
+LHN,no official annotation,50,left_id,17729110
+pre-DN-VNC,no official annotation,50,left_id,17360038
+pre-DN-VNC,no official annotation,50,left_id,15608953
+pre-DN-VNC,no official annotation,50,left_id,17360010
+pre-DN-VNC,no official annotation,50,left_id,10885466
+pre-DN-VNC,no official annotation,50,left_id,3060480
+PN-somato,mechano-Ch 2nd_order PN,50,left_id,10282065
+LHN,no official annotation,50,left_id,12371688
+DN-VNC,no official annotation,50,left_id,3048606
+LHN,no official annotation,50,left_id,10922020
+pre-DN-VNC,no official annotation,50,left_id,10922928
+pre-DN-VNC,no official annotation,50,left_id,2438653
+sensory,respiratory,51,left_id,9835169
+DN-SEZ,no official annotation,51,left_id,16424131
+pre-DN-VNC,no official annotation,52,left_id,5671303
+pre-DN-VNC,no official annotation,52,left_id,17360076
+DN-SEZ,no official annotation,52,left_id,5764924
+DN-VNC,no official annotation,52,left_id,10716080
+ascending,mechano-Ch,52,left_id,10949382
+DN-SEZ,no official annotation,52,left_id,3882998
+DN-VNC,no official annotation,52,left_id,15588711
+RGN,no official annotation,52,left_id,4400767
+DN-VNC,no official annotation,52,left_id,7227010
+PN-somato,noci 2nd_order PN,52,left_id,6723364
+PN-somato,noci 2nd_order PN,52,left_id,18058644
+pre-DN-VNC,no official annotation,52,left_id,16636860
+pre-DN-VNC,no official annotation,52,left_id,16366055
+PN-somato,Tel10; noci 2nd_order PN,52,left_id,16356967
+DN-SEZ,no official annotation,52,left_id,10728323
+DN-VNC,no official annotation,52,left_id,15365184
+pre-DN-VNC,no official annotation,52,left_id,18149325
+DN-VNC,no official annotation,52,left_id,5763407
+ascending,A00c_a4; noci,52,left_id,2511238
+pre-DN-VNC,no official annotation,52,left_id,17086412
+RGN,no official annotation,52,left_id,3928574
+DN-SEZ,no official annotation,52,left_id,9795662
+DN-VNC,no official annotation,52,left_id,10728318
+LN,no official annotation,52,left_id,7694589
+pre-DN-VNC,no official annotation,52,left_id,8347907
+pre-DN-VNC,no official annotation,52,left_id,8347720
+DN-SEZ,no official annotation,52,left_id,5684940
+DN-VNC,no official annotation,52,left_id,8391330
+ascending,A00c_a6; noci,52,left_id,1042538
+DN-VNC,no official annotation,52,left_id,10609443
+sensory,gustatory-pharyngeal,52,left_id,1011675
+LN,no official annotation,52,left_id,6623049
+pre-DN-VNC,PL-7,52,left_id,15676016
+DN-SEZ,no official annotation,52,left_id,9787859
+DN-SEZ,no official annotation,52,left_id,17321919
+DN-SEZ,no official annotation,52,left_id,6604203
+DN-VNC,no official annotation,52,left_id,17473163
+LN,no official annotation,53,left_id,11003707
+LHN,no official annotation,53,left_id,4379603
+CN,no official annotation,53,left_id,16089738
+LHN,no official annotation,53,left_id,17047087
+LHN,no official annotation,53,left_id,4391317
+LHN,no official annotation,53,left_id,9207332
+MB-FFN,FFN-13,53,left_id,11051740
+pre-DN-VNC,no official annotation,53,left_id,9983417
+LHN,no official annotation,53,left_id,7582489
+MB-FBN,FB2N-4,53,left_id,13852833
+LHN,no official annotation,53,left_id,2439134
+LHN,no official annotation,53,left_id,10710503
+LHN,no official annotation,53,left_id,5963873
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,53,left_id,3543931
+LHN,no official annotation,53,left_id,12281339
+LHN,LHN-16; CN-52,53,left_id,11703922
+MB-FBN,FB2N-9,53,left_id,15343835
+MB-FFN,FFN-11,53,left_id,12356747
+LHN,no official annotation,53,left_id,14434314
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,53,left_id,16906721
+LHN,CN-15,53,left_id,12138418
+LHN,no official annotation,53,left_id,16386470
+LHN,LHN-3,53,left_id,13206239
+PN,FFN-4; FFN-5; gustatory-pharyngeal 2nd_order PN; gut 2nd_order PN; respiratory 2nd_order PN; mechano-II/III 2nd_order PN,54,left_id,3945454
+PN,FFN-18; gustatory-pharyngeal 2nd_order PN; gut 2nd_order PN,54,left_id,3420915
+PN,gut 2nd_order PN; mechano-II/III 2nd_order PN,54,left_id,3945394
+PN,gut 2nd_order PN,54,left_id,9787933
+PN,FFN-17; gut 2nd_order PN,54,left_id,12479019
+CN,no official annotation,54,left_id,9006142
+PN,gut 2nd_order PN; mechano-II/III 2nd_order PN,54,left_id,3945225
+pre-DN-SEZ,no official annotation,54,left_id,13854190
+PN,FFN-12; gut 2nd_order PN; mechano-II/III 2nd_order PN,54,left_id,17176866
+PN,FFN-4; FFN-5; gustatory-pharyngeal 2nd_order PN; gut 2nd_order PN,54,left_id,3945232
+MB-FBN,FAN-1,55,left_id,3157405
+LHN,no official annotation,55,left_id,8582134
+LHN,no official annotation,55,left_id,8974428
+LHN,no official annotation,55,left_id,10427055
+PN-somato,mechano-Ch 2nd_order PN,55,left_id,16985194
+CN,FFN-2,55,left_id,11011058
+pre-DN-SEZ,no official annotation,56,left_id,2142817
+pre-DN-SEZ,no official annotation,56,left_id,16742642
+pre-DN-SEZ,no official annotation,56,left_id,13395814
+PN-somato,mechano-II/III 2nd_order PN,56,left_id,9503414
+LHN,no official annotation,56,left_id,17641913
+LHN,no official annotation,56,left_id,4379508
+LHN,no official annotation,56,left_id,3158123
+pre-DN-SEZ,no official annotation,56,left_id,9436520
+RGN,no official annotation,56,left_id,9372642
+LHN,no official annotation,56,left_id,2439150
+LHN,no official annotation,56,left_id,17423412
+LHN,no official annotation,56,left_id,3814651
+PN-somato,mechano-II/III 2nd_order PN,56,left_id,9524538
+pre-DN-SEZ,no official annotation,56,left_id,17927604
+ascending,mechano-II/III,56,left_id,4595609
+LHN,_WS,56,left_id,3946432
+RGN,no official annotation,56,left_id,3928522
+LN,no official annotation,56,left_id,4785242
+MBON,MBON-j1,57,left_id,15421363
+MBIN,OAN-e1,57,left_id,7983899
+LN,APL,57,left_id,15571194
+MBIN,DAN-d1,57,left_id,3886356
+MBIN,DAN-k1,57,left_id,12871993
+MBIN,MBIN-b2,57,left_id,17295912
+MBIN,DAN-g1,57,left_id,4381377
+MBIN,DAN-c1,57,left_id,15592096
+MBIN,MBIN-l1,57,left_id,4381129
+MBIN,MBIN-b1,57,left_id,8689674
+MBIN,DAN-f1,57,left_id,7901791
+MBIN,MBIN-e2,57,left_id,12475432
+MBIN,DAN-i1,57,left_id,7057894
+MBIN,DAN-j1,57,left_id,4414163
+LHN,no official annotation,58,left_id,4721538
+pre-DN-VNC,no official annotation,58,left_id,5675990
+CN,no official annotation,58,left_id,11216417
+MB-FFN,FFN-10,58,left_id,12389097
+pre-DN-VNC,no official annotation,58,left_id,2797480
+CN,CN-9,58,left_id,17639784
+pre-DN-SEZ,no official annotation,58,left_id,16444758
+CN,CN-35,58,left_id,12868041
+CN,CN-35,58,left_id,16444552
+LN,no official annotation,58,left_id,17360262
+pre-DN-VNC,no official annotation,58,left_id,16545179
+LN,no official annotation,58,left_id,17360296
+LHN,CN-26,58,left_id,10875625
+MBON,MBON-h1; MBON-h2,59,left_id,8798010
+MBON,MBON-b3,59,left_id,16883909
+MBON,MBON-a1,59,left_id,8877158
+MBON,MBON-b2,59,left_id,16782830
+MBON,MBON-b1,59,left_id,17147698
+MBON,MBON-k1,59,left_id,16846805
+MBON,MBON-c1; CN-59,59,left_id,16223537
+MBON,MBON-a2,59,left_id,17355757
+MBON,MBON-h1; MBON-h2,59,left_id,8338584
+MBON,MBON-d1,59,left_id,7055857
+MBON,MBON-i1,59,left_id,7802210
+MBON,MBON-g2,59,left_id,5395823
+MBON,MBON-g1,59,left_id,4401350
+MB-FBN,FBN-28; mechano-Ch 2nd_order PN,60,left_id,10612094
+LHN,no official annotation,61,left_id,5938794
+LHN,FFN-3,61,left_id,16442113
+LN,FBN-17; CN-7,61,left_id,13197236
+MB-FBN,FBN-15; LHN-12; CN-48,61,left_id,15766806
+LHN,CN-17,61,left_id,12299621
+CN,mechano-II/III 2nd_order PN,61,left_id,11409587
+CN,PL-6,61,left_id,15566333
+MB-FFN,FFN-14,61,left_id,9015745
+LHN,no official annotation,61,left_id,16089743
+LN,CN-11; FBN-12,61,left_id,11013351
+LHN,no official annotation,61,left_id,2369444
+pre-DN-VNC,no official annotation,61,left_id,9078240
+pre-DN-SEZ,no official annotation,62,left_id,16433696
+pre-DN-VNC,no official annotation,62,left_id,16428373
+pre-DN-VNC,no official annotation,62,left_id,10523825
+pre-DN-VNC,no official annotation,62,left_id,17777981
+pre-DN-SEZ,no official annotation,62,left_id,16348875
+pre-DN-VNC,no official annotation,62,left_id,10600188
+pre-DN-VNC,no official annotation,62,left_id,16167914
+pre-DN-VNC,no official annotation,62,left_id,10880408
+PN-somato,noci 2nd_order PN,62,left_id,5769582
+pre-DN-VNC,no official annotation,62,left_id,16468935
+pre-DN-SEZ,no official annotation,62,left_id,10842047
+CN,CN-23,62,left_id,9236708
+LHN,no official annotation,62,left_id,10382686
+CN,no official annotation,62,left_id,16937815
+pre-DN-VNC,no official annotation,62,left_id,10842099
+CN,no official annotation,62,left_id,10400440
+CN,CN-18,62,left_id,17237305
+pre-DN-VNC,no official annotation,62,left_id,17354414
+pre-DN-VNC,no official annotation,62,left_id,10100020
+CN,no official annotation,62,left_id,18500915
+pre-DN-SEZ,no official annotation,62,left_id,21300466
+pre-DN-VNC,no official annotation,62,left_id,15792643
+DN-VNC,CN-28; PL-17,62,left_id,10411574
+pre-DN-SEZ,no official annotation,62,left_id,12782494
+RGN,no official annotation,63,left_id,16683883
+sensory,respiratory,63,left_id,11874130
+RGN,no official annotation,63,left_id,2138427
+RGN,no official annotation,63,left_id,10563755
+RGN,no official annotation,63,left_id,7476468
+DN-VNC,no official annotation,63,left_id,15639294
+RGN,no official annotation,63,left_id,4874953
+RGN,no official annotation,63,left_id,16683943
+sensory,gut,63,left_id,1398253
+RGN,no official annotation,63,left_id,3926669
+sensory,gut,63,left_id,15770032
+RGN,no official annotation,63,left_id,3926438
+RGN,no official annotation,63,left_id,3925724
+sensory,respiratory,63,left_id,5617164
+sensory,respiratory,63,left_id,3915835
+sensory,gut,63,left_id,15769419
+sensory,gut,63,left_id,1367171
+DN-SEZ,no official annotation,63,left_id,3729496
+sensory,gut,63,left_id,40152
+RGN,no official annotation,63,left_id,5615961
+sensory,gut,63,left_id,1395971
+RGN,no official annotation,63,left_id,3926904
+RGN,no official annotation,63,left_id,10418394
+MB-FBN,CN-10; FAN-2,64,left_id,17150791
+MBON,MBON-e1,64,left_id,14082322
+MB-FBN,CN-25; FAN-12,64,left_id,16475849
+MBON,MBON-n1,64,left_id,15398730
+CN,CN-42,64,left_id,17176911
+MBON,MBON-f1,64,left_id,15253921
+MB-FBN,CN-36; FAN-4; PL-9,64,left_id,14540633
+CN,CN-16,64,left_id,10702736
+MBIN,MBIN-e1,64,left_id,14541927
+pre-DN-SEZ,CN-30,64,left_id,7056904
+MB-FFN,FFN-16,64,left_id,12832017
+PN,FBN-3; gut 2nd_order PN,64,left_id,10202724
+MBON,MBON-d2,64,left_id,15810983
+MB-FBN,CN-14; FAN-11,64,left_id,15668309
+CN,no official annotation,64,left_id,17140424
+MBON,MBON-d3,64,left_id,9109799
+MBON,MBON-o1; CN-60,64,left_id,16868923
+LHN,LHN-20; CN-56,64,left_id,11257084
+MB-FBN,FBN-13; mechano-Ch 2nd_order PN,64,left_id,7540581
+CN,CN-4,64,left_id,10543751
+MBON,MBON-e2,64,left_id,8922644
+MB-FBN,CN-44; FAN-3,64,left_id,8078096
+CN,CN-6,64,left_id,9409359
+PN,gustatory-pharyngeal 2nd_order PN,64,left_id,12478620
+MB-FBN,FBN-1,64,left_id,11003660
+MB-FBN,CN-43; FBN-14,64,left_id,5321459
+MBON,MBON-q1,64,left_id,7910624
+sensory,gustatory-pharyngeal,65,left_id,15997666
+pre-DN-VNC,no official annotation,65,left_id,17356442
+DN-SEZ,no official annotation,65,left_id,16713227
+pre-DN-VNC,PL-14,65,left_id,8801736
+DN-SEZ,no official annotation,65,left_id,3944330
+PN-somato,proprio 2nd_order PN,65,left_id,16935790
+pre-DN-VNC,no official annotation,65,left_id,16383966
+pre-DN-VNC,no official annotation,65,left_id,16545101
+pre-DN-VNC,no official annotation,65,left_id,17728781
+pre-DN-VNC,no official annotation,65,left_id,15431408
+DN-SEZ,no official annotation,65,left_id,9787592
+pre-DN-VNC,no official annotation,66,left_id,10797407
+CN,no official annotation,66,left_id,11329998
+pre-DN-VNC,no official annotation,66,left_id,10792617
+MB-FBN,FB2N-17,66,left_id,16848475
+MB-FFN,FFN-22,66,left_id,17177103
+MB-FFN,FFN-40,66,left_id,16492104
+DN-SEZ,no official annotation,66,left_id,14034311
+CN,no official annotation,66,left_id,19088042
+pre-DN-SEZ,no official annotation,66,left_id,12279909
+pre-DN-SEZ,no official annotation,66,left_id,7388340
+pre-DN-VNC,no official annotation,66,left_id,10583715
+pre-DN-SEZ,no official annotation,66,left_id,15568134
+MB-FFN,FFN-20,66,left_id,13199414
+pre-DN-VNC,no official annotation,66,left_id,9428865
+MB-FBN,FB2N-19,66,left_id,9527333
+pre-DN-SEZ,no official annotation,66,left_id,16051878
+DN-SEZ,no official annotation,66,left_id,3044500
+pre-DN-SEZ,no official annotation,66,left_id,10345590
+DN-VNC,no official annotation,66,left_id,3946166
+MB-FBN,FB2N-15,66,left_id,5091874
+pre-DN-SEZ,no official annotation,67,left_id,15605301
+pre-DN-VNC,no official annotation,67,left_id,2597151
+pre-DN-SEZ,no official annotation,67,left_id,12299704
+MB-FFN,FFN-28,67,left_id,17096642
+MB-FBN,FB2N-1,67,left_id,12233237
+PN-somato,mechano-II/III 2nd_order PN,67,left_id,3931398
+pre-DN-VNC,no official annotation,67,left_id,7557604
+pre-DN-SEZ,no official annotation,67,left_id,15576292
+pre-DN-SEZ,no official annotation,67,left_id,12364717
+pre-DN-VNC,no official annotation,68,left_id,11073313
+pre-DN-VNC,no official annotation,68,left_id,11079069
+DN-VNC,_telegoro-1,68,left_id,5754346
+DN-VNC,no official annotation,68,left_id,5690425
+DN-VNC,no official annotation,68,left_id,8047280
+pre-DN-VNC,no official annotation,68,left_id,17729335
+DN-VNC,no official annotation,68,left_id,5680013
+pre-DN-SEZ,no official annotation,68,left_id,12654063
+DN-VNC,no official annotation,68,left_id,5462159
+pre-DN-VNC,no official annotation,68,left_id,19166349
+MB-FBN,FB2N-13,69,left_id,17280216
+DN-SEZ,no official annotation,69,left_id,14539753
+pre-DN-SEZ,no official annotation,69,left_id,17315288
+MB-FFN,FFN-9,69,left_id,8802069
+pre-DN-VNC,no official annotation,69,left_id,10918898
+pre-DN-VNC,PL-24,69,left_id,17813457
+MB-FFN,FFN-1,69,left_id,9048462
+PN-somato,FFN-8; proprio 2nd_order PN,69,left_id,9072237
+MB-FBN,FBN-20,69,left_id,9251793
+MB-FBN,FB2N-10; proprio 2nd_order PN,69,left_id,9252296
+PN-somato,proprio 2nd_order PN,69,left_id,18412747
+CN,no official annotation,69,left_id,17373283
+MB-FFN,FFN-41,69,left_id,16933362
+CN,PL-8,69,left_id,15974183
+CN,no official annotation,69,left_id,11908619
+pre-DN-VNC,no official annotation,69,left_id,17177419
+MB-FBN,FB2N-14,69,left_id,8052161
+pre-DN-VNC,no official annotation,70,left_id,15629759
+DN-SEZ,no official annotation,70,left_id,10018161
+ascending,unknown modality,70,left_id,18458734
+DN-SEZ,no official annotation,70,left_id,17359111
+DN-VNC,no official annotation,70,left_id,18123575
+DN-VNC,no official annotation,70,left_id,18305433
+pre-DN-VNC,no official annotation,70,left_id,17827011
+pre-DN-VNC,no official annotation,70,left_id,14638686
+DN-VNC,no official annotation,70,left_id,4110483
+PN-somato,proprio 2nd_order PN,70,left_id,12390459
+pre-DN-VNC,no official annotation,70,left_id,12420377
+DN-VNC,no official annotation,70,left_id,17102002
+DN-VNC,no official annotation,70,left_id,17354403
+pre-DN-VNC,no official annotation,70,left_id,10355356
+pre-DN-VNC,no official annotation,70,left_id,16544712
+pre-DN-VNC,no official annotation,70,left_id,13370624
+pre-DN-SEZ,no official annotation,70,left_id,5768240
+pre-DN-VNC,no official annotation,70,left_id,10382824
+pre-DN-VNC,PL-16,70,left_id,16937799
+pre-DN-VNC,no official annotation,70,left_id,18088813
+DN-VNC,no official annotation,70,left_id,17732346
+DN-VNC,no official annotation,70,left_id,10018150
+pre-DN-VNC,no official annotation,70,left_id,6729443
+pre-DN-VNC,no official annotation,70,left_id,10317031
+DN-VNC,no official annotation,70,left_id,8723983
+pre-DN-VNC,PL-15,70,left_id,8142831
+pre-DN-VNC,no official annotation,70,left_id,20379247
+pre-DN-VNC,no official annotation,70,left_id,17729347
+pre-DN-VNC,no official annotation,70,left_id,16693923
+pre-DN-VNC,no official annotation,70,left_id,17352824
+DN-VNC,no official annotation,70,left_id,17732334
+pre-DN-VNC,no official annotation,70,left_id,20316708
+DN-VNC,no official annotation,70,left_id,16928740
+pre-DN-VNC,no official annotation,70,left_id,8810141
+pre-DN-VNC,no official annotation,70,left_id,19091995
+DN-VNC,no official annotation,71,left_id,17359501
+pre-DN-SEZ,no official annotation,71,left_id,13818467
+DN-SEZ,no official annotation,71,left_id,17087885
+DN-VNC,no official annotation,71,left_id,13749806
+pre-DN-SEZ,no official annotation,71,left_id,14723506
+pre-DN-VNC,no official annotation,71,left_id,17360266
+DN-VNC,no official annotation,71,left_id,6572414
+pre-DN-VNC,no official annotation,71,left_id,14586769
+PN-somato,noci 2nd_order PN,71,left_id,15514582
+pre-DN-VNC,no official annotation,71,left_id,14655602
+pre-DN-VNC,no official annotation,71,left_id,3945136
+pre-DN-VNC,no official annotation,71,left_id,18501001
+DN-SEZ,no official annotation,71,left_id,11217208
+PN-somato,noci 2nd_order PN,71,left_id,12195879
+pre-DN-VNC,no official annotation,71,left_id,10449035
+pre-DN-SEZ,no official annotation,71,left_id,8070872
+DN-SEZ,no official annotation,71,left_id,16676038
+DN-VNC,no official annotation,71,left_id,19298644
+DN-VNC,no official annotation,71,left_id,1980134
+pre-DN-SEZ,no official annotation,71,left_id,12279941
+pre-DN-VNC,no official annotation,71,left_id,18023286
+DN-SEZ,no official annotation,71,left_id,7130033
+pre-DN-VNC,no official annotation,71,left_id,4901087
+pre-DN-SEZ,no official annotation,71,left_id,16361363
+pre-DN-VNC,no official annotation,71,left_id,16422727
+pre-DN-SEZ,no official annotation,71,left_id,16434560
+pre-DN-VNC,no official annotation,71,left_id,1961182
+pre-DN-VNC,no official annotation,71,left_id,18035063
+pre-DN-VNC,no official annotation,71,left_id,17729973
+DN-VNC,no official annotation,71,left_id,19298625
+DN-SEZ,no official annotation,71,left_id,11009492
+pre-DN-VNC,no official annotation,71,left_id,5745929
+DN-VNC,no official annotation,71,left_id,4188290
+pre-DN-SEZ,no official annotation,71,left_id,9351843
+DN-SEZ,no official annotation,71,left_id,17728922
+pre-DN-VNC,no official annotation,71,left_id,11027071
+PN-somato,proprio 2nd_order PN,72,left_id,8814524
+pre-DN-VNC,no official annotation,72,left_id,17574013
+ascending,proprio,72,left_id,12998937
+pre-DN-SEZ,no official annotation,72,left_id,17109286
+pre-DN-VNC,no official annotation,72,left_id,17975547
+ascending,proprio,72,left_id,14522404
+PN-somato,proprio 2nd_order PN,72,left_id,19881737
+PN-somato,proprio 2nd_order PN,72,left_id,17110189
+ascending,proprio,72,left_id,15315491
+PN-somato,PL-3; proprio 2nd_order PN,72,left_id,17110024
+LN,FB2N-6,73,left_id,3945246
+pre-DN-VNC,no official annotation,73,left_id,16415910
+pre-DN-VNC,no official annotation,73,left_id,11348509
+DN-SEZ,no official annotation,73,left_id,9424902
+pre-DN-VNC,no official annotation,73,left_id,16848587
+LN,FB2N-11,73,left_id,6591182
+DN-SEZ,no official annotation,73,left_id,3944626
+MB-FFN,FFN-24,73,left_id,10281116
+pre-DN-VNC,no official annotation,73,left_id,10872426
+LN,FB2N-18,73,left_id,17176767
+pre-DN-VNC,no official annotation,73,left_id,12551020
+pre-DN-VNC,no official annotation,73,left_id,3945756
+pre-DN-VNC,no official annotation,74,left_id,4274518
+pre-DN-VNC,no official annotation,74,left_id,1646076
+MB-FBN,CN-31; FBN-26; noci 2nd_order PN,74,left_id,13743125
+MBIN,OAN-g1,74,left_id,11525714
+CN,no official annotation,74,left_id,14329745
+CN,no official annotation,74,left_id,16026677
+LHN,CN-39,74,left_id,12587013
+pre-DN-VNC,no official annotation,74,left_id,10758204
+PN-somato,FFN-27; noci 2nd_order PN,74,left_id,14493841
+pre-DN-VNC,no official annotation,74,left_id,16342197
+MB-FBN,FAN-9,74,left_id,14260575
+CN,no official annotation,74,left_id,16464284
+pre-DN-VNC,no official annotation,74,left_id,6298455
+CN,no official annotation,74,left_id,11871574
+pre-DN-VNC,no official annotation,74,left_id,16445338
+pre-DN-SEZ,no official annotation,74,left_id,8993049
+MB-FBN,CN-13; FBN-6,75,left_id,11018254
+MB-FBN,FBN-16,75,left_id,8118947
+MB-FBN,FB2N-7,75,left_id,12398622
+MB-FBN,CN-21; FBN-4,75,left_id,2966602
+MB-FBN,CN-38; FAN-6,75,left_id,12262910
+CN,no official annotation,75,left_id,7053966
+MB-FBN,CN-12; FBN-8,75,left_id,14313750
+LN,CN-20,75,left_id,18062678
+MB-FBN,FB2N-16,75,left_id,16160495
+MB-FFN,FFN-7,75,left_id,15510288
+MB-FBN,FBN-23,75,left_id,7026287
+MB-FBN,CN-19; FBN-9,75,left_id,9527522
+CN,no official annotation,76,left_id,9057998
+PN,respiratory 2nd_order PN,76,left_id,10323628
+CN,CN-22,76,left_id,14071613
+MB-FBN,FB2N-8,76,left_id,8540770
+MB-FFN,FFN-23,76,left_id,16385470
+CN,no official annotation,76,left_id,9051960
+CN,no official annotation,76,left_id,14071449
+LHN,no official annotation,76,left_id,14133114
+MB-FBN,FB2N-2,76,left_id,9083312
+pre-DN-SEZ,no official annotation,76,left_id,15594113
+DN-VNC,no official annotation,77,left_id,15522152
+pre-DN-VNC,no official annotation,77,left_id,16445073
+pre-DN-VNC,no official annotation,77,left_id,19017386
+MB-FFN,FFN-15,77,left_id,16978882
+pre-DN-VNC,no official annotation,77,left_id,10596949
+pre-DN-VNC,CN-34,77,left_id,14617508
+MB-FFN,FFN-6,77,left_id,17176808
+pre-DN-VNC,no official annotation,77,left_id,17360282
+LHN,no official annotation,77,left_id,16444544
+pre-DN-VNC,no official annotation,78,left_id,9480916
+pre-DN-VNC,no official annotation,78,left_id,20151537
+pre-DN-VNC,no official annotation,78,left_id,10017944
+CN,no official annotation,78,left_id,15468308
+pre-DN-VNC,no official annotation,78,left_id,17067625
+pre-DN-VNC,no official annotation,78,left_id,18111410
+pre-DN-VNC,no official annotation,78,left_id,9384504
+PN-somato,noci 2nd_order PN,78,left_id,10229852
+DN-SEZ,no official annotation,78,left_id,16340977
+MB-FFN,FFN-25,78,left_id,16340998
+PN-somato,noci 2nd_order PN,78,left_id,16541149
+pre-DN-VNC,no official annotation,78,left_id,10234576
+pre-DN-VNC,no official annotation,78,left_id,14621584
+pre-DN-VNC,no official annotation,78,left_id,14492757
+pre-DN-VNC,no official annotation,78,left_id,10581624
+pre-DN-VNC,no official annotation,78,left_id,15722990
+pre-DN-VNC,no official annotation,78,left_id,1679034
+DN-SEZ,no official annotation,78,left_id,8357933
+pre-DN-VNC,no official annotation,78,left_id,9239759
+pre-DN-VNC,no official annotation,78,left_id,16931001
+pre-DN-VNC,no official annotation,78,left_id,15055590
+pre-DN-VNC,no official annotation,78,left_id,16851791
+pre-DN-VNC,no official annotation,78,left_id,17728695
+MB-FBN,FBN-7,79,left_id,8864785
+MB-FBN,FBN-5,79,left_id,15588620
+MB-FBN,FB2N-3,79,left_id,18035864
+MB-FBN,FAN-5,79,left_id,17300165
+PN,FB2N-12; gustatory-pharyngeal 2nd_order PN,79,left_id,15623649
+CN,no official annotation,79,left_id,14073503
+MB-FBN,FB2N-21,79,left_id,14158399
+CN,no official annotation,79,left_id,12789813
+CN,no official annotation,80,left_id,14342744
+MB-FFN,FFN-35,80,left_id,12199095
+pre-DN-VNC,no official annotation,80,left_id,16950097
+DN-VNC,no official annotation,80,left_id,7005145
+pre-DN-VNC,no official annotation,80,left_id,14579509
+PN,gustatory-external 2nd_order PN,80,left_id,16435325
+pre-DN-SEZ,no official annotation,80,left_id,16547268
+DN-VNC,no official annotation,80,left_id,15897280
+pre-DN-VNC,no official annotation,80,left_id,5902352
+pre-DN-VNC,no official annotation,80,left_id,17000062
+MB-FBN,FAN-8,81,left_id,4408397
+pre-DN-SEZ,no official annotation,81,left_id,18500988
+CN,CN-41,81,left_id,17276867
+MB-FBN,FBN-21,81,left_id,9062992
+PN-somato,noci 2nd_order PN,81,left_id,11003551
+MB-FBN,FB2N-5,81,left_id,17177005
+MB-FBN,FAN-10,81,left_id,9238937
+MB-FBN,FBN-19,81,left_id,9064208
+MBON,MBON-m1; CN-62,82,left_id,17016974
+MB-FBN,CN-32; FBN-10,82,left_id,15741865
+MB-FBN,CN-33; FAN-7,82,left_id,14000746
+MBON,MBON-p1; CN-61,82,left_id,11017761
+MB-FBN,CN-37; FBN-2,82,left_id,9141404
+CN,CN-24,82,left_id,11600886
+DN-VNC,no official annotation,83,left_id,7335439
+RGN,no official annotation,83,left_id,4453485
+RGN,no official annotation,83,left_id,3281684
+DN-SEZ,no official annotation,83,left_id,10059655
+RGN,no official annotation,83,left_id,4506509
+DN-SEZ,no official annotation,83,left_id,7338309
+DN-SEZ,no official annotation,83,left_id,3498479
+RGN,no official annotation,83,left_id,4523584
+RGN,no official annotation,83,left_id,4523803
+RGN,no official annotation,83,left_id,10329208
+DN-SEZ,no official annotation,83,left_id,17776982
+RGN,no official annotation,83,left_id,6978585
+DN-SEZ,no official annotation,83,left_id,6445994
+sensory,gut,83,left_id,13744425
+RGN,no official annotation,83,left_id,12634154
+DN-VNC,no official annotation,83,left_id,7005184
+RGN,no official annotation,83,left_id,3046503
+sensory,gut,83,left_id,2284021
+RGN,no official annotation,83,left_id,10459723
+pre-DN-VNC,no official annotation,84,left_id,12252572
+pre-DN-VNC,PL-18,84,left_id,17105218
+pre-DN-VNC,no official annotation,84,left_id,17383431
+pre-DN-VNC,no official annotation,84,left_id,11303036
+pre-DN-VNC,no official annotation,84,left_id,20421224
+pre-DN-VNC,no official annotation,84,left_id,16635345
+pre-DN-VNC,no official annotation,84,left_id,16992171
+pre-DN-VNC,no official annotation,84,left_id,9237734
+DN-VNC,no official annotation,84,left_id,16562142
+DN-VNC,no official annotation,84,left_id,17053270
+DN-VNC,no official annotation,84,left_id,18485293
+pre-DN-VNC,no official annotation,84,left_id,18267838
+pre-DN-VNC,no official annotation,84,left_id,14241490
+PN-somato,mechano-Ch 2nd_order PN; proprio 2nd_order PN,84,left_id,18106257
+pre-DN-VNC,no official annotation,84,left_id,10240382
+pre-DN-VNC,no official annotation,84,left_id,16547292
+pre-DN-VNC,no official annotation,84,left_id,15525711
+DN-VNC,no official annotation,85,left_id,10921106
+pre-DN-VNC,no official annotation,85,left_id,11625573
+pre-DN-VNC,PL-22,85,left_id,16345627
+pre-DN-VNC,no official annotation,85,left_id,6623089
+pre-DN-VNC,no official annotation,85,left_id,12935706
+pre-DN-VNC,no official annotation,85,left_id,14726012
+pre-DN-VNC,no official annotation,85,left_id,14726069
+pre-DN-VNC,PL-21,85,left_id,14999928
+PN-somato,proprio 2nd_order PN,85,left_id,15028907
+pre-DN-VNC,PL-23,85,left_id,4966994
+pre-DN-VNC,no official annotation,85,left_id,9235545
+DN-VNC,no official annotation,85,left_id,10728328
+pre-DN-VNC,no official annotation,85,left_id,16937395
+pre-DN-VNC,PL-20,85,left_id,9594273
+pre-DN-VNC,no official annotation,85,left_id,16545264
+pre-DN-VNC,no official annotation,85,left_id,15539984
+CN,no official annotation,85,left_id,12928099
+pre-DN-VNC,no official annotation,85,left_id,8025665
+pre-DN-VNC,no official annotation,85,left_id,9961098
+pre-DN-VNC,no official annotation,85,left_id,10248031
+CN,PL-12,85,left_id,9870483
+pre-DN-VNC,no official annotation,85,left_id,10238739
+pre-DN-VNC,no official annotation,85,left_id,13714311
+pre-DN-SEZ,no official annotation,85,left_id,9612903
+pre-DN-VNC,no official annotation,85,left_id,18538744
+pre-DN-VNC,no official annotation,85,left_id,17110007
+PN-somato,noci 2nd_order PN,85,left_id,17108278
+pre-DN-VNC,no official annotation,85,left_id,9714476
+pre-DN-VNC,no official annotation,85,left_id,10447988
+pre-DN-VNC,no official annotation,85,left_id,18566361
+DN-VNC,no official annotation,85,left_id,10728333
+pre-DN-SEZ,no official annotation,86,left_id,9429085
+pre-DN-VNC,no official annotation,86,left_id,5760480
+DN-VNC,no official annotation,86,left_id,17353986
+pre-DN-VNC,no official annotation,86,left_id,8801715
+pre-DN-VNC,no official annotation,86,left_id,12736001
+DN-VNC,no official annotation,86,left_id,14651659
+DN-VNC,no official annotation,86,left_id,7439913
+pre-DN-VNC,no official annotation,86,left_id,16863538
+pre-DN-VNC,no official annotation,86,left_id,16547297
+pre-DN-VNC,no official annotation,86,left_id,12420898
+DN-VNC,PL-19,86,left_id,16561660
+DN-VNC,no official annotation,86,left_id,17075832
+DN-VNC,no official annotation,86,left_id,17358891
+ascending,unknown modality,86,left_id,3564452
+DN-SEZ,no official annotation,86,left_id,20139548
+pre-DN-VNC,no official annotation,87,left_id,15512404
+DN-VNC,no official annotation,87,left_id,1622901
+pre-DN-VNC,no official annotation,87,left_id,11841664
+MB-FBN,FBN-22,87,left_id,10682660
+pre-DN-VNC,no official annotation,87,left_id,11468088
+pre-DN-VNC,no official annotation,87,left_id,12598741
+pre-DN-VNC,no official annotation,87,left_id,15512408
+pre-DN-VNC,no official annotation,87,left_id,7057730
+pre-DN-VNC,no official annotation,87,left_id,16327998
+pre-DN-VNC,no official annotation,87,left_id,16545113
+MB-FFN,FFN-26,87,left_id,7058243
+MB-FBN,FBN-25,87,left_id,5681132
+PN-somato,noci 2nd_order PN,87,left_id,16561284
+MB-FBN,FBN-24,87,left_id,16427492
+pre-DN-VNC,no official annotation,87,left_id,4324567
+DN-VNC,no official annotation,87,left_id,16952691
+pre-DN-VNC,no official annotation,87,left_id,17448356
+DN-VNC,no official annotation,87,left_id,16851577
+PN-somato,proprio 2nd_order PN,87,left_id,16950121
+DN-VNC,no official annotation,87,left_id,17022668
+pre-DN-VNC,no official annotation,87,left_id,16950115
+pre-DN-VNC,no official annotation,87,left_id,15513540
+MB-FBN,FBN-27,87,left_id,5870071
+pre-DN-VNC,no official annotation,87,left_id,9154024
+pre-DN-VNC,no official annotation,87,left_id,16547281
+DN-VNC,no official annotation,88,left_id,13736919
+pre-DN-VNC,no official annotation,88,left_id,16547287
+DN-VNC,no official annotation,88,left_id,18058793
+DN-VNC,no official annotation,88,left_id,17732256
+DN-VNC,no official annotation,88,left_id,17732311
+DN-VNC,no official annotation,88,left_id,16675987
+DN-SEZ,no official annotation,88,left_id,18305476
+DN-SEZ,no official annotation,88,left_id,18695745
+DN-VNC,no official annotation,88,left_id,17777031
+DN-VNC,no official annotation,88,left_id,17736755
+DN-VNC,no official annotation,88,left_id,11013583
+ascending,noci,88,left_id,4206755
+DN-VNC,no official annotation,88,left_id,20556072
+MB-FFN,FFN-36,88,left_id,16972043
+ascending,proprio,88,left_id,8059283
+LN,no official annotation,88,left_id,20172310
+DN-VNC,no official annotation,88,left_id,17736748
+DN-VNC,no official annotation,88,left_id,16952671
+DN-VNC,no official annotation,88,left_id,16952648
+DN-SEZ,no official annotation,88,left_id,7955278
+DN-VNC,no official annotation,89,left_id,16852622
+DN-VNC,no official annotation,89,left_id,16952665
+LN,no official annotation,89,left_id,16856617
+pre-DN-VNC,no official annotation,89,left_id,10473853
+DN-SEZ,no official annotation,89,left_id,10756813
+pre-DN-VNC,no official annotation,89,left_id,11022546
+PN-somato,proprio 2nd_order PN,89,left_id,16856369
+pre-DN-VNC,no official annotation,89,left_id,17360404
+DN-VNC,no official annotation,89,left_id,16670540
+DN-VNC,no official annotation,89,left_id,16952642
+DN-VNC,no official annotation,89,left_id,17736641
+pre-DN-VNC,no official annotation,89,left_id,11876076
+pre-DN-VNC,no official annotation,89,left_id,15516413
+DN-SEZ,no official annotation,89,left_id,17358864
+DN-VNC,no official annotation,89,left_id,18929470
+DN-VNC,no official annotation,89,left_id,18076102
+pre-DN-VNC,no official annotation,89,left_id,19835787
+pre-DN-VNC,no official annotation,89,left_id,15995958
+pre-DN-VNC,no official annotation,89,left_id,4324479
+DN-VNC,no official annotation,89,left_id,17736654
+pre-DN-VNC,no official annotation,89,left_id,13028455
+DN-SEZ,no official annotation,89,left_id,17809869
+pre-DN-VNC,no official annotation,89,left_id,7025831
+MB-FBN,FBN-11,90,left_id,9423829
+DN-VNC,no official annotation,91,left_id,3979181
+pre-DN-VNC,no official annotation,91,left_id,7700444
+DN-VNC,no official annotation,91,left_id,17165755
+CN,no official annotation,91,left_id,9061235
+pre-DN-VNC,PL-13,91,left_id,10964258
+MB-FBN,FB2N-20,91,left_id,11476614
+pre-DN-VNC,no official annotation,91,left_id,15525794
+DN-VNC,no official annotation,91,left_id,15005403
+DN-VNC,no official annotation,91,left_id,16667306
+pre-DN-VNC,no official annotation,91,left_id,4749004
+DN-VNC,no official annotation,91,left_id,16667592
+pre-DN-VNC,no official annotation,91,left_id,16560178
+DN-SEZ,no official annotation,91,left_id,16561224
+pre-DN-SEZ,no official annotation,91,left_id,16852589
+DN-VNC,no official annotation,91,left_id,19361427
+pre-DN-VNC,no official annotation,92,left_id,7025064
+DN-VNC,no official annotation,92,left_id,16851496
+pre-DN-VNC,no official annotation,92,left_id,16851718
+DN-VNC,no official annotation,92,left_id,10553248
+DN-VNC,no official annotation,92,left_id,1678567
+pre-DN-VNC,no official annotation,92,left_id,18551732
+pre-DN-VNC,no official annotation,92,left_id,17454636
+MB-FFN,FFN-38,no cluster,left_id,17015609
+sensory,gustatory-external,no cluster,left_id,15713206
+sensory,gustatory-pharyngeal,no cluster,left_id,15998319
+sensory,gustatory-external,no cluster,left_id,5120990
+sensory,gustatory-pharyngeal,no cluster,left_id,15998913
+sensory,gustatory-pharyngeal,no cluster,left_id,15998899
+sensory,visual,0,right_id,2532841
+sensory,visual,0,right_id,16267292
+sensory,visual,0,right_id,2544902
+sensory,visual,0,right_id,7566199
+sensory,visual,0,right_id,1856512
+sensory,visual,0,right_id,8447845
+sensory,visual,0,right_id,946481
+sensory,visual,0,right_id,902038
+sensory,visual,0,right_id,900032
+sensory,olfactory,1,right_id,3827211
+sensory,olfactory,1,right_id,3790004
+sensory,olfactory,1,right_id,3963891
+sensory,olfactory,1,right_id,3840345
+sensory,olfactory,1,right_id,4073353
+sensory,olfactory,1,right_id,3885215
+sensory,olfactory,1,right_id,3958234
+sensory,olfactory,1,right_id,2608843
+LN,no official annotation,1,right_id,3805641
+sensory,olfactory,1,right_id,3980315
+sensory,olfactory,2,right_id,3893195
+sensory,olfactory,2,right_id,2582391
+sensory,thermo-warm,2,right_id,3985829
+sensory,olfactory,2,right_id,3813723
+sensory,olfactory,2,right_id,7719547
+sensory,olfactory,2,right_id,7658146
+sensory,olfactory,2,right_id,2584838
+sensory,thermo-warm,2,right_id,4023881
+sensory,olfactory,2,right_id,4076389
+sensory,olfactory,2,right_id,3954014
+sensory,olfactory,2,right_id,3896629
+sensory,olfactory,2,right_id,3865952
+sensory,olfactory,2,right_id,2571761
+sensory,olfactory,2,right_id,3872653
+sensory,gustatory-external,3,right_id,15746421
+sensory,gustatory-external,3,right_id,15595950
+LN,no official annotation,3,right_id,7563413
+sensory,gustatory-external,3,right_id,3966683
+sensory,gustatory-external,3,right_id,15652529
+sensory,gustatory-external,3,right_id,15556868
+sensory,gustatory-external,3,right_id,15615042
+sensory,gustatory-external,3,right_id,15588691
+sensory,gustatory-external,3,right_id,15556081
+sensory,gustatory-external,3,right_id,15615589
+sensory,gustatory-external,3,right_id,18625446
+sensory,gustatory-external,3,right_id,15595607
+sensory,gustatory-external,3,right_id,15589411
+PN,gustatory-external 2nd_order PN,3,right_id,11184236
+sensory,gustatory-external,3,right_id,15653288
+sensory,gustatory-pharyngeal,3,right_id,15522777
+DN-SEZ,mPN,3,right_id,14517691
+PN,gustatory-external 2nd_order PN,3,right_id,6220384
+sensory,gustatory-external,3,right_id,15653432
+LN,no official annotation,3,right_id,6219781
+DN-SEZ,no official annotation,3,right_id,16393165
+sensory,gustatory-external,3,right_id,9853425
+sensory,gustatory-external,3,right_id,15609885
+sensory,gustatory-pharyngeal,3,right_id,3199456
+sensory,gustatory-external,4,right_id,15736147
+DN-SEZ,no official annotation,4,right_id,10167116
+DN-SEZ,no official annotation,4,right_id,8159396
+DN-SEZ,no official annotation,4,right_id,13580849
+sensory,gustatory-external,4,right_id,12253020
+DN-SEZ,no official annotation,4,right_id,16586265
+sensory,gustatory-pharyngeal,4,right_id,15506094
+sensory,gustatory-pharyngeal,4,right_id,15592696
+sensory,gustatory-pharyngeal,4,right_id,15507888
+sensory,gustatory-external,4,right_id,16341399
+sensory,gustatory-external,4,right_id,15588800
+DN-SEZ,no official annotation,4,right_id,8227502
+sensory,gustatory-external,4,right_id,10934438
+sensory,gustatory-external,4,right_id,4097554
+sensory,gustatory-external,4,right_id,15595823
+DN-SEZ,no official annotation,4,right_id,17659219
+DN-SEZ,no official annotation,4,right_id,16158918
+sensory,gustatory-external,4,right_id,3071301
+DN-SEZ,no official annotation,4,right_id,2557644
+sensory,gustatory-external,4,right_id,4017089
+sensory,gustatory-external,4,right_id,15651438
+DN-SEZ,no official annotation,4,right_id,9750356
+sensory,gustatory-external,5,right_id,3822523
+sensory,gustatory-external,5,right_id,15589362
+sensory,gustatory-external,5,right_id,15656435
+sensory,gustatory-external,5,right_id,15615081
+sensory,gustatory-external,5,right_id,15615776
+sensory,gustatory-external,5,right_id,4096703
+DN-SEZ,no official annotation,5,right_id,5558724
+DN-SEZ,no official annotation,5,right_id,12335381
+sensory,gustatory-pharyngeal,5,right_id,15409328
+DN-SEZ,PL-1,5,right_id,5478818
+sensory,thermo-cold,5,right_id,3487306
+sensory,thermo-cold,5,right_id,18630153
+sensory,gustatory-pharyngeal,5,right_id,15541976
+sensory,gustatory-pharyngeal,5,right_id,15639171
+sensory,gustatory-pharyngeal,5,right_id,15531033
+sensory,gustatory-pharyngeal,5,right_id,15640893
+sensory,gustatory-pharyngeal,5,right_id,15530882
+sensory,gustatory-pharyngeal,5,right_id,15531916
+sensory,gustatory-pharyngeal,5,right_id,15525858
+sensory,gustatory-pharyngeal,5,right_id,16341507
+DN-SEZ,no official annotation,5,right_id,19054481
+sensory,gustatory-pharyngeal,5,right_id,15573283
+sensory,gustatory-pharyngeal,5,right_id,16341966
+sensory,gustatory-pharyngeal,5,right_id,15458316
+DN-SEZ,no official annotation,5,right_id,17529547
+sensory,gustatory-pharyngeal,5,right_id,15434200
+sensory,gustatory-pharyngeal,5,right_id,18620885
+sensory,gustatory-pharyngeal,5,right_id,15398807
+sensory,gustatory-external,5,right_id,5448622
+sensory,gustatory-pharyngeal,5,right_id,3795498
+sensory,gustatory-pharyngeal,5,right_id,15461769
+sensory,gustatory-pharyngeal,5,right_id,15451084
+DN-SEZ,no official annotation,5,right_id,869360
+sensory,gustatory-pharyngeal,5,right_id,15573331
+DN-SEZ,no official annotation,5,right_id,6219445
+sensory,gustatory-pharyngeal,5,right_id,15639020
+DN-SEZ,no official annotation,5,right_id,16057212
+sensory,thermo-cold,5,right_id,3650600
+sensory,gustatory-pharyngeal,5,right_id,3123905
+DN-SEZ,no official annotation,5,right_id,10221622
+DN-SEZ,no official annotation,5,right_id,5559657
+DN-SEZ,no official annotation,5,right_id,16463097
+sensory,gustatory-external,6,right_id,15658013
+sensory,gustatory-pharyngeal,6,right_id,7160160
+sensory,gustatory-pharyngeal,6,right_id,15641926
+sensory,gustatory-pharyngeal,6,right_id,15533421
+sensory,gustatory-external,6,right_id,8810739
+sensory,gut,6,right_id,15547732
+sensory,gustatory-external,6,right_id,16115501
+sensory,gustatory-pharyngeal,6,right_id,15645825
+sensory,gustatory-external,6,right_id,15653927
+sensory,gustatory-external,7,right_id,15762568
+sensory,gustatory-external,7,right_id,15615475
+sensory,gustatory-external,7,right_id,15620606
+sensory,gustatory-external,7,right_id,15629241
+sensory,gustatory-external,7,right_id,18679889
+sensory,gustatory-external,7,right_id,15594123
+sensory,gustatory-pharyngeal,7,right_id,15505837
+sensory,gustatory-pharyngeal,7,right_id,15672153
+sensory,gustatory-pharyngeal,7,right_id,15639275
+sensory,gustatory-external,7,right_id,15618976
+sensory,gustatory-pharyngeal,7,right_id,15637893
+sensory,gustatory-pharyngeal,7,right_id,15671848
+sensory,gustatory-pharyngeal,7,right_id,15638520
+sensory,gustatory-external,7,right_id,15620432
+sensory,gustatory-external,7,right_id,15743905
+sensory,gustatory-pharyngeal,7,right_id,16362243
+sensory,visual,8,right_id,766246
+sensory,visual,8,right_id,902877
+PN,gustatory-external 2nd_order PN,8,right_id,3848843
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,8,right_id,6252764
+sensory,visual,8,right_id,7778722
+sensory,visual,8,right_id,7485368
+PN,gustatory-pharyngeal 2nd_order PN,8,right_id,11838242
+sensory,gustatory-external,9,right_id,4059758
+sensory,gustatory-pharyngeal,9,right_id,15640548
+sensory,gustatory-external,9,right_id,4030526
+sensory,gut,9,right_id,15748726
+DN-SEZ,no official annotation,9,right_id,865151
+sensory,gut,9,right_id,15542354
+sensory,gustatory-external,9,right_id,15638742
+sensory,gut,9,right_id,15576194
+sensory,gut,9,right_id,15564911
+sensory,gustatory-external,9,right_id,15617459
+sensory,gustatory-pharyngeal,9,right_id,15640425
+sensory,gut,9,right_id,15574508
+sensory,gut,9,right_id,15575052
+sensory,gustatory-external,9,right_id,15607180
+sensory,gut,9,right_id,15575232
+sensory,gustatory-external,9,right_id,18833414
+LN,no official annotation,10,right_id,10831005
+LN,no official annotation,10,right_id,4247099
+LN,no official annotation,10,right_id,8199671
+LN,no official annotation,10,right_id,8198513
+LN,_broad D1,10,right_id,8198416
+LN,no official annotation,10,right_id,3806573
+LN,no official annotation,10,right_id,8198317
+LN,no official annotation,10,right_id,6557581
+LN,no official annotation,10,right_id,11051276
+LN,no official annotation,10,right_id,8198238
+LN,no official annotation,10,right_id,5247102
+LN,no official annotation,10,right_id,7600311
+LN,no official annotation,10,right_id,8231264
+PN,mPN; mPN iACT bilateral UPPER; Multiglomerular PN 1; mPN; olfactory 2nd_order PN; thermo-warm 2nd_order PN,10,right_id,16795524
+DN-SEZ,FFN-39,10,right_id,4116174
+sensory,gustatory-pharyngeal,11,right_id,15639548
+sensory,gustatory-external,11,right_id,15612241
+sensory,gustatory-pharyngeal,11,right_id,15640567
+sensory,gustatory-pharyngeal,11,right_id,15914721
+sensory,gustatory-external,11,right_id,15618756
+sensory,gut,11,right_id,15572414
+sensory,gut,11,right_id,15564782
+sensory,gustatory-pharyngeal,11,right_id,15672957
+sensory,gustatory-external,11,right_id,15671481
+sensory,gustatory-external,11,right_id,15615877
+sensory,gustatory-external,11,right_id,3562954
+sensory,gustatory-pharyngeal,11,right_id,15445198
+PN,33a PN; uPN; olfactory 2nd_order PN,12,right_id,13589251
+PN,45a PN; uPN; olfactory 2nd_order PN,12,right_id,8247451
+PN,74a PN; uPN; olfactory 2nd_order PN,12,right_id,8140109
+PN,85c PN; uPN; olfactory 2nd_order PN,12,right_id,14604028
+PN,59a PN; uPN; olfactory 2nd_order PN,12,right_id,8245014
+PN,94a&94b PN; uPN; olfactory 2nd_order PN,12,right_id,4651929
+PN,67b PN; uPN; olfactory 2nd_order PN,12,right_id,8246081
+PN,22c PN; uPN; olfactory 2nd_order PN,12,right_id,8248631
+PN,24a PN; uPN; olfactory 2nd_order PN,12,right_id,8245869
+PN,1a PN; uPN; olfactory 2nd_order PN,12,right_id,8252067
+PN,83a PN; uPN; olfactory 2nd_order PN,12,right_id,8243455
+PN,13a PN; uPN; olfactory 2nd_order PN,12,right_id,8244823
+PN,45b PN; uPN; olfactory 2nd_order PN,12,right_id,8253413
+PN,42b PN; uPN; olfactory 2nd_order PN,12,right_id,8245692
+PN,30a PN; uPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN,12,right_id,8256186
+PN,35a PN; uPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,12,right_id,7935088
+PN,42a PN; uPN; olfactory 2nd_order PN,12,right_id,8244723
+PN,49a PN; uPN; olfactory 2nd_order PN,12,right_id,11279244
+PN,47a&33b PN; uPN; olfactory 2nd_order PN,12,right_id,8246750
+PN,82a PN; uPN; olfactory 2nd_order PN,12,right_id,8245146
+PN,63a PN; uPN; olfactory 2nd_order PN,12,right_id,8245513
+sensory,gut,13,right_id,945309
+sensory,gustatory-external,13,right_id,15609427
+DN-SEZ,no official annotation,13,right_id,17698681
+sensory,gustatory-pharyngeal,13,right_id,18785124
+sensory,gustatory-external,13,right_id,15629355
+sensory,gustatory-external,13,right_id,15611642
+sensory,gustatory-external,13,right_id,15611791
+ascending,mechano-Ch,14,right_id,2784471
+pre-DN-VNC,no official annotation,14,right_id,21591037
+PN-somato,mechano-Ch 2nd_order PN,14,right_id,8942413
+pre-DN-VNC,no official annotation,14,right_id,21590958
+pre-DN-VNC,no official annotation,14,right_id,17360225
+PN-somato,noci 2nd_order PN,14,right_id,1141813
+PN-somato,noci 2nd_order PN,14,right_id,8821758
+pre-DN-SEZ,no official annotation,14,right_id,10663559
+pre-DN-VNC,no official annotation,14,right_id,16666673
+PN-somato,mechano-Ch 2nd_order PN,14,right_id,2885630
+ascending,mechano-Ch,14,right_id,10937355
+PN-somato,mechano-Ch 2nd_order PN,14,right_id,5545085
+DN-SEZ,mPN,15,right_id,10158972
+DN-SEZ,no official annotation,15,right_id,17355872
+DN-SEZ,no official annotation,15,right_id,13968203
+DN-SEZ,mPN,15,right_id,3806652
+sensory,gustatory-pharyngeal,16,right_id,3192952
+DN-SEZ,no official annotation,16,right_id,17355892
+sensory,gut,16,right_id,15567466
+sensory,gustatory-pharyngeal,16,right_id,15638968
+sensory,gut,16,right_id,18231999
+sensory,gut,16,right_id,15587166
+sensory,gut,16,right_id,15564882
+sensory,gut,16,right_id,15564661
+sensory,gut,16,right_id,17951153
+sensory,gut,16,right_id,15546924
+sensory,gut,16,right_id,15569561
+PN,Gustatory PN 2; gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,17,right_id,13789482
+LN,no official annotation,17,right_id,4620453
+LN,Thermo PN 2,17,right_id,9291474
+PN,Unknown PN 2; gustatory-external 2nd_order PN,17,right_id,8254894
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,17,right_id,3814635
+PN,gustatory-external 2nd_order PN,17,right_id,4983938
+PN,Gustatory PN 4; gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,17,right_id,4393049
+PN,Thermo PN 4; tPN; thermo-cold 2nd_order PN,17,right_id,3690921
+PN,Thermo PN 3; tPN; thermo-cold 2nd_order PN,17,right_id,9747710
+PN,Gustatory PN 1; gustatory-external 2nd_order PN,17,right_id,17884299
+PN-somato,mechano-Ch 2nd_order PN,18,right_id,16574328
+PN-somato,noci 2nd_order PN,18,right_id,9621307
+PN-somato,noci 2nd_order PN,18,right_id,6692908
+PN-somato,noci 2nd_order PN,18,right_id,8697453
+PN-somato,noci 2nd_order PN,18,right_id,2881070
+PN-somato,mechano-Ch 2nd_order PN,18,right_id,21591033
+PN-somato,mechano-Ch 2nd_order PN,18,right_id,20278329
+PN-somato,noci 2nd_order PN,18,right_id,4393350
+PN-somato,noci 2nd_order PN,18,right_id,17654624
+PN-somato,mechano-Ch 2nd_order PN,18,right_id,2846555
+PN-somato,mechano-Ch 2nd_order PN,18,right_id,8641784
+PN-somato,mechano-Ch 2nd_order PN,18,right_id,12884490
+pre-DN-SEZ,no official annotation,18,right_id,14759661
+PN-somato,mechano-Ch 2nd_order PN,18,right_id,15684934
+pre-DN-SEZ,no official annotation,18,right_id,3182103
+PN-somato,mechano-Ch 2nd_order PN,18,right_id,17541953
+PN-somato,noci 2nd_order PN,18,right_id,18655517
+PN-somato,mechano-Ch 2nd_order PN,18,right_id,15668869
+PN-somato,mechano-Ch 2nd_order PN,18,right_id,1137946
+ascending,noci,18,right_id,9640873
+pre-DN-VNC,no official annotation,18,right_id,7449767
+DN-VNC,no official annotation,18,right_id,8880781
+PN-somato,mechano-Ch 2nd_order PN,18,right_id,10403609
+PN-somato,mechano-Ch 2nd_order PN,18,right_id,10683313
+PN-somato,mechano-Ch 2nd_order PN,18,right_id,2911847
+PN-somato,noci 2nd_order PN,18,right_id,8970595
+ascending,mechano-Ch,18,right_id,8198913
+pre-DN-VNC,no official annotation,19,right_id,17658672
+pre-DN-SEZ,no official annotation,19,right_id,3180681
+PN-somato,noci 2nd_order PN,19,right_id,9161929
+sensory,respiratory,20,right_id,10852875
+DN-SEZ,no official annotation,20,right_id,858479
+sensory,gut,20,right_id,15561413
+sensory,gut,20,right_id,15574328
+sensory,gut,20,right_id,15548694
+sensory,gut,20,right_id,9716858
+sensory,gut,20,right_id,15563553
+sensory,gut,20,right_id,15562137
+sensory,gut,20,right_id,6883831
+sensory,respiratory,20,right_id,891237
+sensory,gut,20,right_id,15573450
+sensory,respiratory,20,right_id,11291344
+sensory,gut,21,right_id,15586536
+sensory,gut,21,right_id,15573381
+sensory,gut,21,right_id,15564807
+sensory,gut,21,right_id,15575327
+sensory,respiratory,21,right_id,4061049
+sensory,respiratory,21,right_id,12178825
+PN,gut 2nd_order PN,21,right_id,2432564
+sensory,respiratory,21,right_id,5382876
+sensory,gut,21,right_id,15543394
+sensory,gustatory-pharyngeal,21,right_id,15640724
+sensory,respiratory,21,right_id,7331555
+sensory,respiratory,21,right_id,19037563
+pre-DN-VNC,no official annotation,22,right_id,11714576
+DN-SEZ,no official annotation,22,right_id,16884962
+PN,LHN-22; CN-58; gustatory-external 2nd_order PN,22,right_id,8069432
+PN,mPN; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN,22,right_id,10990803
+PN,mPN; mPN seahorse; mPN; olfactory 2nd_order PN,22,right_id,4324898
+PN,mPN; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,22,right_id,7503199
+PN,mPN; Multiglomerular PN 3; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,22,right_id,4391978
+PN,mPN; mPN D; mPN; olfactory 2nd_order PN,22,right_id,3538129
+PN,LHN-19; CN-55; gustatory-external 2nd_order PN,22,right_id,4311586
+PN,FFN-30; gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,22,right_id,1591351
+PN,mPN; mPN iACT B3; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN,22,right_id,16735586
+pre-DN-SEZ,mPN,22,right_id,14154154
+PN,mPN; FFN-21; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN; thermo-warm 2nd_order PN,22,right_id,4327684
+PN,PN; gustatory-external 2nd_order PN,22,right_id,13858824
+pre-DN-VNC,no official annotation,22,right_id,6143930
+LN,no official annotation,22,right_id,18598859
+PN,mPN; mPN iACT B2; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN; thermo-warm 2nd_order PN,22,right_id,4700078
+PN,mPN; Multiglomerular PN 5; olfactory 2nd_order PN; gustatory-external 2nd_order PN,22,right_id,10160250
+PN,mPN; mPN iACT A2; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,22,right_id,4679139
+LN,no official annotation,22,right_id,8812078
+PN,mPN; mPN iACT bilateral LOWER; Multiglomerular PN 2; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN,22,right_id,11543212
+ascending,unknown modality,23,right_id,8257672
+ascending,mechano-Ch,23,right_id,14531828
+pre-DN-VNC,no official annotation,23,right_id,19857577
+DN-SEZ,no official annotation,23,right_id,7573476
+DN-VNC,no official annotation,23,right_id,11905911
+sensory,respiratory,23,right_id,7627878
+ascending,unknown modality,23,right_id,16278312
+ascending,noci,23,right_id,5108525
+sensory,visual,23,right_id,2552701
+ascending,mechano-Ch,23,right_id,7184082
+DN-VNC,no official annotation,23,right_id,6125806
+ascending,A00c_a5; noci,23,right_id,2619565
+pre-DN-VNC,no official annotation,23,right_id,10959064
+sensory,visual,23,right_id,7555204
+ascending,unknown modality,23,right_id,10949030
+sensory,visual,23,right_id,7568455
+sensory,gustatory-external,24,right_id,15610387
+sensory,gut,24,right_id,15564706
+sensory,gut,24,right_id,15574941
+DN-SEZ,no official annotation,24,right_id,3732322
+sensory,gut,24,right_id,9748269
+sensory,gustatory-external,24,right_id,15615305
+DN-SEZ,no official annotation,24,right_id,15599768
+DN-SEZ,no official annotation,24,right_id,4541081
+sensory,gustatory-external,24,right_id,15606918
+sensory,gustatory-pharyngeal,24,right_id,15532105
+sensory,gut,24,right_id,16442344
+sensory,gut,24,right_id,15543068
+DN-SEZ,no official annotation,24,right_id,10263287
+LN,no official annotation,25,right_id,7897051
+DN-VNC,no official annotation,25,right_id,7589765
+LN,no official annotation,25,right_id,8480418
+PN,Pdf-LaNs; visual 2nd_order PN,25,right_id,2775943
+PN,Pdf-LaNs; visual 2nd_order PN,25,right_id,2775707
+PN,Pdf-LaNs; visual 2nd_order PN,25,right_id,7874184
+PN,Thermo PN 7; tPN; thermo-cold 2nd_order PN,25,right_id,3002410
+RGN,no official annotation,25,right_id,12704360
+PN,Pdf-LaNs; visual 2nd_order PN,25,right_id,2512602
+LN,no official annotation,25,right_id,8247641
+PN-somato,noci 2nd_order PN,26,right_id,8805777
+pre-DN-VNC,no official annotation,26,right_id,11271082
+pre-DN-SEZ,no official annotation,26,right_id,8979434
+pre-DN-VNC,no official annotation,26,right_id,15023987
+LHN,noci 2nd_order PN,26,right_id,9637388
+LHN,noci 2nd_order PN; mechano-Ch 2nd_order PN,26,right_id,17777259
+PN-somato,mechano-Ch 2nd_order PN,26,right_id,16433177
+PN-somato,noci 2nd_order PN,26,right_id,9530532
+PN-somato,Tel5; noci 2nd_order PN,27,right_id,20443420
+PN-somato,noci 2nd_order PN,27,right_id,9202326
+PN-somato,noci 2nd_order PN; mechano-Ch 2nd_order PN,27,right_id,8229118
+pre-DN-VNC,no official annotation,27,right_id,13841523
+pre-DN-VNC,no official annotation,27,right_id,2772093
+PN-somato,mechano-Ch 2nd_order PN,27,right_id,15679639
+PN-somato,noci 2nd_order PN; mechano-Ch 2nd_order PN,27,right_id,9241349
+pre-DN-VNC,no official annotation,27,right_id,10725068
+PN-somato,mechano-Ch 2nd_order PN,27,right_id,4130960
+PN-somato,mechano-Ch 2nd_order PN,27,right_id,11029851
+PN-somato,mechano-Ch 2nd_order PN,27,right_id,14762026
+PN-somato,noci 2nd_order PN; mechano-Ch 2nd_order PN,27,right_id,9422291
+LHN,no official annotation,28,right_id,8670503
+PN,Thermo PN 5; tPN; thermo-cold 2nd_order PN,28,right_id,3756659
+LHN,no official annotation,28,right_id,10293348
+LN,no official annotation,28,right_id,2776773
+PN,vPN; visual 2nd_order PN,28,right_id,8717219
+LHN,no official annotation,28,right_id,4127707
+PN,PN; tPN; gustatory-external 2nd_order PN; thermo-cold 2nd_order PN,28,right_id,3869488
+LHN,Thermo PN 1; Thermo PN 6,28,right_id,7971031
+LN,no official annotation,28,right_id,2921933
+LHN,no official annotation,28,right_id,8842220
+LN,Thermo PN 1; Thermo PN 6,28,right_id,9275210
+LHN,no official annotation,28,right_id,8138616
+LN,no official annotation,28,right_id,21664445
+LN,no official annotation,28,right_id,9808146
+LHN,no official annotation,28,right_id,17360593
+LN,no official annotation,28,right_id,4101295
+LHN,no official annotation,28,right_id,2914206
+pre-DN-SEZ,no official annotation,28,right_id,8943485
+LHN,no official annotation,28,right_id,9291938
+PN,Gustatory PN 3; gustatory-external 2nd_order PN,28,right_id,7020344
+PN,mPN; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN,29,right_id,16515871
+KC,KC,30,right_id,9766793
+KC,KC,30,right_id,7868195
+KC,KC,30,right_id,4444354
+KC,KC,30,right_id,5836206
+KC,KC,30,right_id,10056280
+KC,KC,30,right_id,8066542
+KC,KC,30,right_id,4230739
+KC,KC,30,right_id,4230061
+KC,KC,30,right_id,16850888
+KC,KC,30,right_id,5836197
+KC,KC,30,right_id,4227304
+KC,KC,30,right_id,7786053
+KC,KC,30,right_id,5836163
+KC,KC,30,right_id,9609048
+KC,KC,30,right_id,9556700
+KC,KC,30,right_id,11813287
+KC,KC,30,right_id,3347708
+KC,KC,30,right_id,5835799
+KC,KC,30,right_id,4241192
+KC,KC,30,right_id,8413663
+KC,KC,30,right_id,5836035
+KC,KC,30,right_id,5051342
+KC,KC,30,right_id,5019924
+KC,KC,30,right_id,9796812
+KC,KC,30,right_id,8850802
+pre-DN-VNC,no official annotation,31,right_id,9643439
+pre-DN-VNC,no official annotation,31,right_id,1591270
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,31,right_id,17654617
+LHN,no official annotation,31,right_id,5585799
+PN-somato,noci 2nd_order PN,31,right_id,17326218
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,31,right_id,11788830
+LHN,no official annotation,31,right_id,16131474
+pre-DN-VNC,no official annotation,31,right_id,16335254
+PN,vPN; visual 2nd_order PN,31,right_id,8124177
+LHN,no official annotation,31,right_id,8349553
+DN-SEZ,no official annotation,31,right_id,5038920
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,31,right_id,15829660
+pre-DN-SEZ,no official annotation,31,right_id,15636958
+PN,gustatory-external 2nd_order PN,31,right_id,3844961
+LHN,LHN-14; CN-50,32,right_id,3913629
+PN,mPN; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN,32,right_id,10167078
+LHN,CN-1,32,right_id,16070049
+LN,Multiglomerular PN 4; LHN-11; CN-47,32,right_id,16485079
+LN,no official annotation,32,right_id,3913613
+PN,vPN; visual 2nd_order PN,32,right_id,9539868
+LHN,LHN-15; CN-51,32,right_id,13803032
+LN,CN-2,32,right_id,17822238
+LN,LHN-6,32,right_id,16295025
+LHN,no official annotation,32,right_id,8177199
+LN,LHN-10; CN-46,32,right_id,11178891
+PN,mPN; Multiglomerular PN 7; mPN; olfactory 2nd_order PN; gustatory-external 2nd_order PN; thermo-warm 2nd_order PN,32,right_id,4119387
+PN,vPN; visual 2nd_order PN,32,right_id,8270683
+LN,LHN-13; CN-49,32,right_id,17671219
+LHN,LHN-9; CN-45,32,right_id,13858797
+LHN,LHN-21; CN-57,32,right_id,8565131
+LHN,no official annotation,32,right_id,15588389
+KC,KC,33,right_id,9531722
+KC,KC,33,right_id,5835815
+KC,KC,33,right_id,5836387
+KC,KC,33,right_id,4414426
+KC,KC,33,right_id,7690945
+KC,KC,33,right_id,7828725
+KC,KC,33,right_id,7829784
+KC,KC,33,right_id,7840203
+KC,KC,33,right_id,7891312
+KC,KC,33,right_id,3587612
+KC,KC,33,right_id,8274902
+KC,KC,33,right_id,8891315
+KC,KC,33,right_id,9525492
+KC,KC,33,right_id,5836181
+KC,KC,33,right_id,9809626
+KC,KC,33,right_id,9813188
+KC,KC,33,right_id,9889095
+KC,KC,33,right_id,8559607
+KC,KC,34,right_id,9897223
+LN,PL-5,35,right_id,2920554
+pre-DN-SEZ,no official annotation,35,right_id,15639331
+LHN,no official annotation,35,right_id,9585145
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,35,right_id,12842593
+PN,FFN-37; gustatory-pharyngeal 2nd_order PN,35,right_id,5592307
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,35,right_id,16188942
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,35,right_id,16297403
+PN-somato,noci 2nd_order PN,35,right_id,4128002
+KC,KC,36,right_id,16720240
+pre-DN-VNC,no official annotation,37,right_id,18302665
+PN,gustatory-external 2nd_order PN,37,right_id,6218461
+ascending,unknown modality,37,right_id,19718010
+LHN,no official annotation,37,right_id,13722516
+LHN,no official annotation,38,right_id,8723267
+CN,no official annotation,38,right_id,17380092
+LHN,no official annotation,38,right_id,4108720
+LHN,no official annotation,38,right_id,17591687
+pre-DN-SEZ,no official annotation,38,right_id,17671375
+LHN,no official annotation,38,right_id,9291437
+LHN,no official annotation,38,right_id,18292832
+LHN,LHN-1,38,right_id,13986583
+LHN,no official annotation,38,right_id,3930411
+PN,gustatory-external 2nd_order PN,38,right_id,19276024
+LN,no official annotation,38,right_id,9800178
+LHN,no official annotation,38,right_id,18220289
+LHN,no official annotation,38,right_id,5507096
+LHN,LHN-5,38,right_id,13986477
+LHN,no official annotation,38,right_id,11248536
+DN-VNC,no official annotation,38,right_id,8741619
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,38,right_id,16457812
+pre-DN-VNC,no official annotation,38,right_id,15638932
+LHN,no official annotation,38,right_id,8705088
+pre-DN-VNC,no official annotation,38,right_id,17913032
+MB-FFN,FFN-19,38,right_id,8135412
+LHN,no official annotation,38,right_id,4319395
+DN-SEZ,no official annotation,38,right_id,9761454
+LHN,no official annotation,38,right_id,17896997
+PN,Vision PN 1; vPN; visual 2nd_order PN,38,right_id,7555968
+PN,gustatory-pharyngeal 2nd_order PN,38,right_id,13173311
+LHN,no official annotation,38,right_id,2932028
+LN,PL-4,38,right_id,2920061
+LHN,no official annotation,38,right_id,8813113
+LN,no official annotation,38,right_id,4102413
+LHN,no official annotation,38,right_id,16260741
+LHN,no official annotation,38,right_id,3815483
+KC,KC,39,right_id,4227544
+KC,KC,40,right_id,4229950
+KC,KC,40,right_id,8068173
+KC,KC,40,right_id,3664102
+KC,KC,40,right_id,4415241
+LHN,no official annotation,41,right_id,15683275
+LN,CN-5,41,right_id,17591442
+LHN,LHN-2,41,right_id,11210000
+LN,no official annotation,41,right_id,11645541
+KC,KC,42,right_id,7196392
+KC,KC,42,right_id,7838405
+KC,KC,42,right_id,9847388
+KC,KC,42,right_id,29
+KC,KC,42,right_id,3497901
+KC,KC,42,right_id,3347834
+KC,KC,42,right_id,10259967
+KC,KC,42,right_id,8835968
+KC,KC,42,right_id,8997281
+KC,KC,42,right_id,8924186
+KC,KC,42,right_id,9730873
+KC,KC,42,right_id,8419602
+LHN,no official annotation,43,right_id,2963280
+LHN,LHN-8,43,right_id,3814853
+LHN,mechano-Ch 2nd_order PN,43,right_id,15605987
+PN-somato,FFN-29; noci 2nd_order PN,43,right_id,9507904
+CN,no official annotation,43,right_id,15676571
+LHN,no official annotation,43,right_id,3932136
+pre-DN-VNC,no official annotation,44,right_id,10855798
+PN,gustatory-external 2nd_order PN,44,right_id,17587452
+PN,gustatory-external 2nd_order PN,44,right_id,13634759
+PN,gustatory-external 2nd_order PN,44,right_id,17819985
+CN,no official annotation,44,right_id,3232277
+DN-SEZ,no official annotation,44,right_id,15334461
+LHN,no official annotation,44,right_id,3232808
+CN,no official annotation,44,right_id,10946002
+DN-VNC,no official annotation,44,right_id,19508873
+PN,gustatory-external 2nd_order PN,44,right_id,15547235
+LHN,no official annotation,44,right_id,8698941
+CN,no official annotation,44,right_id,13665529
+pre-DN-VNC,no official annotation,44,right_id,20443501
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,44,right_id,5591201
+PN,gustatory-external 2nd_order PN,44,right_id,11157622
+pre-DN-VNC,no official annotation,44,right_id,15589591
+pre-DN-VNC,no official annotation,44,right_id,9565674
+PN,gustatory-external 2nd_order PN,44,right_id,12612426
+pre-DN-VNC,no official annotation,44,right_id,16223688
+DN-SEZ,no official annotation,44,right_id,16316981
+CN,no official annotation,44,right_id,5791548
+PN,gustatory-external 2nd_order PN,44,right_id,10013517
+LHN,noci 2nd_order PN,46,right_id,7719118
+pre-DN-VNC,no official annotation,46,right_id,7467027
+PN-somato,noci 2nd_order PN,46,right_id,9720614
+PN-somato,noci 2nd_order PN,46,right_id,3862443
+pre-DN-VNC,no official annotation,46,right_id,11081239
+PN-somato,noci 2nd_order PN,46,right_id,8412625
+pre-DN-VNC,no official annotation,46,right_id,5134110
+MB-FFN,FFN-33,46,right_id,9798791
+PN-somato,mechano-Ch 2nd_order PN,46,right_id,17654638
+pre-DN-VNC,no official annotation,46,right_id,18639459
+pre-DN-VNC,no official annotation,46,right_id,8461082
+MB-FFN,FFN-34,47,right_id,8689148
+LHN,no official annotation,47,right_id,8711574
+LHN,LHN-18; CN-54,47,right_id,17125520
+LHN,no official annotation,47,right_id,17379372
+LHN,CN-29,47,right_id,8065771
+LHN,no official annotation,47,right_id,9585036
+MB-FBN,FBN-18,47,right_id,17437719
+LHN,LHN-17; CN-53,47,right_id,8069478
+LHN,LHN-4; PL-2; noci 2nd_order PN,47,right_id,17806341
+LHN,no official annotation,47,right_id,17952967
+pre-DN-VNC,_Two-headed cobra,47,right_id,19046339
+PN-somato,noci 2nd_order PN,47,right_id,17425996
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,47,right_id,3844799
+LHN,CN-3,47,right_id,11137808
+CN,CN-40,47,right_id,13988443
+CN,no official annotation,47,right_id,13806524
+MB-FFN,FFN-32,47,right_id,17107661
+LHN,no official annotation,47,right_id,11605861
+LHN,no official annotation,47,right_id,17942676
+MB-FFN,FFN-31,47,right_id,17847543
+LHN,CN-27,47,right_id,12813847
+pre-DN-VNC,no official annotation,48,right_id,7422253
+pre-DN-VNC,no official annotation,48,right_id,7429933
+pre-DN-VNC,no official annotation,48,right_id,4127926
+pre-DN-SEZ,no official annotation,48,right_id,13049485
+KC,KC,49,right_id,10169396
+KC,KC,49,right_id,8504660
+KC,KC,49,right_id,8427677
+KC,KC,49,right_id,16625432
+KC,KC,49,right_id,4982172
+KC,KC,49,right_id,9707941
+KC,KC,49,right_id,8509987
+KC,KC,49,right_id,677717
+KC,KC,49,right_id,3522293
+pre-DN-VNC,no official annotation,50,right_id,5700090
+pre-DN-VNC,no official annotation,50,right_id,11050498
+LHN,no official annotation,50,right_id,16399845
+pre-DN-VNC,no official annotation,50,right_id,17378483
+pre-DN-VNC,no official annotation,50,right_id,15632120
+pre-DN-VNC,no official annotation,50,right_id,15638906
+pre-DN-VNC,no official annotation,50,right_id,12548756
+pre-DN-VNC,no official annotation,50,right_id,17380080
+PN-somato,mechano-Ch 2nd_order PN,50,right_id,5946241
+LHN,no official annotation,50,right_id,9811608
+DN-VNC,no official annotation,50,right_id,3009700
+LHN,no official annotation,50,right_id,17123466
+pre-DN-VNC,no official annotation,50,right_id,3149791
+pre-DN-VNC,no official annotation,50,right_id,10627239
+sensory,respiratory,51,right_id,9503203
+DN-SEZ,no official annotation,51,right_id,13167025
+pre-DN-VNC,no official annotation,52,right_id,8696919
+pre-DN-VNC,no official annotation,52,right_id,15655801
+DN-SEZ,no official annotation,52,right_id,10947427
+DN-VNC,no official annotation,52,right_id,3595837
+ascending,mechano-Ch,52,right_id,16945771
+DN-SEZ,no official annotation,52,right_id,11261332
+DN-VNC,no official annotation,52,right_id,10945795
+RGN,no official annotation,52,right_id,13751194
+DN-VNC,no official annotation,52,right_id,16115575
+PN-somato,noci 2nd_order PN,52,right_id,10198121
+PN-somato,noci 2nd_order PN,52,right_id,8939384
+pre-DN-VNC,no official annotation,52,right_id,11623145
+pre-DN-VNC,no official annotation,52,right_id,17654645
+PN-somato,Tel10; noci 2nd_order PN,52,right_id,10319019
+DN-SEZ,no official annotation,52,right_id,2655798
+DN-VNC,no official annotation,52,right_id,5512988
+pre-DN-VNC,no official annotation,52,right_id,14757050
+DN-VNC,no official annotation,52,right_id,10945111
+ascending,A00c_a4; noci,52,right_id,3093284
+pre-DN-VNC,no official annotation,52,right_id,17362538
+RGN,no official annotation,52,right_id,5890323
+DN-SEZ,no official annotation,52,right_id,15250080
+DN-VNC,no official annotation,52,right_id,3598000
+LN,no official annotation,52,right_id,8271034
+pre-DN-VNC,no official annotation,52,right_id,5503982
+pre-DN-VNC,no official annotation,52,right_id,18302610
+DN-SEZ,no official annotation,52,right_id,7982324
+DN-VNC,no official annotation,52,right_id,5993765
+ascending,A00c_a6; noci,52,right_id,1690576
+DN-VNC,no official annotation,52,right_id,6114695
+sensory,gustatory-pharyngeal,52,right_id,15541944
+LN,no official annotation,52,right_id,17654634
+pre-DN-VNC,PL-7,52,right_id,3058132
+DN-SEZ,no official annotation,52,right_id,11941255
+DN-SEZ,no official annotation,52,right_id,4215611
+DN-SEZ,no official annotation,52,right_id,2670619
+DN-VNC,no official annotation,52,right_id,16571210
+LN,no official annotation,53,right_id,17525174
+LHN,no official annotation,53,right_id,8307514
+CN,no official annotation,53,right_id,9641919
+LHN,no official annotation,53,right_id,7431625
+LHN,no official annotation,53,right_id,11826171
+LHN,no official annotation,53,right_id,8305958
+MB-FFN,FFN-13,53,right_id,7421507
+pre-DN-VNC,no official annotation,53,right_id,17658884
+LHN,no official annotation,53,right_id,7977834
+MB-FBN,FB2N-4,53,right_id,9457719
+LHN,no official annotation,53,right_id,4099900
+LHN,no official annotation,53,right_id,18142558
+LHN,no official annotation,53,right_id,4101621
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,53,right_id,13795090
+LHN,no official annotation,53,right_id,9585013
+LHN,LHN-16; CN-52,53,right_id,16181377
+MB-FBN,FB2N-9,53,right_id,4114133
+MB-FFN,FFN-11,53,right_id,19857573
+LHN,no official annotation,53,right_id,13369670
+PN,gustatory-external 2nd_order PN; gustatory-pharyngeal 2nd_order PN,53,right_id,5590611
+LHN,CN-15,53,right_id,8310087
+LHN,no official annotation,53,right_id,17013169
+LHN,LHN-3,53,right_id,8847957
+PN,FFN-4; FFN-5; gustatory-pharyngeal 2nd_order PN; gut 2nd_order PN; respiratory 2nd_order PN; mechano-II/III 2nd_order PN,54,right_id,11637003
+PN,FFN-18; gustatory-pharyngeal 2nd_order PN; gut 2nd_order PN,54,right_id,3622234
+PN,gut 2nd_order PN; mechano-II/III 2nd_order PN,54,right_id,3729504
+PN,gut 2nd_order PN,54,right_id,867393
+PN,FFN-17; gut 2nd_order PN,54,right_id,5560620
+CN,no official annotation,54,right_id,5783868
+PN,gut 2nd_order PN; mechano-II/III 2nd_order PN,54,right_id,3793681
+pre-DN-SEZ,no official annotation,54,right_id,5476653
+PN,FFN-12; gut 2nd_order PN; mechano-II/III 2nd_order PN,54,right_id,17176882
+PN,FFN-4; FFN-5; gustatory-pharyngeal 2nd_order PN; gut 2nd_order PN,54,right_id,9841469
+MB-FBN,FAN-1,55,right_id,8752697
+LHN,no official annotation,55,right_id,8469124
+LHN,no official annotation,55,right_id,9294475
+LHN,no official annotation,55,right_id,17437725
+PN-somato,mechano-Ch 2nd_order PN,55,right_id,15068806
+CN,FFN-2,55,right_id,2667061
+pre-DN-SEZ,no official annotation,56,right_id,17415439
+pre-DN-SEZ,no official annotation,56,right_id,8546775
+pre-DN-SEZ,no official annotation,56,right_id,17756162
+PN-somato,mechano-II/III 2nd_order PN,56,right_id,13950464
+LHN,no official annotation,56,right_id,13429045
+LHN,no official annotation,56,right_id,3794023
+LHN,no official annotation,56,right_id,15225589
+pre-DN-SEZ,no official annotation,56,right_id,20536322
+RGN,no official annotation,56,right_id,9842000
+LHN,no official annotation,56,right_id,11851588
+LHN,no official annotation,56,right_id,13038489
+LHN,no official annotation,56,right_id,15732471
+PN-somato,mechano-II/III 2nd_order PN,56,right_id,11946903
+pre-DN-SEZ,no official annotation,56,right_id,11605567
+ascending,mechano-II/III,56,right_id,19120853
+LHN,_WS,56,right_id,2935173
+RGN,no official annotation,56,right_id,16434842
+LN,no official annotation,56,right_id,2935198
+MBON,MBON-j1,57,right_id,3299214
+MBIN,OAN-e1,57,right_id,7616956
+LN,APL,57,right_id,3234817
+MBIN,DAN-d1,57,right_id,5966099
+MBIN,DAN-k1,57,right_id,4884579
+MBIN,MBIN-b2,57,right_id,16353832
+MBIN,DAN-g1,57,right_id,10673895
+MBIN,DAN-c1,57,right_id,16240569
+MBIN,MBIN-l1,57,right_id,15404207
+MBIN,MBIN-b1,57,right_id,8319311
+MBIN,DAN-f1,57,right_id,2506050
+MBIN,MBIN-e2,57,right_id,3890028
+MBIN,DAN-i1,57,right_id,6611894
+MBIN,DAN-j1,57,right_id,4414184
+LHN,no official annotation,58,right_id,8069365
+pre-DN-VNC,no official annotation,58,right_id,15688523
+CN,no official annotation,58,right_id,8451818
+MB-FFN,FFN-10,58,right_id,15674269
+pre-DN-VNC,no official annotation,58,right_id,13713529
+CN,CN-9,58,right_id,17438424
+pre-DN-SEZ,no official annotation,58,right_id,17762417
+CN,CN-35,58,right_id,17340931
+CN,CN-35,58,right_id,16339645
+LN,no official annotation,58,right_id,14758420
+pre-DN-VNC,no official annotation,58,right_id,14501257
+LN,no official annotation,58,right_id,14757992
+LHN,CN-26,58,right_id,4067286
+MBON,MBON-h1; MBON-h2,59,right_id,4195012
+MBON,MBON-b3,59,right_id,4234009
+MBON,MBON-a1,59,right_id,10163418
+MBON,MBON-b2,59,right_id,9469519
+MBON,MBON-b1,59,right_id,8094859
+MBON,MBON-k1,59,right_id,18028397
+MBON,MBON-c1; CN-59,59,right_id,8980589
+MBON,MBON-a2,59,right_id,15617305
+MBON,MBON-h1; MBON-h2,59,right_id,4230749
+MBON,MBON-d1,59,right_id,4241237
+MBON,MBON-i1,59,right_id,16797672
+MBON,MBON-g2,59,right_id,11524047
+MBON,MBON-g1,59,right_id,4598363
+MB-FBN,FBN-28; mechano-Ch 2nd_order PN,60,right_id,12122924
+LHN,no official annotation,61,right_id,8310955
+LHN,FFN-3,61,right_id,3814175
+LN,FBN-17; CN-7,61,right_id,8075484
+MB-FBN,FBN-15; LHN-12; CN-48,61,right_id,13863331
+LHN,CN-17,61,right_id,8034919
+CN,mechano-II/III 2nd_order PN,61,right_id,17019327
+CN,PL-6,61,right_id,15568333
+MB-FFN,FFN-14,61,right_id,9583435
+LHN,no official annotation,61,right_id,10340880
+LN,CN-11; FBN-12,61,right_id,11909406
+LHN,no official annotation,61,right_id,10119916
+pre-DN-VNC,no official annotation,61,right_id,7688300
+pre-DN-SEZ,no official annotation,62,right_id,19132527
+pre-DN-VNC,no official annotation,62,right_id,5369028
+pre-DN-VNC,no official annotation,62,right_id,17455871
+pre-DN-VNC,no official annotation,62,right_id,16685117
+pre-DN-SEZ,no official annotation,62,right_id,15601640
+pre-DN-VNC,no official annotation,62,right_id,8571259
+pre-DN-VNC,no official annotation,62,right_id,13834125
+pre-DN-VNC,no official annotation,62,right_id,10875178
+PN-somato,noci 2nd_order PN,62,right_id,9753418
+pre-DN-VNC,no official annotation,62,right_id,10781924
+pre-DN-SEZ,no official annotation,62,right_id,14914182
+CN,CN-23,62,right_id,9212816
+LHN,no official annotation,62,right_id,16100103
+CN,no official annotation,62,right_id,13411525
+pre-DN-VNC,no official annotation,62,right_id,10882750
+CN,no official annotation,62,right_id,18264509
+CN,CN-18,62,right_id,14948339
+pre-DN-VNC,no official annotation,62,right_id,3021609
+pre-DN-VNC,no official annotation,62,right_id,1868538
+CN,no official annotation,62,right_id,16846902
+pre-DN-SEZ,no official annotation,62,right_id,18644088
+pre-DN-VNC,no official annotation,62,right_id,15610774
+DN-VNC,CN-28; PL-17,62,right_id,17379420
+pre-DN-SEZ,no official annotation,62,right_id,15585114
+RGN,no official annotation,63,right_id,5956787
+sensory,respiratory,63,right_id,10868477
+RGN,no official annotation,63,right_id,5038703
+RGN,no official annotation,63,right_id,13535387
+RGN,no official annotation,63,right_id,3762787
+DN-VNC,no official annotation,63,right_id,7571966
+RGN,no official annotation,63,right_id,5469039
+RGN,no official annotation,63,right_id,7530253
+sensory,gut,63,right_id,15574199
+RGN,no official annotation,63,right_id,3727026
+sensory,gut,63,right_id,3556191
+RGN,no official annotation,63,right_id,3727004
+RGN,no official annotation,63,right_id,5955853
+sensory,respiratory,63,right_id,10963761
+sensory,respiratory,63,right_id,5638694
+sensory,gut,63,right_id,15548107
+sensory,gut,63,right_id,15559195
+DN-SEZ,no official annotation,63,right_id,3762317
+sensory,gut,63,right_id,15573396
+RGN,no official annotation,63,right_id,5601924
+sensory,gut,63,right_id,15574231
+RGN,no official annotation,63,right_id,7529574
+RGN,no official annotation,63,right_id,2260755
+MB-FBN,CN-10; FAN-2,64,right_id,8712361
+MBON,MBON-e1,64,right_id,7840791
+MB-FBN,CN-25; FAN-12,64,right_id,16823703
+MBON,MBON-n1,64,right_id,6703240
+CN,CN-42,64,right_id,4575178
+MBON,MBON-f1,64,right_id,4598109
+MB-FBN,CN-36; FAN-4; PL-9,64,right_id,4473922
+CN,CN-16,64,right_id,14206030
+MBIN,MBIN-e1,64,right_id,4235139
+pre-DN-SEZ,CN-30,64,right_id,17176927
+MB-FFN,FFN-16,64,right_id,19091931
+PN,FBN-3; gut 2nd_order PN,64,right_id,5480553
+MBON,MBON-d2,64,right_id,6699205
+MB-FBN,CN-14; FAN-11,64,right_id,17165711
+CN,no official annotation,64,right_id,9753530
+MBON,MBON-d3,64,right_id,9074101
+MBON,MBON-o1; CN-60,64,right_id,17013073
+LHN,LHN-20; CN-56,64,right_id,7612147
+MB-FBN,FBN-13; mechano-Ch 2nd_order PN,64,right_id,5516552
+CN,CN-4,64,right_id,11464638
+MBON,MBON-e2,64,right_id,8297018
+MB-FBN,CN-44; FAN-3,64,right_id,4514494
+CN,CN-6,64,right_id,3913620
+PN,gustatory-pharyngeal 2nd_order PN,64,right_id,16318521
+MB-FBN,FBN-1,64,right_id,16594509
+MB-FBN,CN-43; FBN-14,64,right_id,10809383
+MBON,MBON-q1,64,right_id,7897469
+sensory,gustatory-pharyngeal,65,right_id,15508735
+pre-DN-VNC,no official annotation,65,right_id,16443509
+DN-SEZ,no official annotation,65,right_id,17659014
+pre-DN-VNC,PL-14,65,right_id,6049565
+DN-SEZ,no official annotation,65,right_id,15732050
+PN-somato,proprio 2nd_order PN,65,right_id,11359482
+pre-DN-VNC,no official annotation,65,right_id,7371184
+pre-DN-VNC,no official annotation,65,right_id,4812481
+pre-DN-VNC,no official annotation,65,right_id,13644685
+pre-DN-VNC,no official annotation,65,right_id,16714214
+DN-SEZ,no official annotation,65,right_id,13191017
+pre-DN-VNC,no official annotation,66,right_id,14760757
+CN,no official annotation,66,right_id,13365464
+pre-DN-VNC,no official annotation,66,right_id,11278919
+MB-FBN,FB2N-17,66,right_id,17980792
+MB-FFN,FFN-22,66,right_id,17177115
+MB-FFN,FFN-40,66,right_id,10617840
+DN-SEZ,no official annotation,66,right_id,5976168
+CN,no official annotation,66,right_id,8717042
+pre-DN-SEZ,no official annotation,66,right_id,8471817
+pre-DN-SEZ,no official annotation,66,right_id,15606239
+pre-DN-VNC,no official annotation,66,right_id,11306294
+pre-DN-SEZ,no official annotation,66,right_id,5973097
+MB-FFN,FFN-20,66,right_id,11234536
+pre-DN-VNC,no official annotation,66,right_id,13674287
+MB-FBN,FB2N-19,66,right_id,13210358
+pre-DN-SEZ,no official annotation,66,right_id,8951591
+DN-SEZ,no official annotation,66,right_id,6317793
+pre-DN-SEZ,no official annotation,66,right_id,15048530
+DN-VNC,no official annotation,66,right_id,3620633
+MB-FBN,FB2N-15,66,right_id,9287906
+pre-DN-SEZ,no official annotation,67,right_id,15607335
+pre-DN-VNC,no official annotation,67,right_id,3158085
+pre-DN-SEZ,no official annotation,67,right_id,10768709
+MB-FFN,FFN-28,67,right_id,16751955
+MB-FBN,FB2N-1,67,right_id,11528017
+PN-somato,mechano-II/III 2nd_order PN,67,right_id,3793760
+pre-DN-VNC,no official annotation,67,right_id,3276003
+pre-DN-SEZ,no official annotation,67,right_id,17384874
+pre-DN-SEZ,no official annotation,67,right_id,11356523
+pre-DN-VNC,no official annotation,68,right_id,16347476
+pre-DN-VNC,no official annotation,68,right_id,10986253
+DN-VNC,_telegoro-1,68,right_id,3764792
+DN-VNC,no official annotation,68,right_id,19010160
+DN-VNC,no official annotation,68,right_id,7587948
+pre-DN-VNC,no official annotation,68,right_id,8592501
+DN-VNC,no official annotation,68,right_id,17658978
+pre-DN-SEZ,no official annotation,68,right_id,12990900
+DN-VNC,no official annotation,68,right_id,6446394
+pre-DN-VNC,no official annotation,68,right_id,13167730
+MB-FBN,FB2N-13,69,right_id,4337398
+DN-SEZ,no official annotation,69,right_id,12962772
+pre-DN-SEZ,no official annotation,69,right_id,5326407
+MB-FFN,FFN-9,69,right_id,4665627
+pre-DN-VNC,no official annotation,69,right_id,4228105
+pre-DN-VNC,PL-24,69,right_id,17083341
+MB-FFN,FFN-1,69,right_id,10612630
+PN-somato,FFN-8; proprio 2nd_order PN,69,right_id,4201020
+MB-FBN,FBN-20,69,right_id,4190567
+MB-FBN,FB2N-10; proprio 2nd_order PN,69,right_id,4201555
+PN-somato,proprio 2nd_order PN,69,right_id,17336347
+CN,no official annotation,69,right_id,10339991
+MB-FFN,FFN-41,69,right_id,4234016
+CN,PL-8,69,right_id,15662776
+CN,no official annotation,69,right_id,8318813
+pre-DN-VNC,no official annotation,69,right_id,4227880
+MB-FBN,FB2N-14,69,right_id,4152272
+pre-DN-VNC,no official annotation,70,right_id,2659504
+DN-SEZ,no official annotation,70,right_id,17379360
+ascending,unknown modality,70,right_id,13775497
+DN-SEZ,no official annotation,70,right_id,16316973
+DN-VNC,no official annotation,70,right_id,17543765
+DN-VNC,no official annotation,70,right_id,17587730
+pre-DN-VNC,no official annotation,70,right_id,17654973
+pre-DN-VNC,no official annotation,70,right_id,11891098
+DN-VNC,no official annotation,70,right_id,17587726
+PN-somato,proprio 2nd_order PN,70,right_id,19989037
+pre-DN-VNC,no official annotation,70,right_id,13242252
+DN-VNC,no official annotation,70,right_id,1065967
+DN-VNC,no official annotation,70,right_id,12030078
+pre-DN-VNC,no official annotation,70,right_id,5898284
+pre-DN-VNC,no official annotation,70,right_id,5730322
+pre-DN-VNC,no official annotation,70,right_id,14756440
+pre-DN-SEZ,no official annotation,70,right_id,1805418
+pre-DN-VNC,no official annotation,70,right_id,17297936
+pre-DN-VNC,PL-16,70,right_id,17654991
+pre-DN-VNC,no official annotation,70,right_id,17660233
+DN-VNC,no official annotation,70,right_id,17378648
+DN-VNC,no official annotation,70,right_id,17379298
+pre-DN-VNC,no official annotation,70,right_id,17937991
+pre-DN-VNC,no official annotation,70,right_id,2504517
+DN-VNC,no official annotation,70,right_id,16115255
+pre-DN-VNC,PL-15,70,right_id,17655000
+pre-DN-VNC,no official annotation,70,right_id,17658602
+pre-DN-VNC,no official annotation,70,right_id,20479904
+pre-DN-VNC,no official annotation,70,right_id,17654967
+pre-DN-VNC,no official annotation,70,right_id,13137623
+DN-VNC,no official annotation,70,right_id,16347786
+pre-DN-VNC,no official annotation,70,right_id,19167389
+DN-VNC,no official annotation,70,right_id,15560623
+pre-DN-VNC,no official annotation,70,right_id,12422355
+pre-DN-VNC,no official annotation,70,right_id,18302931
+DN-VNC,no official annotation,71,right_id,13763548
+pre-DN-SEZ,no official annotation,71,right_id,17813001
+DN-SEZ,no official annotation,71,right_id,17324711
+DN-VNC,no official annotation,71,right_id,14034206
+pre-DN-SEZ,no official annotation,71,right_id,17850822
+pre-DN-VNC,no official annotation,71,right_id,14755393
+DN-VNC,no official annotation,71,right_id,13081886
+pre-DN-VNC,no official annotation,71,right_id,19048289
+PN-somato,noci 2nd_order PN,71,right_id,8826198
+pre-DN-VNC,no official annotation,71,right_id,15672269
+pre-DN-VNC,no official annotation,71,right_id,13948718
+pre-DN-VNC,no official annotation,71,right_id,1805669
+DN-SEZ,no official annotation,71,right_id,5993001
+PN-somato,noci 2nd_order PN,71,right_id,20443598
+pre-DN-VNC,no official annotation,71,right_id,17658948
+pre-DN-SEZ,no official annotation,71,right_id,12422147
+DN-SEZ,no official annotation,71,right_id,13645610
+DN-VNC,no official annotation,71,right_id,17537254
+DN-VNC,no official annotation,71,right_id,7982307
+pre-DN-SEZ,no official annotation,71,right_id,17328632
+pre-DN-VNC,no official annotation,71,right_id,9753494
+DN-SEZ,no official annotation,71,right_id,5996485
+pre-DN-VNC,no official annotation,71,right_id,18133444
+pre-DN-SEZ,no official annotation,71,right_id,13953184
+pre-DN-VNC,no official annotation,71,right_id,20443571
+pre-DN-SEZ,no official annotation,71,right_id,17328580
+pre-DN-VNC,no official annotation,71,right_id,9177218
+pre-DN-VNC,no official annotation,71,right_id,17937986
+pre-DN-VNC,no official annotation,71,right_id,10870424
+DN-VNC,no official annotation,71,right_id,16154290
+DN-SEZ,no official annotation,71,right_id,17304269
+pre-DN-VNC,no official annotation,71,right_id,16617920
+DN-VNC,no official annotation,71,right_id,5010581
+pre-DN-SEZ,no official annotation,71,right_id,17990556
+DN-SEZ,no official annotation,71,right_id,9234420
+pre-DN-VNC,no official annotation,71,right_id,3010486
+PN-somato,proprio 2nd_order PN,72,right_id,17340973
+pre-DN-VNC,no official annotation,72,right_id,9085808
+ascending,proprio,72,right_id,14938436
+pre-DN-SEZ,no official annotation,72,right_id,6653450
+pre-DN-VNC,no official annotation,72,right_id,15018449
+ascending,proprio,72,right_id,13774384
+PN-somato,proprio 2nd_order PN,72,right_id,2505266
+PN-somato,proprio 2nd_order PN,72,right_id,6182848
+ascending,proprio,72,right_id,15556861
+PN-somato,PL-3; proprio 2nd_order PN,72,right_id,9037152
+LN,FB2N-6,73,right_id,19271710
+pre-DN-VNC,no official annotation,73,right_id,9116228
+pre-DN-VNC,no official annotation,73,right_id,3765735
+DN-SEZ,no official annotation,73,right_id,3027876
+pre-DN-VNC,no official annotation,73,right_id,14753815
+LN,FB2N-11,73,right_id,6597872
+DN-SEZ,no official annotation,73,right_id,16195633
+MB-FFN,FFN-24,73,right_id,10351681
+pre-DN-VNC,no official annotation,73,right_id,8572353
+LN,FB2N-18,73,right_id,17176781
+pre-DN-VNC,no official annotation,73,right_id,14756061
+pre-DN-VNC,no official annotation,73,right_id,8566140
+pre-DN-VNC,no official annotation,74,right_id,19156025
+pre-DN-VNC,no official annotation,74,right_id,10276161
+MB-FBN,CN-31; FBN-26; noci 2nd_order PN,74,right_id,17854345
+MBIN,OAN-g1,74,right_id,12805363
+CN,no official annotation,74,right_id,19786464
+CN,no official annotation,74,right_id,14495367
+LHN,CN-39,74,right_id,9015568
+pre-DN-VNC,no official annotation,74,right_id,2650887
+PN-somato,FFN-27; noci 2nd_order PN,74,right_id,11361875
+pre-DN-VNC,no official annotation,74,right_id,12031406
+MB-FBN,FAN-9,74,right_id,16987409
+CN,no official annotation,74,right_id,8184598
+pre-DN-VNC,no official annotation,74,right_id,6193472
+CN,no official annotation,74,right_id,11102156
+pre-DN-VNC,no official annotation,74,right_id,16350988
+pre-DN-SEZ,no official annotation,74,right_id,17867309
+MB-FBN,CN-13; FBN-6,75,right_id,15480928
+MB-FBN,FBN-16,75,right_id,14077615
+MB-FBN,FB2N-7,75,right_id,4103336
+MB-FBN,CN-21; FBN-4,75,right_id,12704069
+MB-FBN,CN-38; FAN-6,75,right_id,5738449
+CN,no official annotation,75,right_id,4214582
+MB-FBN,CN-12; FBN-8,75,right_id,11889676
+LN,CN-20,75,right_id,7065182
+MB-FBN,FB2N-16,75,right_id,8814922
+MB-FFN,FFN-7,75,right_id,6300434
+MB-FBN,FBN-23,75,right_id,7980369
+MB-FBN,CN-19; FBN-9,75,right_id,14083681
+CN,no official annotation,76,right_id,14214039
+PN,respiratory 2nd_order PN,76,right_id,8370111
+CN,CN-22,76,right_id,4411542
+MB-FBN,FB2N-8,76,right_id,15488316
+MB-FFN,FFN-23,76,right_id,18098174
+CN,no official annotation,76,right_id,17813006
+CN,no official annotation,76,right_id,13953546
+LHN,no official annotation,76,right_id,17166682
+MB-FBN,FB2N-2,76,right_id,14077179
+pre-DN-SEZ,no official annotation,76,right_id,15590555
+DN-VNC,no official annotation,77,right_id,15548844
+pre-DN-VNC,no official annotation,77,right_id,15481779
+pre-DN-VNC,no official annotation,77,right_id,8127390
+MB-FFN,FFN-15,77,right_id,14127447
+pre-DN-VNC,no official annotation,77,right_id,13411445
+pre-DN-VNC,CN-34,77,right_id,14680483
+MB-FFN,FFN-6,77,right_id,17176819
+pre-DN-VNC,no official annotation,77,right_id,14754777
+LHN,no official annotation,77,right_id,8981761
+pre-DN-VNC,no official annotation,78,right_id,9077224
+pre-DN-VNC,no official annotation,78,right_id,12474815
+pre-DN-VNC,no official annotation,78,right_id,16913476
+CN,no official annotation,78,right_id,17330632
+pre-DN-VNC,no official annotation,78,right_id,16340011
+pre-DN-VNC,no official annotation,78,right_id,4876839
+pre-DN-VNC,no official annotation,78,right_id,5935744
+PN-somato,noci 2nd_order PN,78,right_id,16347283
+DN-SEZ,no official annotation,78,right_id,18232369
+MB-FFN,FFN-25,78,right_id,8007556
+PN-somato,noci 2nd_order PN,78,right_id,10079731
+pre-DN-VNC,no official annotation,78,right_id,19090042
+pre-DN-VNC,no official annotation,78,right_id,17355864
+pre-DN-VNC,no official annotation,78,right_id,14656798
+pre-DN-VNC,no official annotation,78,right_id,13564607
+pre-DN-VNC,no official annotation,78,right_id,9604434
+pre-DN-VNC,no official annotation,78,right_id,14374534
+DN-SEZ,no official annotation,78,right_id,13764822
+pre-DN-VNC,no official annotation,78,right_id,9034378
+pre-DN-VNC,no official annotation,78,right_id,8709865
+pre-DN-VNC,no official annotation,78,right_id,14492880
+pre-DN-VNC,no official annotation,78,right_id,16340461
+pre-DN-VNC,no official annotation,78,right_id,10367190
+MB-FBN,FBN-7,79,right_id,4617479
+MB-FBN,FBN-5,79,right_id,7594047
+MB-FBN,FB2N-3,79,right_id,4411688
+MB-FBN,FAN-5,79,right_id,9848760
+PN,FB2N-12; gustatory-pharyngeal 2nd_order PN,79,right_id,20443457
+CN,no official annotation,79,right_id,5669107
+MB-FBN,FB2N-21,79,right_id,17784367
+CN,no official annotation,79,right_id,16405545
+CN,no official annotation,80,right_id,15618614
+MB-FFN,FFN-35,80,right_id,17435678
+pre-DN-VNC,no official annotation,80,right_id,4847079
+DN-VNC,no official annotation,80,right_id,7590264
+pre-DN-VNC,no official annotation,80,right_id,13835439
+PN,gustatory-external 2nd_order PN,80,right_id,8995807
+pre-DN-SEZ,no official annotation,80,right_id,15732485
+DN-VNC,no official annotation,80,right_id,2669844
+pre-DN-VNC,no official annotation,80,right_id,5936935
+pre-DN-VNC,no official annotation,80,right_id,17755491
+MB-FBN,FAN-8,81,right_id,4199033
+pre-DN-SEZ,no official annotation,81,right_id,14334367
+CN,CN-41,81,right_id,6611100
+MB-FBN,FBN-21,81,right_id,8792477
+PN-somato,noci 2nd_order PN,81,right_id,17913199
+MB-FBN,FB2N-5,81,right_id,8019816
+MB-FBN,FAN-10,81,right_id,9103732
+MB-FBN,FBN-19,81,right_id,5934511
+MBON,MBON-m1; CN-62,82,right_id,4022539
+MB-FBN,CN-32; FBN-10,82,right_id,6290724
+MB-FBN,CN-33; FAN-7,82,right_id,16699958
+MBON,MBON-p1; CN-61,82,right_id,16178283
+MB-FBN,CN-37; FBN-2,82,right_id,16691937
+CN,CN-24,82,right_id,7980189
+DN-VNC,no official annotation,83,right_id,5500958
+RGN,no official annotation,83,right_id,2283495
+RGN,no official annotation,83,right_id,15202263
+DN-SEZ,no official annotation,83,right_id,11639192
+RGN,no official annotation,83,right_id,2852273
+DN-SEZ,no official annotation,83,right_id,17352470
+DN-SEZ,no official annotation,83,right_id,3414508
+RGN,no official annotation,83,right_id,2659386
+RGN,no official annotation,83,right_id,13793212
+RGN,no official annotation,83,right_id,3561724
+DN-SEZ,no official annotation,83,right_id,6554358
+RGN,no official annotation,83,right_id,5869204
+DN-SEZ,no official annotation,83,right_id,3436420
+sensory,gut,83,right_id,2340336
+RGN,no official annotation,83,right_id,2357110
+DN-VNC,no official annotation,83,right_id,7569260
+RGN,no official annotation,83,right_id,2355126
+sensory,gut,83,right_id,2456826
+RGN,no official annotation,83,right_id,13535380
+pre-DN-VNC,no official annotation,84,right_id,16651566
+pre-DN-VNC,PL-18,84,right_id,9067063
+pre-DN-VNC,no official annotation,84,right_id,9532295
+pre-DN-VNC,no official annotation,84,right_id,15823055
+pre-DN-VNC,no official annotation,84,right_id,17466463
+pre-DN-VNC,no official annotation,84,right_id,5859372
+pre-DN-VNC,no official annotation,84,right_id,17356024
+pre-DN-VNC,no official annotation,84,right_id,15800115
+DN-VNC,no official annotation,84,right_id,15894278
+DN-VNC,no official annotation,84,right_id,5319633
+DN-VNC,no official annotation,84,right_id,17647621
+pre-DN-VNC,no official annotation,84,right_id,4173633
+pre-DN-VNC,no official annotation,84,right_id,16924423
+PN-somato,mechano-Ch 2nd_order PN; proprio 2nd_order PN,84,right_id,17031293
+pre-DN-VNC,no official annotation,84,right_id,5895651
+pre-DN-VNC,no official annotation,84,right_id,15732497
+pre-DN-VNC,no official annotation,84,right_id,9068346
+DN-VNC,no official annotation,85,right_id,16388736
+pre-DN-VNC,no official annotation,85,right_id,18545747
+pre-DN-VNC,PL-22,85,right_id,16671014
+pre-DN-VNC,no official annotation,85,right_id,17897230
+pre-DN-VNC,no official annotation,85,right_id,16852421
+pre-DN-VNC,no official annotation,85,right_id,9091922
+pre-DN-VNC,no official annotation,85,right_id,5805651
+pre-DN-VNC,PL-21,85,right_id,4591713
+PN-somato,proprio 2nd_order PN,85,right_id,11362589
+pre-DN-VNC,PL-23,85,right_id,16578252
+pre-DN-VNC,no official annotation,85,right_id,17435815
+DN-VNC,no official annotation,85,right_id,18464581
+pre-DN-VNC,no official annotation,85,right_id,9519425
+pre-DN-VNC,PL-20,85,right_id,16934932
+pre-DN-VNC,no official annotation,85,right_id,5164129
+pre-DN-VNC,no official annotation,85,right_id,8271875
+CN,no official annotation,85,right_id,15474790
+pre-DN-VNC,no official annotation,85,right_id,6190181
+pre-DN-VNC,no official annotation,85,right_id,4311241
+pre-DN-VNC,no official annotation,85,right_id,17380319
+CN,PL-12,85,right_id,12935696
+pre-DN-VNC,no official annotation,85,right_id,5893912
+pre-DN-VNC,no official annotation,85,right_id,8710444
+pre-DN-SEZ,no official annotation,85,right_id,17535542
+pre-DN-VNC,no official annotation,85,right_id,11362334
+pre-DN-VNC,no official annotation,85,right_id,6188181
+PN-somato,noci 2nd_order PN,85,right_id,9051500
+pre-DN-VNC,no official annotation,85,right_id,16709072
+pre-DN-VNC,no official annotation,85,right_id,16540741
+pre-DN-VNC,no official annotation,85,right_id,16471422
+DN-VNC,no official annotation,85,right_id,13557064
+pre-DN-SEZ,no official annotation,86,right_id,17247877
+pre-DN-VNC,no official annotation,86,right_id,4127096
+DN-VNC,no official annotation,86,right_id,18604097
+pre-DN-VNC,no official annotation,86,right_id,19092010
+pre-DN-VNC,no official annotation,86,right_id,15155348
+DN-VNC,no official annotation,86,right_id,13760954
+DN-VNC,no official annotation,86,right_id,15934458
+pre-DN-VNC,no official annotation,86,right_id,20443362
+pre-DN-VNC,no official annotation,86,right_id,15589738
+pre-DN-VNC,no official annotation,86,right_id,5162462
+DN-VNC,PL-19,86,right_id,13652117
+DN-VNC,no official annotation,86,right_id,14039007
+DN-VNC,no official annotation,86,right_id,19190681
+ascending,unknown modality,86,right_id,3571478
+DN-SEZ,no official annotation,86,right_id,17380345
+pre-DN-VNC,no official annotation,87,right_id,5786898
+DN-VNC,no official annotation,87,right_id,6156152
+pre-DN-VNC,no official annotation,87,right_id,5856647
+MB-FBN,FBN-22,87,right_id,16856539
+pre-DN-VNC,no official annotation,87,right_id,4188325
+pre-DN-VNC,no official annotation,87,right_id,15706875
+pre-DN-VNC,no official annotation,87,right_id,4917442
+pre-DN-VNC,no official annotation,87,right_id,4017464
+pre-DN-VNC,no official annotation,87,right_id,17173852
+pre-DN-VNC,no official annotation,87,right_id,15732503
+MB-FFN,FFN-26,87,right_id,15478720
+MB-FBN,FBN-25,87,right_id,7574701
+PN-somato,noci 2nd_order PN,87,right_id,17173922
+MB-FBN,FBN-24,87,right_id,4180774
+pre-DN-VNC,no official annotation,87,right_id,15732509
+DN-VNC,no official annotation,87,right_id,5052370
+pre-DN-VNC,no official annotation,87,right_id,13675374
+DN-VNC,no official annotation,87,right_id,16950798
+PN-somato,proprio 2nd_order PN,87,right_id,4849988
+DN-VNC,no official annotation,87,right_id,12474164
+pre-DN-VNC,no official annotation,87,right_id,6609380
+pre-DN-VNC,no official annotation,87,right_id,5790355
+MB-FBN,FBN-27,87,right_id,4144377
+pre-DN-VNC,no official annotation,87,right_id,16947349
+pre-DN-VNC,no official annotation,87,right_id,13722900
+DN-VNC,no official annotation,88,right_id,17877682
+pre-DN-VNC,no official annotation,88,right_id,5167842
+DN-VNC,no official annotation,88,right_id,14588375
+DN-VNC,no official annotation,88,right_id,17656886
+DN-VNC,no official annotation,88,right_id,5995125
+DN-VNC,no official annotation,88,right_id,13646473
+DN-SEZ,no official annotation,88,right_id,13007383
+DN-SEZ,no official annotation,88,right_id,17587734
+DN-VNC,no official annotation,88,right_id,15672263
+DN-VNC,no official annotation,88,right_id,15964206
+DN-VNC,no official annotation,88,right_id,17589475
+ascending,noci,88,right_id,7124156
+DN-VNC,no official annotation,88,right_id,17025508
+MB-FFN,FFN-36,88,right_id,4507955
+ascending,proprio,88,right_id,14913093
+LN,no official annotation,88,right_id,9521722
+DN-VNC,no official annotation,88,right_id,17639824
+DN-VNC,no official annotation,88,right_id,6154200
+DN-VNC,no official annotation,88,right_id,5900426
+DN-SEZ,no official annotation,88,right_id,12026822
+DN-VNC,no official annotation,89,right_id,16950767
+DN-VNC,no official annotation,89,right_id,6154921
+LN,no official annotation,89,right_id,16561429
+pre-DN-VNC,no official annotation,89,right_id,16355225
+DN-SEZ,no official annotation,89,right_id,2648254
+pre-DN-VNC,no official annotation,89,right_id,17663944
+PN-somato,proprio 2nd_order PN,89,right_id,4185530
+pre-DN-VNC,no official annotation,89,right_id,4390116
+DN-VNC,no official annotation,89,right_id,16950443
+DN-VNC,no official annotation,89,right_id,6155577
+DN-VNC,no official annotation,89,right_id,20911955
+pre-DN-VNC,no official annotation,89,right_id,15674282
+pre-DN-VNC,no official annotation,89,right_id,5816138
+DN-SEZ,no official annotation,89,right_id,13842372
+DN-VNC,no official annotation,89,right_id,6700147
+DN-VNC,no official annotation,89,right_id,17654514
+pre-DN-VNC,no official annotation,89,right_id,17380309
+pre-DN-VNC,no official annotation,89,right_id,18080008
+pre-DN-VNC,no official annotation,89,right_id,19950281
+DN-VNC,no official annotation,89,right_id,20911961
+pre-DN-VNC,no official annotation,89,right_id,4142619
+DN-SEZ,no official annotation,89,right_id,17654519
+pre-DN-VNC,no official annotation,89,right_id,5782947
+MB-FBN,FBN-11,90,right_id,9057043
+DN-VNC,no official annotation,91,right_id,5794678
+pre-DN-VNC,no official annotation,91,right_id,16910799
+DN-VNC,no official annotation,91,right_id,13727202
+CN,no official annotation,91,right_id,13836327
+pre-DN-VNC,PL-13,91,right_id,17357979
+MB-FBN,FB2N-20,91,right_id,18084995
+pre-DN-VNC,no official annotation,91,right_id,9069084
+DN-VNC,no official annotation,91,right_id,15894178
+DN-VNC,no official annotation,91,right_id,16520950
+pre-DN-VNC,no official annotation,91,right_id,17323054
+DN-VNC,no official annotation,91,right_id,16950550
+pre-DN-VNC,no official annotation,91,right_id,9068024
+DN-SEZ,no official annotation,91,right_id,6702943
+pre-DN-SEZ,no official annotation,91,right_id,6610913
+DN-VNC,no official annotation,91,right_id,16950354
+pre-DN-VNC,no official annotation,92,right_id,8161142
+DN-VNC,no official annotation,92,right_id,16339338
+pre-DN-VNC,no official annotation,92,right_id,9097065
+DN-VNC,no official annotation,92,right_id,8496618
+DN-VNC,no official annotation,92,right_id,6153877
+pre-DN-VNC,no official annotation,92,right_id,8161148
+pre-DN-VNC,no official annotation,92,right_id,15467736
+MB-FFN,FFN-38,no cluster,right_id,8790590
+sensory,gustatory-pharyngeal,no cluster,right_id,15542199
+sensory,gustatory-pharyngeal,no cluster,right_id,8199012
+sensory,gustatory-external,no cluster,right_id,15629888
+sensory,gustatory-pharyngeal,no cluster,right_id,15594038
+sensory,gustatory-external,no cluster,right_id,4044654
+sensory,gustatory-pharyngeal,no cluster,right_id,15508475
+sensory,gustatory-pharyngeal,no cluster,right_id,15605657

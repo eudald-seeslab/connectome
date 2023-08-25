@@ -1,3 +1,5 @@
+# DEPRECATED
+
 from torch import nn, optim, device, cuda
 import torch
 import yaml

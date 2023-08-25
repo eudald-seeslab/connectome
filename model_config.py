@@ -22,3 +22,9 @@ class ModelConfig:
             stride=config_data["stride"],
             padding=config_data["padding"],
         )
+
+    @classmethod
+    def from_dict(cls, config_dict):
+        return cls(
+            model_name=config_dict["model_name"],
+        )

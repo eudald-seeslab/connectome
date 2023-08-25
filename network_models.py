@@ -134,8 +134,8 @@ class RetinaModel(nn.Module):
         return x
 
 
-def get_retina_model(which_model="vgg16"):
-    if which_model == "vgg16":
+def get_retina_model(model_config):
+    if model_config.model_name == "vgg16":
         # Load the pre-trained MobileNetV2 model and remove the last fully connected layer
         # retina_model = hub.load('pytorch/vision:v0.10.0', 'mobilenet_v2', pretrained=True)
         retina_model = models.vgg16(pretrained=True)
@@ -143,13 +143,8 @@ def get_retina_model(which_model="vgg16"):
         retina_model.eval()
 
         return retina_model
-
     else:
-        config_manager = ModelConfigManager()
-        config_manager.load_configs_from_yaml(["cnn_1.yml", "cnn_2.yml"])
-        config = config_manager.get_config(RETINA_MODEL)
-
-        return RetinaModel(config)
+        return RetinaModel(model_config)
 
 
 def get_retina_output_shape(model, input_shape):
@@ -167,9 +162,9 @@ def get_retina_output_shape(model, input_shape):
 
 # Define the combined model
 class CombinedModel(nn.Module):
-    def __init__(self, adjacency_matrix, neurons, retina_model_type):
+    def __init__(self, adjacency_matrix, neurons, model_config):
         super().__init__()
-        self.retina_model = get_retina_model(which_model=retina_model_type)
+        self.retina_model = get_retina_model(model_config=model_config)
 
         # Get the output shape of the retina model
         retina_output_shape = get_retina_output_shape(

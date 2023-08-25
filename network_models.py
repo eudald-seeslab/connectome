@@ -8,7 +8,7 @@ from torchvision import models
 import yaml
 
 # Import model config manager
-from model_config_manager import ModelConfigManager
+from model_config_manager import PRETRAINED_MODELS
 
 # TODO: this shouldn't be here
 config = yaml.safe_load(open("config.yml"))
@@ -113,15 +113,15 @@ class ConnectomeNetwork(nn.Module):
 
 
 class RetinaModel(nn.Module):
-    def __init__(self, config):
+    def __init__(self, model_config):
         super(RetinaModel, self).__init__()
         # Define the single convolutional layer
         self.conv_layer = nn.Conv2d(
             in_channels=3,
-            out_channels=config.out_channels,
-            kernel_size=config.kernel_size,
-            padding=config.padding,
-            stride=config.stride,
+            out_channels=model_config.out_channels,
+            kernel_size=model_config.kernel_size,
+            padding=model_config.padding,
+            stride=model_config.stride,
         )
         self.activation = nn.ReLU(inplace=True)
         self.pooling_layer = nn.MaxPool2d(kernel_size=2, stride=2)
@@ -135,10 +135,9 @@ class RetinaModel(nn.Module):
 
 
 def get_retina_model(model_config):
-    if model_config.model_name == "vgg16":
-        # Load the pre-trained MobileNetV2 model and remove the last fully connected layer
-        # retina_model = hub.load('pytorch/vision:v0.10.0', 'mobilenet_v2', pretrained=True)
-        retina_model = models.vgg16(pretrained=True)
+    if model_config.model_name in PRETRAINED_MODELS:
+        # Load a pretrained model from torchvision
+        retina_model = models.get_model(model_config.model_name, pretrained=True)
         retina_model = nn.Sequential(*list(retina_model.children())[:-1])
         retina_model.eval()
 
@@ -160,7 +159,6 @@ def get_retina_output_shape(model, input_shape):
     return output.size()
 
 
-# Define the combined model
 class CombinedModel(nn.Module):
     def __init__(self, adjacency_matrix, neurons, model_config):
         super().__init__()

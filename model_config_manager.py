@@ -1,5 +1,10 @@
 # model_config_manager.py
+from torchvision import models
+
 from model_config import ModelConfig
+
+
+PRETRAINED_MODELS = models.list_models()
 
 
 class ModelConfigManager:
@@ -18,7 +23,7 @@ class ModelConfigManager:
 
     def set_model_config(self, model_name):
         # Pretrained models are not in the config file
-        if model_name == "vgg16":
+        if model_name in PRETRAINED_MODELS:
             self.model_config = ModelConfig.from_dict(dict({"model_name": model_name}))
             self.model_type = "pretrained"
             return
@@ -32,7 +37,7 @@ class ModelConfigManager:
 
     def output_model_details(self):
         print("Model configurations:")
-        print(self.model_config.model_name)
+        print(f"Model name: {self.model_config.model_name}")
 
         if self.model_type == "pretrained":
             print("This is a pretrained model")

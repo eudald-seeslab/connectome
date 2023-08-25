@@ -27,4 +27,9 @@ class ModelConfig:
     def from_dict(cls, config_dict):
         return cls(
             model_name=config_dict["model_name"],
+            # FIXME: separate between pretrained and custom models
+            out_channels=None,
+            kernel_size=None,
+            stride=None,
+            padding=None,
         )

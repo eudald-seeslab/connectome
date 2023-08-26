@@ -3,8 +3,11 @@ import yaml
 
 
 class ModelConfig:
-    def __init__(self, model_name, out_channels, kernel_size, stride, padding):
+    def __init__(
+        self, model_name, num_layers, out_channels, kernel_size, stride, padding
+    ):
         self.model_name = model_name
+        self.num_layers = num_layers
         self.out_channels = out_channels
         self.kernel_size = kernel_size
         self.stride = stride
@@ -17,6 +20,7 @@ class ModelConfig:
 
         return cls(
             model_name=config_data["model_name"],
+            num_layers=config_data["num_layers"],
             out_channels=config_data["out_channels"],
             kernel_size=config_data["kernel_size"],
             stride=config_data["stride"],
@@ -28,6 +32,7 @@ class ModelConfig:
         return cls(
             model_name=config_dict["model_name"],
             # FIXME: separate between pretrained and custom models
+            num_layers=None,
             out_channels=None,
             kernel_size=None,
             stride=None,

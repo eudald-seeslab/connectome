@@ -1,10 +1,13 @@
 # model_config_manager.py
+import os
+
 from torchvision import models
 
 from model_config import ModelConfig
 
 
 PRETRAINED_MODELS = models.list_models()
+CONFIG_DIRECTORY = "custom_models_config"
 
 
 class ModelConfigManager:
@@ -12,14 +15,17 @@ class ModelConfigManager:
 
     def __init__(self):
         self.model_configs = []
+        self.load_configs_from_yaml(CONFIG_DIRECTORY)
 
     def add_config(self, model_config):
         self.model_configs.append(model_config)
 
-    def load_configs_from_yaml(self, file_paths):
-        for file_path in file_paths:
-            model_config = ModelConfig.from_yaml(file_path)
-            self.add_config(model_config)
+    def load_configs_from_yaml(self, config_directory):
+        for file_name in os.listdir(config_directory):
+            if file_name.endswith(".yml"):
+                file_path = os.path.join(config_directory, file_name)
+                model_config = ModelConfig.from_yaml(file_path)
+                self.add_config(model_config)
 
     def set_model_config(self, model_name):
         # Pretrained models are not in the config file
@@ -43,6 +49,7 @@ class ModelConfigManager:
             print("This is a pretrained model")
             return
 
+        print(f"Number of layers: {self.model_config.num_layers}")
         print(f"Output channels: {self.model_config.out_channels}")
         print(f"Kernel size: {self.model_config.kernel_size}")
         print(f"Stride: {self.model_config.stride}")

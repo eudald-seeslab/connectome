@@ -16,48 +16,51 @@ logger = logging.getLogger("training_log")
 
 class ModelConfigManager:
     model_type = None
-    model_config = None
+    current_model_config = None
 
-    def __init__(self):
-        self.model_configs = []
+    def __init__(self, connectome_config):
+        self.connectome_config = connectome_config
+        self.model_name = connectome_config["RETINA_MODEL"]
+        self.connectome_layer_number = connectome_config["CONNECTOME_LAYER_NUMBER"]
+        self.retina_model_configs = []
         self.load_configs_from_yaml(CONFIG_DIRECTORY)
-
-    def add_config(self, model_config):
-        self.model_configs.append(model_config)
 
     def load_configs_from_yaml(self, config_directory):
         for file_name in os.listdir(config_directory):
             if file_name.endswith(".yml"):
                 file_path = os.path.join(config_directory, file_name)
-                model_config = ModelConfig.from_yaml(file_path)
-                self.add_config(model_config)
+                model_config = ModelConfig(self.connectome_config).get_data_from_yaml(
+                    file_path
+                )
+                self.retina_model_configs.append(model_config)
 
     def set_model_config(self, model_name):
-        # Pretrained models are not in the config file
+        # Pretrained models are not in the custom retina models config files
         if model_name in PRETRAINED_MODELS:
-            self.model_config = ModelConfig.from_dict(dict({"model_name": model_name}))
+            self.current_model_config = ModelConfig(self.connectome_config)
             self.model_type = "pretrained"
             return
 
-        for config in self.model_configs:
+        for config in self.retina_model_configs:
             if config.model_name == model_name:
-                self.model_config = config
+                self.current_model_config = config
                 self.model_type = "custom"
                 return
         raise ValueError(f"Model configuration '{model_name}' not found.")
 
     def output_model_details(self):
         logger.info("Model configurations:")
-        logger.info(f"Model name: {self.model_config.model_name}")
+        logger.info(f"Model name: {self.current_model_config.model_name}")
 
-        logger.info(f"Number of connectome layers: {self.model_config.num_layers}")
+        logger.info(f"Number of connectome layers: {self.connectome_layer_number}")
 
         if self.model_type == "pretrained":
             logger.info("This is a pretrained model")
             return
 
-        logger.info(f"Output channels: {self.model_config.out_channels}")
-        logger.info(f"Kernel size: {self.model_config.kernel_size}")
-        logger.info(f"Stride: {self.model_config.stride}")
-        logger.info(f"Padding: {self.model_config.padding}")
+        logger.info(f"Number of retina layers: {self.current_model_config.num_layers}")
+        logger.info(f"Output channels: {self.current_model_config.out_channels}")
+        logger.info(f"Kernel size: {self.current_model_config.kernel_size}")
+        logger.info(f"Stride: {self.current_model_config.stride}")
+        logger.info(f"Padding: {self.current_model_config.padding}")
         logger.info("\n")

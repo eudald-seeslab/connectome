@@ -16,7 +16,7 @@ from model_helpers import (
 
 # TODO: this shouldn't be here
 config = yaml.safe_load(open("config.yml"))
-LAYER_NUM = config["LAYER_NUM"]
+LAYER_NUMBER = config["LAYER_NUMBER"]
 IMAGE_SIZE = config["IMAGE_SIZE"]
 BATCH_SIZE = config["BATCH_SIZE"]
 RETINA_MODEL = config["RETINA_MODEL"]
@@ -59,7 +59,7 @@ class ConnectomeNetwork(nn.Module):
         # Create a dictionary that packs the neuron layers, which are equivalent
         #  to signals advancing through the connectome
         self.neuron_layer_dict = {}
-        for i in range(LAYER_NUM):
+        for i in range(LAYER_NUMBER):
             self.neuron_layer_dict[i] = nn.Linear(
                 self.neuron_count, self.neuron_count, bias=False
             )

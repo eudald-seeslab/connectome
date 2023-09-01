@@ -1,6 +1,11 @@
 # check missing values
 import torch
 import wandb
+import torch.nn as nn
+import logging
+
+
+logger = logging.getLogger("training_log")
 
 
 def check_for_missing_values(x, step):
@@ -17,9 +22,9 @@ def check_model_parameters(model, epoch):
     # NOT IN USE AT THE MOMENT
     check_for_missing_values(model, epoch)
     # Clip gradients to avoid exploding gradients
-    nn.utils.clip_grad_norm_(combined_model.parameters(), 1)
+    nn.utils.clip_grad_norm_(model.parameters(), 1)
     # Clip parameters to avoid exploding parameters
-    for p in combined_model.parameters():
+    for p in model.parameters():
         p.data.clamp_(-1, 1)
 
 
@@ -31,12 +36,15 @@ def log_training_images(images, labels, outputs):
         label = labels[i].cpu().numpy()
         predicted_label = torch.argmax(outputs[i]).cpu().numpy()
 
-        # Log the image and label using wandb.Image and wandb.log
-        wandb.log(
-            {
-                "Training Image": wandb.Image(
-                    image,
-                    caption=f"True Label: {label}, Predicted Label: {predicted_label}",
-                )
-            }
-        )
+        # There is a bug in wandb that prevents logging images
+        try:
+            wandb.log(
+                {
+                    "Training Image": wandb.Image(
+                        image,
+                        caption=f"True Label: {label}, Predicted Label: {predicted_label}",
+                    )
+                }
+            )
+        except FileNotFoundError:
+            logger.warning(f"Could not log training image")

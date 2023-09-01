@@ -1,4 +1,5 @@
 # model_config_manager.py
+import logging
 import os
 
 from torchvision import models
@@ -8,6 +9,9 @@ from model_config import ModelConfig
 
 PRETRAINED_MODELS = models.list_models()
 CONFIG_DIRECTORY = "custom_models_config"
+
+
+logger = logging.getLogger("training_log")
 
 
 class ModelConfigManager:
@@ -42,16 +46,17 @@ class ModelConfigManager:
         raise ValueError(f"Model configuration '{model_name}' not found.")
 
     def output_model_details(self):
-        print("Model configurations:")
-        print(f"Model name: {self.model_config.model_name}")
+        logger.info("Model configurations:")
+        logger.info(f"Model name: {self.model_config.model_name}")
+
+        logger.info(f"Number of connectome layers: {self.model_config.num_layers}")
 
         if self.model_type == "pretrained":
-            print("This is a pretrained model")
+            logger.info("This is a pretrained model")
             return
 
-        print(f"Number of layers: {self.model_config.num_layers}")
-        print(f"Output channels: {self.model_config.out_channels}")
-        print(f"Kernel size: {self.model_config.kernel_size}")
-        print(f"Stride: {self.model_config.stride}")
-        print(f"Padding: {self.model_config.padding}")
-        print("\n")
+        logger.info(f"Output channels: {self.model_config.out_channels}")
+        logger.info(f"Kernel size: {self.model_config.kernel_size}")
+        logger.info(f"Stride: {self.model_config.stride}")
+        logger.info(f"Padding: {self.model_config.padding}")
+        logger.info("\n")

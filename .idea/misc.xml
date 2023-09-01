@@ -7,4 +7,7 @@
     <option name="sdkUUID" value="1ab3af5a-8776-4a6c-90c3-47ad2fcd497d" />
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.11 (connectome)" project-jdk-type="Python SDK" />
+  <component name="PythonCompatibilityInspectionAdvertiser">
+    <option name="version" value="3" />
+  </component>
 </project>

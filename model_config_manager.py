@@ -16,6 +16,7 @@ logger = logging.getLogger("training_log")
 
 class ModelConfigManager:
     model_type = None
+    model_config = None
 
     def __init__(self):
         self.model_configs = []

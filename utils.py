@@ -102,3 +102,12 @@ def get_image_names(i, _test_loader):
                  ]
     ]
     return batch_image_names, i + 1
+
+
+def preliminary_checks(debug, continue_training, plot_weber, wb, dev, logger):
+    if debug and continue_training:
+        raise ValueError("Can't continue training in DEBUG mode")
+    if plot_weber and not wb:
+        raise ValueError("Can't log Weber fraction plot without wandb")
+    if dev.type == "cpu":
+        logger.warning("WARNING: Running on CPU, so it might be slow")

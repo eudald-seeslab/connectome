@@ -14,25 +14,20 @@ from model_helpers import (
     get_retina_output_shape,
 )
 
-# TODO: this shouldn't be here
-config = yaml.safe_load(open("config.yml"))
-CONNECTOME_LAYER_NUMBER = config["CONNECTOME_LAYER_NUMBER"]
-IMAGE_SIZE = config["IMAGE_SIZE"]
-BATCH_SIZE = config["BATCH_SIZE"]
-RETINA_MODEL = config["RETINA_MODEL"]
-
 
 class CombinedModel(nn.Module):
-    def __init__(self, adjacency_matrix, neurons, model_config):
+    def __init__(self, adjacency_matrix, neurons, model_config, general_config):
         super().__init__()
         self.retina_model = get_retina_model(model_config=model_config)
+        batch_size = general_config["BATCH_SIZE"]
+        image_size = general_config["IMAGE_SIZE"]
 
         # Get the output shape of the retina model
         retina_output_shape = get_retina_output_shape(
-            self, (BATCH_SIZE, 3, IMAGE_SIZE, IMAGE_SIZE)
+            self, (batch_size, 3, image_size, image_size)
         )
         self.connectome_model = ConnectomeNetwork(
-            adjacency_matrix, neurons, retina_output_shape
+            adjacency_matrix, neurons, retina_output_shape, general_config
         )
 
     def forward(self, x):
@@ -45,8 +40,10 @@ class CombinedModel(nn.Module):
 
 
 class ConnectomeNetwork(nn.Module):
-    def __init__(self, adjacency_matrix, nodes, retina_output_size):
+    def __init__(self, adjacency_matrix, nodes, retina_output_size, general_config):
         super(ConnectomeNetwork, self).__init__()
+
+        connectome_layer_number = general_config["CONNECTOME_LAYER_NUMBER"]
 
         self.neuron_count = nodes.shape[0]
         visual_indices = nodes[nodes["visual"]].index
@@ -59,7 +56,7 @@ class ConnectomeNetwork(nn.Module):
         # Create a dictionary that packs the neuron layers, which are equivalent
         #  to signals advancing through the connectome
         self.neuron_layer_dict = {}
-        for i in range(CONNECTOME_LAYER_NUMBER):
+        for i in range(connectome_layer_number):
             self.neuron_layer_dict[i] = nn.Linear(
                 self.neuron_count, self.neuron_count, bias=False
             )

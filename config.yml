@@ -10,3 +10,4 @@ CONTINUE_TRAINING: True
 SAVED_MODEL_PATH: "models/long_training_cnn_1_2_layers/epochs_60.pth"
 SAVED_MODEL_NAME: "long_training"
 SAVE_EVERY: 10
+WANDB: True

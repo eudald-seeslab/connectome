@@ -68,7 +68,7 @@ nbclient==0.8.0
 nbconvert==7.4.0
 nbformat==5.9.0
 nest-asyncio==1.5.6
-netron==6.9.9
+netron
 networkx==3.1
 notebook==6.5.4
 notebook_shim==0.2.3
@@ -130,9 +130,9 @@ tenacity==8.2.2
 terminado==0.17.1
 threadpoolctl==3.1.0
 tinycss2==1.2.1
-torch==2.1.0.dev20230721+cu121
-torchaudio==2.1.0.dev20230721+cu121
-torchvision==0.16.0.dev20230721+cu121
+torch
+torchaudio
+torchvision
 tornado==6.3.2
 tqdm==4.65.0
 traitlets==5.9.0

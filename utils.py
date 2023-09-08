@@ -66,8 +66,8 @@ def plot_weber_fraction(test_results_df, save_dir):
     plt.title('Percentage of Correct Answers for Each Weber Ratio')
     plt.xticks(rotation=45)
     plt.tight_layout()
-    # Save to model directory
-    plt.savefig(os.path.join(save_dir, 'weber_fraction_plot.png'))
+
+    return plt
 
 
 def print_run_details(config_manager, debug, images_fraction, continue_training):
@@ -92,3 +92,13 @@ def handle_log_configs(debug):
     logger.addHandler(logging.StreamHandler())
 
     return logger
+
+
+def get_image_names(i, _test_loader):
+    batch_image_names = [
+        a[0]
+        for a in _test_loader.dataset.dataset.samples[
+                 i * _test_loader.batch_size: (i + 1) * _test_loader.batch_size
+                 ]
+    ]
+    return batch_image_names, i + 1

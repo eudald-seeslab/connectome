@@ -1,3 +1,5 @@
+# main run
+
 import pandas as pd
 from torch import nn, optim, device, cuda
 import torch
@@ -11,7 +13,7 @@ from torch.utils.tensorboard import SummaryWriter
 from data_parser import adj_matrix, nodes
 from image_parser import train_loader, test_loader, debug_loader
 from run_functions import run_test_epoch, run_train_epoch
-from utils import plot_weber_fraction, print_run_details, handle_log_configs
+from utils import plot_weber_fraction, print_run_details, handle_log_configs, get_image_names
 
 from models import CombinedModel
 from model_config_manager import ModelConfigManager
@@ -32,6 +34,8 @@ plot_weber = config["PLOT_WEBER_FRACTION"]
 
 if DEBUG and continue_training:
     raise ValueError("Can't continue training in DEBUG mode")
+if plot_weber and not wb:
+    raise ValueError("Can't log Weber fraction plot without wandb")
 
 loader = debug_loader if DEBUG else train_loader
 
@@ -66,8 +70,12 @@ optimizer = optim.Adam(combined_model.parameters(), lr=0.00001)
 # Logs
 # wandb sometimes screws up, so we might want to disable it (in config.yml)
 if wb:
-    wandb.init(project="connectome", config=config_manager.current_model_config)
+    project_name = f"connectome{'-test' if DEBUG else ''}"
+    wandb.init(project=project_name, config=config_manager.current_model_config)
     _ = wandb.watch(combined_model, criterion, log="all")
+    # Save config info
+    wandb.config.update(config)
+
 # I also want the model architecture
 tensorboard_writer = SummaryWriter()
 mock_image = torch.rand(1, 3, 512, 512).to(dev)
@@ -91,10 +99,6 @@ for epoch in trange(epochs, position=1, leave=True, desc="Epochs"):
     if (epoch + 1) % save_every == 0:
         model_manager.save_model(combined_model, epoch)
 
-# Close logs
-if wb:
-    wandb.finish()
-tensorboard_writer.close()
 
 # Clean up intermediate models
 model_manager.clean_previous_runs()
@@ -105,17 +109,6 @@ total = 0
 test_results_df = pd.DataFrame(
     columns=["Image", "Real Label", "Predicted Label", "Correct Prediction"]
 )
-
-
-def get_image_names(i, _test_loader):
-    batch_image_names = [
-        a[0]
-        for a in _test_loader.dataset.dataset.samples[
-                 i * _test_loader.batch_size: (i + 1) * _test_loader.batch_size
-                 ]
-    ]
-    return batch_image_names, i + 1
-
 
 with torch.no_grad():
     j = 0
@@ -130,5 +123,15 @@ with torch.no_grad():
 
 logger.info(f"Accuracy on the {total} test images: {100 * correct / total}%")
 
-if plot_weber:
-    plot_weber_fraction(test_results_df, model_manager.model_dir)
+# Store to wandb
+if wb:
+    wandb.log({"Test accuracy": correct / total})
+
+if plot_weber and wb:
+    weber_plot = plot_weber_fraction(test_results_df, model_manager.model_dir)
+    wandb.log({"Weber Fraction Plot": wandb.Image(weber_plot)})
+
+# Close logs
+if wb:
+    wandb.finish()
+tensorboard_writer.close()

@@ -39,7 +39,10 @@ class ModelManager:
     def clean_previous_runs(self):
         if self.clean_previous:
             # Delete all files in the model directory except for the current run
-            current_run_files = os.listdir(self.model_dir)
+            # Get only files ending with pth
+            current_run_files = [
+                filename for filename in os.listdir(self.model_dir) if filename.endswith(".pth")
+            ]
             for filename in current_run_files:
                 file_path = os.path.join(self.model_dir, filename)
                 if os.path.isfile(file_path) and not filename.startswith(

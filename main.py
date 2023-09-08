@@ -75,7 +75,8 @@ def main(sweep_config=None):
 
     # Logs
     # wandb sometimes screws up, so we might want to disable it (in config.yml)
-    if wb:
+    # Also, this might be called from a sweep run
+    if wb and sweep_config is not None:
         project_name = f"connectome{'-test' if DEBUG else ''}"
         wandb.init(project=project_name, config=config_manager.current_model_config)
         _ = wandb.watch(combined_model, criterion, log="all")

@@ -10,7 +10,7 @@ from model_config_manager import ModelConfigManager
 def log_training_images(
     images: torch.Tensor, labels: torch.Tensor, outputs: torch.Tensor
 ) -> None:
-    num_images_to_log = 5
+    num_images_to_log = 1
     for i in range(num_images_to_log):
         # Convert image and label to numpy for visualization
         image = images[i].cpu().numpy().transpose(1, 2, 0)
@@ -80,8 +80,11 @@ def handle_log_configs(debug: bool) -> logging.Logger:
         level=logging.DEBUG if debug else logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
-    logger = logging.getLogger("training_log")
-    logger.addHandler(logging.StreamHandler())
+    logger = logging.getLogger("raining_log")
+    # In the sweeps, this gets called multiple times
+    if not len(logger.handlers):
+        logger.addHandler(logging.FileHandler("training_log.log"))
+        logger.addHandler(logging.StreamHandler())
 
     return logger
 

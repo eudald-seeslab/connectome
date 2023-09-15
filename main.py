@@ -1,5 +1,3 @@
-# main run
-
 import pandas as pd
 from torch import nn, optim, device, cuda
 import torch
@@ -39,6 +37,7 @@ def main(sweep_config=None):
     epochs = config["EPOCHS"] if not debug else 2
     retina_model = config["RETINA_MODEL"]
     images_fraction = config["IMAGES_FRACTION"]
+    learning_rate = config["LEARNING_RATE"]
     continue_training = config["CONTINUE_TRAINING"]
     saved_model_path = config["SAVED_MODEL_PATH"]
     save_every = config["SAVE_EVERY"]
@@ -46,7 +45,6 @@ def main(sweep_config=None):
     plot_weber = config["PLOT_WEBER_FRACTION"]
     dev = device("cuda" if cuda.is_available() else "cpu")
 
-    # FIXME: this is terrible
     if sweep_config is not None:
         config["CONNECTOME_LAYER_NUMBER"] = sweep_config["connectome_layer_number"]
 
@@ -78,7 +76,8 @@ def main(sweep_config=None):
     # Model details
     combined_model = combined_model.to(dev)
     criterion = nn.NLLLoss()
-    optimizer = optim.Adam(combined_model.parameters(), lr=0.00001)
+    optimizer = optim.Adam(combined_model.parameters(), lr=learning_rate)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=1, verbose=True)
 
     # Logs
     # wandb sometimes screws up, so we might want to disable it (in config.yml)
@@ -108,6 +107,8 @@ def main(sweep_config=None):
             running_loss += run_train_epoch(
                 combined_model, criterion, optimizer, images, labels, epoch, dev
             )
+
+        scheduler.step(running_loss)
 
         logger.info(f"Epoch {epoch+1}/{epochs}, Loss: {running_loss/len(train_loader)}")
 
@@ -145,7 +146,10 @@ def main(sweep_config=None):
 
     if plot_weber and wb:
         weber_plot = plot_weber_fraction(test_results_df)
-        wandb.log({"Weber Fraction Plot": wandb.Image(weber_plot)})
+        try:
+            wandb.log({"Weber Fraction Plot": wandb.Image(weber_plot)})
+        except FileNotFoundError:
+            logger.warning(f"Could not log Weber fraction plot because wandb screwed up")
 
     # Close logs
     if wb:

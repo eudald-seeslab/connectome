@@ -45,10 +45,14 @@ class ModelManager:
             ]
             for filename in current_run_files:
                 file_path = os.path.join(self.model_dir, filename)
-                if os.path.isfile(file_path) and not filename.startswith(
-                    self.last_model_filename
-                ):
-                    os.remove(file_path)
+                # This fails in some edge cases
+                try:
+                    if os.path.isfile(file_path) and not filename.startswith(
+                        self.last_model_filename
+                    ):
+                        os.remove(file_path)
+                except TypeError:
+                    self.logger.warning(f"Failed to delete {file_path}")
 
     def save_model_plot(self, plot):
         plot_path = os.path.join(self.model_dir, "weber_fraction_plot.png")

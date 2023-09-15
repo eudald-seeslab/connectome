@@ -1,34 +1,15 @@
-# check missing values
+import pandas as pd
 import torch
 import wandb
-import torch.nn as nn
 import logging
 import matplotlib.pyplot as plt
 import seaborn as sns
-import os
+from model_config_manager import ModelConfigManager
 
 
-def check_for_missing_values(x, step):
-    if torch.isnan(x.parameters()).any():
-        raise Exception(f"NaN in parameters at step {step}")
-
-
-def nan_to_unknown(x):
-    # Replace the string "nan" with "Unknown"
-    return x.replace("nan", "Unknown")
-
-
-def check_model_parameters(model, epoch):
-    # NOT IN USE AT THE MOMENT
-    check_for_missing_values(model, epoch)
-    # Clip gradients to avoid exploding gradients
-    nn.utils.clip_grad_norm_(model.parameters(), 1)
-    # Clip parameters to avoid exploding parameters
-    for p in model.parameters():
-        p.data.clamp_(-1, 1)
-
-
-def log_training_images(images, labels, outputs):
+def log_training_images(
+    images: torch.Tensor, labels: torch.Tensor, outputs: torch.Tensor
+) -> None:
     num_images_to_log = 5
     for i in range(num_images_to_log):
         # Convert image and label to numpy for visualization
@@ -51,26 +32,38 @@ def log_training_images(images, labels, outputs):
             logger.warning(f"Could not log training image")
 
 
-def plot_weber_fraction(test_results_df, save_dir):
+def plot_weber_fraction(test_results_df: pd.DataFrame) -> plt.Figure:
     # Calculate the percentage of correct answers for each Weber ratio
-    test_results_df['yellow'] = test_results_df['Image'].apply(lambda x: x.split('_')[1])
-    test_results_df['blue'] = test_results_df['Image'].apply(lambda x: x.split('_')[2])
-    test_results_df['weber_ratio'] = test_results_df.apply(
-        lambda row: max(int(row['yellow']), int(row['blue'])) / min(int(row['yellow']), int(row['blue'])), axis=1)
-    correct_percentage = test_results_df.groupby('weber_ratio')['Correct Prediction'].mean() * 100
+    test_results_df["yellow"] = test_results_df["Image"].apply(
+        lambda x: x.split("_")[1]
+    )
+    test_results_df["blue"] = test_results_df["Image"].apply(lambda x: x.split("_")[2])
+    test_results_df["weber_ratio"] = test_results_df.apply(
+        lambda row: max(int(row["yellow"]), int(row["blue"]))
+        / min(int(row["yellow"]), int(row["blue"])),
+        axis=1,
+    )
+    correct_percentage = (
+        test_results_df.groupby("weber_ratio")["Correct Prediction"].mean() * 100
+    )
     # Plot
     plt.figure(figsize=(10, 6))
     sns.barplot(x=correct_percentage.index, y=correct_percentage.values)
-    plt.xlabel('Weber Ratio')
-    plt.ylabel('Percentage of Correct Answers')
-    plt.title('Percentage of Correct Answers for Each Weber Ratio')
+    plt.xlabel("Weber Ratio")
+    plt.ylabel("Percentage of Correct Answers")
+    plt.title("Percentage of Correct Answers for Each Weber Ratio")
     plt.xticks(rotation=45)
     plt.tight_layout()
 
     return plt
 
 
-def print_run_details(config_manager, debug, images_fraction, continue_training):
+def print_run_details(
+    config_manager: ModelConfigManager,
+    debug: bool,
+    images_fraction: float,
+    continue_training: bool,
+) -> None:
     logger = logging.getLogger("training_log")
     config_manager.output_model_details()
     if debug:
@@ -81,12 +74,11 @@ def print_run_details(config_manager, debug, images_fraction, continue_training)
         logger.warning("Warning: I'm training and already trained model")
 
 
-def handle_log_configs(debug):
-
+def handle_log_configs(debug: bool) -> logging.Logger:
     logging.basicConfig(
         filename="training_log.log",
         level=logging.DEBUG if debug else logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s"
+        format="%(asctime)s - %(levelname)s - %(message)s",
     )
     logger = logging.getLogger("training_log")
     logger.addHandler(logging.StreamHandler())
@@ -98,13 +90,20 @@ def get_image_names(i, _test_loader):
     batch_image_names = [
         a[0]
         for a in _test_loader.dataset.dataset.samples[
-                 i * _test_loader.batch_size: (i + 1) * _test_loader.batch_size
-                 ]
+            i * _test_loader.batch_size: (i + 1) * _test_loader.batch_size
+        ]
     ]
     return batch_image_names, i + 1
 
 
-def preliminary_checks(debug, continue_training, plot_weber, wb, dev, logger):
+def preliminary_checks(
+    debug: bool,
+    continue_training: bool,
+    plot_weber: bool,
+    wb: bool,
+    dev: torch.device,
+    logger: logging.Logger,
+) -> None:
     if debug and continue_training:
         raise ValueError("Can't continue training in DEBUG mode")
     if plot_weber and not wb:

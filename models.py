@@ -1,10 +1,7 @@
 import torch.nn.functional as F
 import torch.nn as nn
-from torch import where, from_numpy, rand, transpose
+from torch import Size, Tensor, where, from_numpy, rand, transpose
 from torchvision import models
-
-# Import config
-import yaml
 
 # Import model config manager
 from model_config_manager import PRETRAINED_MODELS
@@ -13,10 +10,19 @@ from model_helpers import (
     create_rational_layer,
     get_retina_output_shape,
 )
+from model_config import ModelConfig
+from pandas.core.frame import DataFrame
+from typing import Dict, Union
 
 
 class CombinedModel(nn.Module):
-    def __init__(self, adjacency_matrix, neurons, model_config, general_config):
+    def __init__(
+        self,
+        adjacency_matrix: DataFrame,
+        neurons: DataFrame,
+        model_config: ModelConfig,
+        general_config: Dict[str, Union[int, float, str, bool]],
+    ) -> None:
         super().__init__()
         self.retina_model = get_retina_model(model_config=model_config)
         batch_size = general_config["BATCH_SIZE"]
@@ -30,7 +36,7 @@ class CombinedModel(nn.Module):
             adjacency_matrix, neurons, retina_output_shape, general_config
         )
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         x = self.retina_model(x)
         x = x.view(x.size(0), -1)
         x = self.connectome_model(x)
@@ -40,7 +46,13 @@ class CombinedModel(nn.Module):
 
 
 class ConnectomeNetwork(nn.Module):
-    def __init__(self, adjacency_matrix, nodes, retina_output_size, general_config):
+    def __init__(
+        self,
+        adjacency_matrix: DataFrame,
+        nodes: DataFrame,
+        retina_output_size: Size,
+        general_config: Dict[str, Union[int, float, str, bool]],
+    ) -> None:
         super(ConnectomeNetwork, self).__init__()
 
         connectome_layer_number = general_config["CONNECTOME_LAYER_NUMBER"]
@@ -78,7 +90,7 @@ class ConnectomeNetwork(nn.Module):
             self.neuron_count, 2, rational_indices
         )
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         # Pass the input through the retina layer
         out = self.retina_layer(x)
 
@@ -121,7 +133,7 @@ class CustomRetinaModel(nn.Module):
         return x
 
 
-def get_retina_model(model_config):
+def get_retina_model(model_config: ModelConfig):
     # Pretrained models
     if model_config.model_name in PRETRAINED_MODELS:
         # Load a pretrained model from torchvision

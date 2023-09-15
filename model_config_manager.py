@@ -5,6 +5,7 @@ import os
 from torchvision import models
 
 from model_config import ModelConfig
+from typing import Dict, Union
 
 
 PRETRAINED_MODELS = models.list_models()
@@ -18,14 +19,16 @@ class ModelConfigManager:
     model_type = None
     current_model_config = None
 
-    def __init__(self, connectome_config):
+    def __init__(
+        self, connectome_config: Dict[str, Union[int, float, str, bool]]
+    ) -> None:
         self.connectome_config = connectome_config
         self.model_name = connectome_config["RETINA_MODEL"]
         self.connectome_layer_number = connectome_config["CONNECTOME_LAYER_NUMBER"]
         self.retina_model_configs = []
         self.load_configs_from_yaml(CONFIG_DIRECTORY)
 
-    def load_configs_from_yaml(self, config_directory):
+    def load_configs_from_yaml(self, config_directory: str) -> None:
         for file_name in os.listdir(config_directory):
             if file_name.endswith(".yml"):
                 file_path = os.path.join(config_directory, file_name)
@@ -34,10 +37,12 @@ class ModelConfigManager:
                 )
                 self.retina_model_configs.append(model_config)
 
-    def set_model_config(self, model_name):
+    def set_model_config(self, model_name: str) -> None:
         # Pretrained models are not in the custom retina models config files
         if model_name in PRETRAINED_MODELS:
-            self.current_model_config = ModelConfig(self.connectome_config).get_model_config()
+            self.current_model_config = ModelConfig(
+                self.connectome_config
+            ).get_model_config()
             self.model_type = "pretrained"
             return
 
@@ -48,7 +53,7 @@ class ModelConfigManager:
                 return
         raise ValueError(f"Model configuration '{model_name}' not found.")
 
-    def output_model_details(self):
+    def output_model_details(self) -> None:
         logger.info("Model configurations:")
         logger.info(f"Model name: {self.current_model_config.model_name}")
 

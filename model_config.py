@@ -1,9 +1,10 @@
 # model_config.py
 import yaml
+from typing import Dict, Union
 
 
 class ModelConfig:
-    def __init__(self, model_config):
+    def __init__(self, model_config: Dict[str, Union[int, float, str, bool]]) -> None:
         # General config
         self.connectome_layer_number = model_config["CONNECTOME_LAYER_NUMBER"]
         self.model_name = model_config["RETINA_MODEL"]
@@ -15,7 +16,7 @@ class ModelConfig:
         self.stride = None
         self.padding = None
 
-    def get_data_from_yaml(self, file_path):
+    def get_data_from_yaml(self, file_path: str) -> "ModelConfig":
         with open(file_path) as f:
             config_data = yaml.safe_load(f)
             self.num_layers = config_data["num_layers"]
@@ -25,5 +26,5 @@ class ModelConfig:
             self.padding = config_data["padding"]
         return self
 
-    def get_model_config(self):
+    def get_model_config(self) -> "ModelConfig":
         return self

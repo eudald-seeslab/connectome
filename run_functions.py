@@ -3,10 +3,15 @@ import torch
 import wandb
 
 import pandas as pd
+from models import CombinedModel
+from torch.nn.modules.loss import NLLLoss
+from torch.optim.adam import Adam
+
+
+# TODO: all of this needs to be improved
 
 
 def run_test_epoch(model, images, labels, image_names, total, correct, dev):
-
     images, labels = images.to(dev), labels.to(dev)
     outputs = model(images)
     _, predicted = torch.max(outputs.data, 1)
@@ -19,7 +24,6 @@ def run_test_epoch(model, images, labels, image_names, total, correct, dev):
 
 
 def check_predictions_and_store_to_df(image_names, labels, predicted):
-
     # Check if the prediction is correct
     correct_predictions = (predicted == labels).cpu().numpy().astype(int)
 
@@ -33,7 +37,16 @@ def check_predictions_and_store_to_df(image_names, labels, predicted):
     )
 
 
-def run_train_epoch(model, criterion, optimizer, images, labels, epoch, dev, wb=True):
+def run_train_epoch(
+    model: CombinedModel,
+    criterion: NLLLoss,
+    optimizer: Adam,
+    images: torch.Tensor,
+    labels: torch.Tensor,
+    epoch: int,
+    dev: torch.device,
+    wb: bool = True,
+) -> float:
     # Move images and labels to the device
     images, labels = images.to(dev), labels.to(dev)
     # Forward pass

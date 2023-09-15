@@ -27,10 +27,17 @@ from model_manager import ModelManager
 
 
 def main(sweep_config=None):
+    """
+    Main function to run the training and testing of the model.
+    Parameters
+    ----------
+    sweep_config: wandb sweep config object
+    """
+
     config = yaml.safe_load(open("config.yml"))
-    DEBUG = config["DEBUG"]
-    epochs = config["EPOCHS"] if not DEBUG else 2
-    RETINA_MODEL = config["RETINA_MODEL"]
+    debug = config["DEBUG"]
+    epochs = config["EPOCHS"] if not debug else 2
+    retina_model = config["RETINA_MODEL"]
     images_fraction = config["IMAGES_FRACTION"]
     continue_training = config["CONTINUE_TRAINING"]
     saved_model_path = config["SAVED_MODEL_PATH"]
@@ -43,16 +50,16 @@ def main(sweep_config=None):
     if sweep_config is not None:
         config["CONNECTOME_LAYER_NUMBER"] = sweep_config["connectome_layer_number"]
 
-    loader = debug_loader if DEBUG else train_loader
-    logger = handle_log_configs(DEBUG)
+    loader = debug_loader if debug else train_loader
+    logger = handle_log_configs(debug)
 
-    preliminary_checks(DEBUG, continue_training, plot_weber, wb, dev, logger)
+    preliminary_checks(debug, continue_training, plot_weber, wb, dev, logger)
 
     # Create the ModelConfigManager and load configurations from YAML files
     config_manager = ModelConfigManager(config)
 
     # Get a specific configuration by model name
-    config_manager.set_model_config(RETINA_MODEL)
+    config_manager.set_model_config(retina_model)
 
     combined_model = CombinedModel(
         adj_matrix,
@@ -78,7 +85,7 @@ def main(sweep_config=None):
     if wb:
         # This might be called from a sweep run, so init is elsewhere
         if sweep_config is None:
-            project_name = f"connectome{'-test' if DEBUG else ''}"
+            project_name = f"connectome{'-test' if debug else ''}"
             wandb.init(project=project_name, config=config_manager.current_model_config)
         _ = wandb.watch(combined_model, criterion, log="all")
         wandb.log({"Connectome layer number": config["CONNECTOME_LAYER_NUMBER"]})
@@ -91,12 +98,11 @@ def main(sweep_config=None):
     mock_image = torch.rand(1, 3, 512, 512).to(dev)
     tensorboard_writer.add_graph(combined_model, mock_image)
 
-    print_run_details(config_manager, DEBUG, images_fraction, continue_training)
+    print_run_details(config_manager, debug, images_fraction, continue_training)
 
     # Training loop
     for epoch in trange(epochs, position=1, leave=True, desc="Epochs"):
         running_loss = 0
-        correct_predictions = 0
 
         for images, labels in tqdm(loader, position=0, leave=True, desc="Batches"):
             running_loss += run_train_epoch(
@@ -138,7 +144,7 @@ def main(sweep_config=None):
         wandb.log({"Test accuracy": correct / total})
 
     if plot_weber and wb:
-        weber_plot = plot_weber_fraction(test_results_df, model_manager.model_dir)
+        weber_plot = plot_weber_fraction(test_results_df)
         wandb.log({"Weber Fraction Plot": wandb.Image(weber_plot)})
 
     # Close logs

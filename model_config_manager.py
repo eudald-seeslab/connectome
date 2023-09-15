@@ -37,7 +37,7 @@ class ModelConfigManager:
     def set_model_config(self, model_name):
         # Pretrained models are not in the custom retina models config files
         if model_name in PRETRAINED_MODELS:
-            self.current_model_config = ModelConfig(self.connectome_config)
+            self.current_model_config = ModelConfig(self.connectome_config).get_model_config()
             self.model_type = "pretrained"
             return
 

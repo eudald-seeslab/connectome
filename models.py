@@ -127,9 +127,10 @@ class CustomRetinaModel(nn.Module):
                 kernel_size=model_config.pool_kernel_size,
                 stride=model_config.pool_stride,
             )
+            dropout = nn.Dropout(p=model_config.dropout)
 
             self.layers.append(
-                nn.Sequential(conv_layer, activation, pooling_layer)
+                nn.Sequential(conv_layer, activation, pooling_layer, dropout)
             )
 
     def forward(self, x):

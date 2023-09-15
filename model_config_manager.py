@@ -70,4 +70,5 @@ class ModelConfigManager:
         logger.info(f"Kernel padding: {self.current_model_config.kernel_padding}")
         logger.info(f"Pool kernel size: {self.current_model_config.pool_kernel_size}")
         logger.info(f"Pool stride: {self.current_model_config.pool_stride}")
+        logger.info(f"Dropout: {self.current_model_config.dropout}")
         logger.info("\n")

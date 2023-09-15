@@ -6,3 +6,4 @@ kernel_stride: 1
 kernel_padding: 0
 pool_kernel_size: 2
 pool_stride: 2
+dropout: 0.5

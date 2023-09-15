@@ -17,6 +17,7 @@ class ModelConfig:
         self.kernel_padding = None
         self.pool_kernel_size = None
         self.pool_stride = None
+        self.dropout = None
 
     def get_data_from_yaml(self, file_path: str) -> "ModelConfig":
         with open(file_path) as f:
@@ -28,6 +29,7 @@ class ModelConfig:
             self.kernel_padding = config_data.get("kernel_padding")
             self.pool_kernel_size = config_data.get("pool_kernel_size")
             self.pool_stride = config_data.get("pool_stride")
+            self.dropout = config_data.get("dropout")
         return self
 
     def get_model_config(self) -> "ModelConfig":

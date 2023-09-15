@@ -119,13 +119,18 @@ class CustomRetinaModel(nn.Module):
                 in_channels=3 if i == 0 else model_config.out_channels,
                 out_channels=model_config.out_channels,
                 kernel_size=model_config.kernel_size,
-                padding=model_config.padding,
-                stride=model_config.stride,
+                padding=model_config.kernel_padding,
+                stride=model_config.kernel_stride,
             )
             activation = nn.ReLU(inplace=True)
-            pooling_layer = nn.MaxPool2d(kernel_size=2, stride=2)
+            pooling_layer = nn.MaxPool2d(
+                kernel_size=model_config.pool_kernel_size,
+                stride=model_config.pool_stride,
+            )
 
-            self.layers.append(nn.Sequential(conv_layer, activation, pooling_layer))
+            self.layers.append(
+                nn.Sequential(conv_layer, activation, pooling_layer)
+            )
 
     def forward(self, x):
         for layer in self.layers:

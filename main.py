@@ -40,7 +40,7 @@ def main(sweep_config=None):
     dev = device("cuda" if cuda.is_available() else "cpu")
 
     # FIXME: this is terrible
-    if sweep_config:
+    if sweep_config is not None:
         config["CONNECTOME_LAYER_NUMBER"] = sweep_config["connectome_layer_number"]
 
     loader = debug_loader if DEBUG else train_loader
@@ -75,11 +75,14 @@ def main(sweep_config=None):
 
     # Logs
     # wandb sometimes screws up, so we might want to disable it (in config.yml)
-    # Also, this might be called from a sweep run
-    if wb and sweep_config is not None:
-        project_name = f"connectome{'-test' if DEBUG else ''}"
-        wandb.init(project=project_name, config=config_manager.current_model_config)
+    if wb:
+        # This might be called from a sweep run, so init is elsewhere
+        if sweep_config is None:
+            project_name = f"connectome{'-test' if DEBUG else ''}"
+            wandb.init(project=project_name, config=config_manager.current_model_config)
         _ = wandb.watch(combined_model, criterion, log="all")
+        wandb.log({"Connectome layer number": config["CONNECTOME_LAYER_NUMBER"]})
+
         # Save config info
         wandb.config.update(config)
 
@@ -116,6 +119,7 @@ def main(sweep_config=None):
         columns=["Image", "Real Label", "Predicted Label", "Correct Prediction"]
     )
 
+    # Training loop
     with torch.no_grad():
         j = 0
         for images, labels in tqdm(test_loader):

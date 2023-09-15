@@ -1,6 +1,6 @@
 import torch.nn.functional as F
 import torch.nn as nn
-from torch import Size, Tensor, where, from_numpy, rand, transpose
+from torch import Size, Tensor, where, from_numpy, rand, transpose, matmul
 from torchvision import models
 
 # Import model config manager
@@ -58,11 +58,10 @@ class ConnectomeNetwork(nn.Module):
         connectome_layer_number = general_config["CONNECTOME_LAYER_NUMBER"]
 
         self.neuron_count = nodes.shape[0]
-        visual_indices = nodes[nodes["visual"]].index
 
         # Create a linear layer for the retina input
         self.retina_layer = create_retina_layer(
-            retina_output_size[1], self.neuron_count, visual_indices
+            retina_output_size[1], self.neuron_count, nodes[nodes["visual"]].index
         )
 
         # Create a dictionary that packs the neuron layers, which are equivalent
@@ -85,9 +84,8 @@ class ConnectomeNetwork(nn.Module):
                 rand(self.neuron_count, self.neuron_count),
             )
         )
-        rational_indices = nodes[nodes["rational"]].index
         self.rational_layer = create_rational_layer(
-            self.neuron_count, 2, rational_indices
+            self.neuron_count, 2, nodes[nodes["rational"]].index
         )
 
     def forward(self, x: Tensor) -> Tensor:
@@ -96,10 +94,8 @@ class ConnectomeNetwork(nn.Module):
 
         # Pass the input through the layer with shared weights
         for _, layer in self.neuron_layer_dict.items():
-            # Set the weights for all layers to be the same
-            layer.weight = self.shared_weights
-            # Then do the forward pass
-            out = layer(out)
+            # Set the weights for all layers to be the same and do the forward pass
+            out = matmul(self.shared_weights, out.t()).t()
 
         # Pass the input through the rational layer
         return self.rational_layer(out)

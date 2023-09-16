@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from data_parser import adj_matrix, nodes
 from image_parser import train_loader, test_loader, validation_loader, debug_loader
-from run_functions import run_test_epoch, run_train_epoch, calculate_test_accuracy
+from run_functions import run_validation_epoch, run_train_epoch, calculate_test_accuracy
 from utils import (
     plot_weber_fraction,
     print_run_details,
@@ -19,7 +19,7 @@ from utils import (
     get_image_names,
     preliminary_checks,
 )
-
+from early_stopper import EarlyStopper
 from models import CombinedModel
 from model_config_manager import ModelConfigManager
 from model_manager import ModelManager
@@ -83,6 +83,7 @@ def main(sweep_config=None):
     criterion = nn.NLLLoss()
     optimizer = optim.Adam(combined_model.parameters(), lr=learning_rate)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=1, verbose=True)
+    early_stopper = EarlyStopper(patience=3, min_delta=0.1)
 
     # Logs
     # wandb sometimes screws up, so we might want to disable it (in config.yml)
@@ -115,8 +116,11 @@ def main(sweep_config=None):
                 combined_model, criterion, optimizer, images, labels, dev
             )
         # Run test
-        test_accuracy = calculate_test_accuracy(validation_loader, combined_model, dev)
+        test_accuracy, test_loss = calculate_test_accuracy(test_loader, combined_model, criterion, dev)
         wandb.log({"Test accuracy": test_accuracy})
+        if early_stopper.early_stop(test_loss):
+            logger.info("Early stopping")
+            break
 
         scheduler.step(running_loss)
 
@@ -139,11 +143,13 @@ def main(sweep_config=None):
     # Training loop
     with torch.no_grad():
         j = 0
-        for images, labels in tqdm(validation_loader):
-            # Get the correct image names
-            image_names, j = get_image_names(j, validation_loader)
-            correct, total, batch_df = run_test_epoch(
-                combined_model, images, labels, image_names, total, correct, dev
+        # This is overly complicated because I need to get the image names
+        #  to compute the weber fraction
+        for (images, labels), (image_paths, _) in tqdm(
+                zip(validation_loader, validation_loader.dataset.dataset.samples)
+        ):
+            correct, total, batch_df = run_validation_epoch(
+                combined_model, images, labels, image_paths, total, correct, dev
             )
             # Append the batch DataFrame to the list
             validation_results_df = pd.concat([validation_results_df, batch_df], ignore_index=True)

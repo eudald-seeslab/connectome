@@ -43,7 +43,6 @@ def run_train_epoch(
     optimizer: Adam,
     images: torch.Tensor,
     labels: torch.Tensor,
-    epoch: int,
     dev: torch.device,
     wb: bool = True,
 ) -> float:
@@ -63,7 +62,7 @@ def run_train_epoch(
     optimizer.step()
     # Log images to wandb and tensorboard
     if wb:
-        wandb.log({"loss": loss.item(), "accuracy": accuracy, "epoch": epoch})
+        wandb.log({"loss": loss.item(), "accuracy": accuracy})
         log_training_images(images, labels, outputs)
 
     return loss.item()

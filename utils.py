@@ -93,16 +93,6 @@ def handle_log_configs(debug: bool) -> logging.Logger:
     return logger
 
 
-def get_image_names(i, _test_loader):
-    batch_image_names = [
-        a[0]
-        for a in _test_loader.dataset.dataset.samples[
-            i * _test_loader.batch_size: (i + 1) * _test_loader.batch_size
-        ]
-    ]
-    return batch_image_names, i + 1
-
-
 def preliminary_checks(
     debug: bool,
     continue_training: bool,

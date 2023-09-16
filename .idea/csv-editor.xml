@@ -31,6 +31,48 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\data\science.add9330_data_s1\__MACOSX\Supplementary-Data-S1\._ad_connectivity_matrix.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="&#9;" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\data\science.add9330_data_s1\__MACOSX\Supplementary-Data-S1\._all-all_connectivity_matrix.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="&#9;" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\data\science.add9330_data_s1\__MACOSX\Supplementary-Data-S1\._da_connectivity_matrix.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="&#9;" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\data\science.add9330_data_s1\__MACOSX\Supplementary-Data-S1\._dd_connectivity_matrix.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="&#9;" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\data\science.add9330_data_s1\__MACOSX\Supplementary-Data-S1\._inputs.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="&#9;" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\data\science.add9330_data_s1\__MACOSX\Supplementary-Data-S1\._outputs.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="&#9;" />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\data\science.add9330_data_s3.csv">
           <value>
             <Attribute>

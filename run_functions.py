@@ -66,3 +66,22 @@ def run_train_epoch(
         log_training_images(images, labels, outputs)
 
     return loss.item()
+
+
+def calculate_test_accuracy(validation_loader, model, device):
+    model.eval()  # Set the model to evaluation mode
+    correct = 0
+    total = 0
+
+    with torch.no_grad():
+        for images, labels in validation_loader:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images)
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+    accuracy = correct / total if total > 0 else 0.0
+    model.train()  # Set the model back to training mode
+
+    return accuracy

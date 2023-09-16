@@ -6,6 +6,7 @@ import yaml
 
 config = yaml.safe_load(open("config.yml"))
 images_fraction = config["IMAGES_FRACTION"]
+debug = config["DEBUG"]
 
 # Define a transform to normalize the data
 transform = transforms.Compose(
@@ -22,10 +23,14 @@ transform = transforms.Compose(
 # Load images from the "images" directory
 dataset = datasets.ImageFolder("images", transform=transform)
 
-# Train and test split
+# Create three sets: train, test and validation
 train_size = int(len(dataset) * config["TRAIN_SPLIT"])
-test_size = len(dataset) - train_size
-train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
+test_size = int(len(dataset) * config["TEST_SPLIT"])
+validation_size = len(dataset) - train_size - test_size
+
+train_dataset, test_dataset, validation_dataset = random_split(
+    dataset, [train_size, test_size, validation_size]
+)
 
 # Create a data loader
 # I created the training images artificially, and maybe there are too many.
@@ -34,12 +39,25 @@ train_indices = random.sample(
     range(len(train_dataset)), int(len(train_dataset) * images_fraction)
 )
 train_subset = Subset(train_dataset, train_indices)
-train_loader = DataLoader(train_subset, batch_size=config["BATCH_SIZE"], shuffle=True)
 
+train_loader = DataLoader(
+    train_subset, batch_size=config["BATCH_SIZE"], shuffle=True
+)
+test_loader = DataLoader(
+    test_dataset, batch_size=config["BATCH_SIZE"], shuffle=False
+)
+validation_loader = DataLoader(
+    validation_dataset, batch_size=config["BATCH_SIZE"], shuffle=False
+)
 
-test_loader = DataLoader(test_dataset, batch_size=config["BATCH_SIZE"], shuffle=False)
-
-# FIXME: I'm always creating a debug dataset, but I don't always use it
-debug_indices = random.sample(range(len(train_dataset)), int(len(train_dataset) * 0.1))
-debug_subset = Subset(train_dataset, debug_indices)
-debug_loader = DataLoader(debug_subset, batch_size=config["BATCH_SIZE"], shuffle=True)
+if debug:
+    # Create a data loader for debugging
+    debug_indices = random.sample(
+        range(len(train_dataset)), int(len(train_dataset) * 0.1)
+    )
+    debug_subset = Subset(train_dataset, debug_indices)
+    debug_loader = DataLoader(
+        debug_subset, batch_size=config["BATCH_SIZE"], shuffle=True
+    )
+else:
+    debug_loader = None

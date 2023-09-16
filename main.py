@@ -10,8 +10,8 @@ import wandb
 from torch.utils.tensorboard import SummaryWriter
 
 from data_parser import adj_matrix, nodes
-from image_parser import train_loader, test_loader, debug_loader
-from run_functions import run_test_epoch, run_train_epoch
+from image_parser import train_loader, test_loader, validation_loader, debug_loader
+from run_functions import run_test_epoch, run_train_epoch, calculate_test_accuracy
 from utils import (
     plot_weber_fraction,
     print_run_details,
@@ -37,6 +37,7 @@ def main(sweep_config=None):
     debug = config["DEBUG"]
     epochs = config["EPOCHS"] if not debug else 2
     retina_model = config["RETINA_MODEL"]
+    batch_size = config["BATCH_SIZE"]
     images_fraction = config["IMAGES_FRACTION"]
     learning_rate = config["LEARNING_RATE"]
     continue_training = config["CONTINUE_TRAINING"]
@@ -113,10 +114,13 @@ def main(sweep_config=None):
             running_loss += run_train_epoch(
                 combined_model, criterion, optimizer, images, labels, dev
             )
+        # Run test
+        test_accuracy = calculate_test_accuracy(validation_loader, combined_model, dev)
+        wandb.log({"Test accuracy": test_accuracy})
 
         scheduler.step(running_loss)
 
-        logger.info(f"Epoch {epoch+1}/{epochs}, Loss: {running_loss/len(train_loader)}")
+        logger.info(f"Epoch {epoch+1}/{epochs}, Loss: {running_loss/len(train_loader)}, Test accuracy: {test_accuracy}")
 
         # Save model
         if (epoch + 1) % save_every == 0:
@@ -128,21 +132,21 @@ def main(sweep_config=None):
     # Testing
     correct = 0
     total = 0
-    test_results_df = pd.DataFrame(
+    validation_results_df = pd.DataFrame(
         columns=["Image", "Real Label", "Predicted Label", "Correct Prediction"]
     )
 
     # Training loop
     with torch.no_grad():
         j = 0
-        for images, labels in tqdm(test_loader):
+        for images, labels in tqdm(validation_loader):
             # Get the correct image names
-            image_names, j = get_image_names(j, test_loader)
+            image_names, j = get_image_names(j, validation_loader)
             correct, total, batch_df = run_test_epoch(
                 combined_model, images, labels, image_names, total, correct, dev
             )
             # Append the batch DataFrame to the list
-            test_results_df = pd.concat([test_results_df, batch_df], ignore_index=True)
+            validation_results_df = pd.concat([validation_results_df, batch_df], ignore_index=True)
 
     logger.info(f"Accuracy on the {total} test images: {100 * correct / total}%")
 
@@ -151,7 +155,7 @@ def main(sweep_config=None):
         wandb.log({"Test accuracy": correct / total})
 
     if plot_weber and wb:
-        weber_plot = plot_weber_fraction(test_results_df)
+        weber_plot = plot_weber_fraction(validation_results_df)
         try:
             wandb.log({"Weber Fraction Plot": wandb.Image(weber_plot)})
         except FileNotFoundError:

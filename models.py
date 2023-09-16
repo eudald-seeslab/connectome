@@ -55,7 +55,7 @@ class ConnectomeNetwork(nn.Module):
     ) -> None:
         super(ConnectomeNetwork, self).__init__()
 
-        connectome_layer_number = general_config["CONNECTOME_LAYER_NUMBER"]
+        self.connectome_layer_number = general_config["CONNECTOME_LAYER_NUMBER"]
 
         self.neuron_count = nodes.shape[0]
 
@@ -64,17 +64,7 @@ class ConnectomeNetwork(nn.Module):
             retina_output_size[1], self.neuron_count, nodes[nodes["visual"]].index
         )
 
-        # Create a dictionary that packs the neuron layers, which are equivalent
-        #  to signals advancing through the connectome
-        self.neuron_layer_dict = {}
-        for i in range(connectome_layer_number):
-            self.neuron_layer_dict[i] = nn.Linear(
-                self.neuron_count, self.neuron_count, bias=False
-            )
-            # Remove the weights as we override them in the forward
-            # so that they don't show up when calling .parameters()
-            del self.neuron_layer_dict[i].weight
-
+        # These are the shared weights for the connectome layers
         # Set the weights for non-connected neurons to 0 and initialize the rest randomly
         # TODO: make sure this is correct and the transpose is needed
         self.shared_weights = nn.Parameter(
@@ -93,7 +83,7 @@ class ConnectomeNetwork(nn.Module):
         out = self.retina_layer(x)
 
         # Pass the input through the layer with shared weights
-        for _, layer in self.neuron_layer_dict.items():
+        for _ in range(self.connectome_layer_number):
             # Set the weights for all layers to be the same and do the forward pass
             out = matmul(self.shared_weights, out.t()).t()
 

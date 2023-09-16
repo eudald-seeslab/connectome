@@ -2,6 +2,7 @@ import pandas as pd
 import torch
 import wandb
 import logging
+from random import getrandbits
 import matplotlib.pyplot as plt
 import seaborn as sns
 from model_config_manager import ModelConfigManager
@@ -10,7 +11,10 @@ from model_config_manager import ModelConfigManager
 def log_training_images(
     images: torch.Tensor, labels: torch.Tensor, outputs: torch.Tensor
 ) -> None:
-    num_images_to_log = 1
+    # Don't always log, or we saturate wandb
+    # Substitute for a number smaller or equal to batch size if you want more
+    #  images
+    num_images_to_log = getrandbits(1)
     for i in range(num_images_to_log):
         # Convert image and label to numpy for visualization
         image = images[i].cpu().numpy().transpose(1, 2, 0)

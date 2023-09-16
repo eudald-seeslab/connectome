@@ -6,6 +6,7 @@ import yaml
 from tqdm.auto import tqdm, trange
 
 import wandb
+
 from torch.utils.tensorboard import SummaryWriter
 
 from data_parser import adj_matrix, nodes
@@ -58,6 +59,9 @@ def main(sweep_config=None):
 
     # Get a specific configuration by model name
     config_manager.set_model_config(retina_model)
+    if config_manager.model_type == "pretrained" and batch_size > 8:
+        # If it's a pretrained model, we need to be careful about batch size
+        raise ValueError("Pretrained models can't handle batch sizes larger than 8")
 
     combined_model = CombinedModel(
         adj_matrix,
@@ -102,10 +106,12 @@ def main(sweep_config=None):
     # Training loop
     for epoch in trange(epochs, position=1, leave=True, desc="Epochs"):
         running_loss = 0
+        wandb.log({"Epoch": epoch})
 
+        # for images, labels in loader:
         for images, labels in tqdm(loader, position=0, leave=True, desc="Batches"):
             running_loss += run_train_epoch(
-                combined_model, criterion, optimizer, images, labels, epoch, dev
+                combined_model, criterion, optimizer, images, labels, dev
             )
 
         scheduler.step(running_loss)

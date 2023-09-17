@@ -16,7 +16,6 @@ from utils import (
     plot_weber_fraction,
     print_run_details,
     handle_log_configs,
-    get_image_names,
     preliminary_checks,
 )
 from early_stopper import EarlyStopper
@@ -81,9 +80,11 @@ def main(sweep_config=None):
     # Model details
     combined_model = combined_model.to(dev)
     criterion = nn.NLLLoss()
-    optimizer = optim.Adam(combined_model.parameters(), lr=learning_rate)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=1, verbose=True)
-    early_stopper = EarlyStopper(patience=3, min_delta=0.1)
+    optimizer = optim.Adam(combined_model.parameters(), lr=learning_rate, weight_decay=1e-4)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, factor=0.5, patience=1, verbose=True
+    )
+    early_stopper = EarlyStopper(patience=10, min_delta=0.2)
 
     # Logs
     # wandb sometimes screws up, so we might want to disable it (in config.yml)
@@ -112,19 +113,26 @@ def main(sweep_config=None):
 
         # for images, labels in loader:
         for images, labels in tqdm(loader, position=0, leave=True, desc="Batches"):
-            running_loss += run_train_epoch(
+            loss, accuracy = run_train_epoch(
                 combined_model, criterion, optimizer, images, labels, dev
             )
+            running_loss += loss
         # Run test
-        test_accuracy, test_loss = calculate_test_accuracy(test_loader, combined_model, criterion, dev)
-        wandb.log({"Test accuracy": test_accuracy})
+        test_accuracy, test_loss = calculate_test_accuracy(
+            test_loader, combined_model, criterion, dev
+        )
+        wandb.log({"Test loss": {test_loss}, "Test accuracy": test_accuracy})
+        scheduler.step(test_loss)
+
         if early_stopper.early_stop(test_loss):
             logger.info("Early stopping")
             break
 
-        scheduler.step(running_loss)
-
-        logger.info(f"Epoch {epoch+1}/{epochs}, Loss: {running_loss/len(train_loader)}, Test accuracy: {test_accuracy}")
+        logger.info(
+            f"Epoch {epoch+1}/{epochs}, "
+            f"\nLoss: {running_loss/len(train_loader)}, Accuracy: {accuracy}"
+            f"\nTest loss: {test_loss}, Test accuracy: {test_accuracy}"
+        )
 
         # Save model
         if (epoch + 1) % save_every == 0:
@@ -137,35 +145,41 @@ def main(sweep_config=None):
     correct = 0
     total = 0
     validation_results_df = pd.DataFrame(
-        columns=["Image", "Real Label", "Predicted Label", "Correct Prediction"]
+        columns=["Real Label", "Predicted Label", "Correct Prediction"]
     )
 
-    # Training loop
+    # Validation loop
     with torch.no_grad():
         j = 0
         # This is overly complicated because I need to get the image names
         #  to compute the weber fraction
-        for (images, labels), (image_paths, _) in tqdm(
-                zip(validation_loader, validation_loader.dataset.dataset.samples)
-        ):
+        for images, labels in tqdm(validation_loader):
             correct, total, batch_df = run_validation_epoch(
-                combined_model, images, labels, image_paths, total, correct, dev
+                combined_model, images, labels, total, correct, dev
             )
             # Append the batch DataFrame to the list
-            validation_results_df = pd.concat([validation_results_df, batch_df], ignore_index=True)
+            validation_results_df = pd.concat(
+                [validation_results_df, batch_df], ignore_index=True
+            )
+    validation_results_df["Image"] = [a[0] for a in validation_loader.dataset.samKples]
 
     logger.info(f"Accuracy on the {total} test images: {100 * correct / total}%")
 
     # Store to wandb
     if wb:
-        wandb.log({"Test accuracy": correct / total})
+        wandb.log({"Validation accuracy": correct / total})
 
     if plot_weber and wb:
         weber_plot = plot_weber_fraction(validation_results_df)
         try:
             wandb.log({"Weber Fraction Plot": wandb.Image(weber_plot)})
         except FileNotFoundError:
-            logger.warning(f"Could not log Weber fraction plot because wandb screwed up")
+            logger.warning(
+                "Could not log Weber fraction plot because wandb screwed up"
+            )
+            # Save the plot to a file, taking into account the connectome layer number
+            model_manager.save_model_plot(weber_plot)
+
 
     # Close logs
     if wb:

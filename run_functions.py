@@ -11,7 +11,7 @@ from torch.optim.adam import Adam
 # TODO: all of this needs to be improved
 
 
-def run_validation_epoch(model, images, labels, image_names, total, correct, dev):
+def run_validation_epoch(model, images, labels, total, correct, dev):
     images, labels = images.to(dev), labels.to(dev)
     outputs = model(images)
     _, predicted = torch.max(outputs.data, 1)
@@ -19,24 +19,20 @@ def run_validation_epoch(model, images, labels, image_names, total, correct, dev
     correct += (predicted == labels).sum()
 
     # Check and store predictions
-    batch_df = check_predictions_and_store_to_df(image_names, labels, predicted)
+    batch_df = check_predictions_and_store_to_df(labels, predicted)
     return correct, total, batch_df
 
 
-def check_predictions_and_store_to_df(image_names, labels, predicted):
+def check_predictions_and_store_to_df(labels, predicted):
     # Check if the prediction is correct
     correct_predictions = (predicted == labels).cpu().numpy().astype(int)
-    try:
-        return pd.DataFrame(
-            {
-                "Image": image_names,
-                "Real Label": labels.cpu().numpy(),
-                "Predicted Label": predicted.cpu().numpy(),
-                "Correct Prediction": correct_predictions,
-            }
-        )
-    except ValueError:
-        pass
+    return pd.DataFrame(
+        {
+            "Real Label": labels.cpu().numpy(),
+            "Predicted Label": predicted.cpu().numpy(),
+            "Correct Prediction": correct_predictions,
+        }
+    )
 
 
 def run_train_epoch(
@@ -67,7 +63,7 @@ def run_train_epoch(
         wandb.log({"loss": loss.item(), "accuracy": accuracy})
         log_training_images(images, labels, outputs)
 
-    return loss.item()
+    return loss.item(), accuracy
 
 
 def calculate_test_accuracy(_test_loader, model, criterion, device):

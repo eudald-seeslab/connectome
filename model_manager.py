@@ -55,5 +55,6 @@ class ModelManager:
                     self.logger.warning(f"Failed to delete {file_path}")
 
     def save_model_plot(self, plot):
-        plot_path = os.path.join(self.model_dir, "weber_fraction_plot.png")
+        os.mkdir("sweep_plots", exist_ok=True)
+        plot_path = os.path.join("sweep_plots", f"weber_fraction_plot_{self.connectome_layer_number}.png")
         plot.savefig(plot_path)

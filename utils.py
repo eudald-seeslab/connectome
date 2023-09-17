@@ -36,19 +36,19 @@ def log_training_images(
             logger.warning(f"Could not log training image")
 
 
-def plot_weber_fraction(test_results_df: pd.DataFrame) -> plt.Figure:
+def plot_weber_fraction(results_df: pd.DataFrame) -> plt.Figure:
     # Calculate the percentage of correct answers for each Weber ratio
-    test_results_df["yellow"] = test_results_df["Image"].apply(
-        lambda x: x.split("_")[1]
+    results_df["yellow"] = results_df["Image"].apply(
+        lambda x: x.split("_")[2]
     )
-    test_results_df["blue"] = test_results_df["Image"].apply(lambda x: x.split("_")[2])
-    test_results_df["weber_ratio"] = test_results_df.apply(
+    results_df["blue"] = results_df["Image"].apply(lambda x: x.split("_")[3])
+    results_df["weber_ratio"] = results_df.apply(
         lambda row: max(int(row["yellow"]), int(row["blue"]))
         / min(int(row["yellow"]), int(row["blue"])),
         axis=1,
     )
     correct_percentage = (
-        test_results_df.groupby("weber_ratio")["Correct Prediction"].mean() * 100
+            results_df.groupby("weber_ratio")["Correct Prediction"].mean() * 100
     )
     # Plot
     plt.figure(figsize=(10, 6))

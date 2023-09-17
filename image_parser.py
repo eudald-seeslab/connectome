@@ -25,29 +25,31 @@ dataset = datasets.ImageFolder("images", transform=transform)
 
 # Create three sets: train, test and validation
 train_size = int(len(dataset) * config["TRAIN_SPLIT"])
-test_size = int(len(dataset) * config["TEST_SPLIT"])
-validation_size = len(dataset) - train_size - test_size
+test_size = len(dataset) - train_size
 
-train_dataset, test_dataset, validation_dataset = random_split(
-    dataset, [train_size, test_size, validation_size]
+train_dataset, test_dataset = random_split(
+    dataset, [train_size, test_size]
 )
+
+validation_dataset = datasets.ImageFolder("validation_images", transform=transform)
 
 # Create a data loader
 # I created the training images artificially, and maybe there are too many.
 #  Let's try to use a fraction of images to speed up training
-train_indices = random.sample(
-    range(len(train_dataset)), int(len(train_dataset) * images_fraction)
-)
-train_subset = Subset(train_dataset, train_indices)
+# TODO: think about what to do with this
+# train_indices = random.sample(
+#     range(len(train_dataset)), int(len(train_dataset) * images_fraction)
+# )
+#train_subset = Subset(train_dataset, train_indices)
 
 train_loader = DataLoader(
-    train_subset, batch_size=config["BATCH_SIZE"], shuffle=True
+    train_dataset, batch_size=config["BATCH_SIZE"], shuffle=True
 )
 test_loader = DataLoader(
-    test_dataset, batch_size=config["BATCH_SIZE"], shuffle=False
+    test_dataset, batch_size=config["BATCH_SIZE"], shuffle=True
 )
 validation_loader = DataLoader(
-    validation_dataset, batch_size=config["BATCH_SIZE"], shuffle=False
+    validation_dataset, batch_size=config["BATCH_SIZE"], shuffle=True
 )
 
 if debug:

@@ -108,6 +108,7 @@ class CustomRetinaModel(nn.Module):
                 padding=model_config.kernel_padding,
                 stride=model_config.kernel_stride,
             )
+            batch_norm = nn.BatchNorm2d(model_config.out_channels)
             activation = nn.ReLU(inplace=True)
             pooling_layer = nn.MaxPool2d(
                 kernel_size=model_config.pool_kernel_size,
@@ -116,7 +117,9 @@ class CustomRetinaModel(nn.Module):
             dropout = nn.Dropout(p=model_config.dropout)
 
             self.layers.append(
-                nn.Sequential(conv_layer, activation, pooling_layer, dropout)
+                nn.Sequential(
+                    conv_layer, batch_norm, activation, pooling_layer, dropout
+                )
             )
 
     def forward(self, x):

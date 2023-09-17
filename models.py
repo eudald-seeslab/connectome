@@ -66,10 +66,10 @@ class ConnectomeNetwork(nn.Module):
 
         # These are the shared weights for the connectome layers
         # Set the weights for non-connected neurons to 0 and initialize the rest randomly
-        # TODO: make sure this is correct and the transpose is needed
+        # TODO: make sure this is correct
         self.shared_weights = nn.Parameter(
             where(
-                transpose(from_numpy(adjacency_matrix.values == 0), 0, 1),
+                from_numpy(adjacency_matrix.values == 0),
                 0,
                 rand(self.neuron_count, self.neuron_count),
             )

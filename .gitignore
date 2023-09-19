@@ -239,3 +239,6 @@ models
 logs
 runs
 wandb
+
+# Temp plots
+sweep_plots

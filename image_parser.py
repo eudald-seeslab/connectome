@@ -7,6 +7,8 @@ import yaml
 config = yaml.safe_load(open("config.yml"))
 images_fraction = config["IMAGES_FRACTION"]
 debug = config["DEBUG"]
+train_images_dir = config["TRAIN_IMAGES_DIR"]
+validation_images_dir = config["VALIDATION_IMAGES_DIR"]
 
 # Define a transform to normalize the data
 transform = transforms.Compose(
@@ -21,7 +23,7 @@ transform = transforms.Compose(
 )
 
 # Load images from the "images" directory
-dataset = datasets.ImageFolder("images", transform=transform)
+dataset = datasets.ImageFolder(train_images_dir, transform=transform)
 
 # Create three sets: train, test and validation
 train_size = int(len(dataset) * config["TRAIN_SPLIT"])
@@ -31,7 +33,7 @@ train_dataset, test_dataset = random_split(
     dataset, [train_size, test_size]
 )
 
-validation_dataset = datasets.ImageFolder("validation_images", transform=transform)
+validation_dataset = datasets.ImageFolder(validation_images_dir, transform=transform)
 
 # Create a data loader
 # I created the training images artificially, and maybe there are too many.

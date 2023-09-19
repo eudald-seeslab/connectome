@@ -121,7 +121,7 @@ def main(sweep_config=None):
         test_accuracy, test_loss = calculate_test_accuracy(
             test_loader, combined_model, criterion, dev
         )
-        wandb.log({"Test loss": {test_loss}, "Test accuracy": test_accuracy})
+        wandb.log({"Test loss": test_loss, "Test accuracy": test_accuracy})
         scheduler.step(test_loss)
 
         if early_stopper.early_stop(test_loss):
@@ -161,7 +161,7 @@ def main(sweep_config=None):
             validation_results_df = pd.concat(
                 [validation_results_df, batch_df], ignore_index=True
             )
-    validation_results_df["Image"] = [a[0] for a in validation_loader.dataset.samKples]
+    validation_results_df["Image"] = [a[0] for a in validation_loader.dataset.samples]
 
     logger.info(f"Accuracy on the {total} test images: {100 * correct / total}%")
 

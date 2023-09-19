@@ -1,9 +1,10 @@
 import wandb
 from main import main
+from datetime import datetime
 
 
 sweep_configuration = {
-    'method': 'bayes',
+    'method': 'grid',
     'name': 'sweep',
     'metric': {
         'goal': 'maximize',
@@ -13,7 +14,10 @@ sweep_configuration = {
         'connectome_layer_number': {'values': [1, 2, 3, 4, 5]},
      }
 }
-sweep_id = wandb.sweep(sweep_configuration, project="cnn_2_layer_number_20_runs")
+
+# Get current datetime in a format that can be used as a sweep name
+sweep_name = datetime.now().strftime("%Y%m%d_%H%M%S")
+sweep_id = wandb.sweep(sweep_configuration, project=f"{sweep_name}-test")
 
 
 def train(config=None):

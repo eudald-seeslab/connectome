@@ -57,25 +57,22 @@ class ConnectomeNetwork(nn.Module):
 
         self.connectome_layer_number = general_config["CONNECTOME_LAYER_NUMBER"]
 
-        self.neuron_count = nodes.shape[0]
+        neuron_count = nodes.shape[0]
 
         # Create a linear layer for the retina input
         self.retina_layer = create_retina_layer(
-            retina_output_size[1], self.neuron_count, nodes[nodes["visual"]].index
+            retina_output_size[1], neuron_count, nodes[nodes["visual"]].index
         )
 
-        # These are the shared weights for the connectome layers
-        # Set the weights for non-connected neurons to 0 and initialize the rest randomly
+        # These are the shared weights for the connectome layers: Set weights
+        #  for non-connected neurons to 0 and initialize the rest randomly
         # TODO: make sure this is correct
+        # TODO: should we add bias?
         self.shared_weights = nn.Parameter(
-            where(
-                from_numpy(adjacency_matrix.values == 0),
-                0,
-                rand(self.neuron_count, self.neuron_count),
-            )
+            from_numpy(adjacency_matrix.values).float() * rand(neuron_count, neuron_count)
         )
         self.rational_layer = create_rational_layer(
-            self.neuron_count, 2, nodes[nodes["rational"]].index
+            neuron_count, 2, nodes[nodes["rational"]].index
         )
 
     def forward(self, x: Tensor) -> Tensor:

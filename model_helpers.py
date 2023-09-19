@@ -1,5 +1,5 @@
 import numpy as np
-from torch import nn as nn, where, from_numpy, rand, randn
+from torch import nn as nn, where, from_numpy, rand, randn, ones
 
 
 def retina_weight_mask(input_size, output_size, mask):
@@ -32,6 +32,7 @@ def create_retina_layer(row_size, col_size, mask):
     del layer.weight
 
     layer.weight = retina_weight_mask(row_size, col_size, mask)
+    layer.bias = nn.Parameter(ones(col_size))
     return layer
 
 
@@ -40,6 +41,7 @@ def create_rational_layer(row_size, col_size, mask):
     del layer.weight
 
     layer.weight = rational_weight_mask(row_size, col_size, mask)
+    layer.bias = nn.Parameter(ones(col_size))
     return layer
 
 

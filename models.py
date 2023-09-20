@@ -1,6 +1,6 @@
 import torch.nn.functional as F
 import torch.nn as nn
-from torch import Size, Tensor, where, from_numpy, rand, transpose, matmul, ones
+from torch import Size, Tensor, where, from_numpy, rand, matmul, ones
 from torchvision import models
 
 # Import model config manager
@@ -58,6 +58,7 @@ class ConnectomeNetwork(nn.Module):
         self.connectome_layer_number = general_config["CONNECTOME_LAYER_NUMBER"]
 
         neuron_count = nodes.shape[0]
+        self.adjacency_matrix = adjacency_matrix
 
         # Create a linear layer for the retina input
         self.retina_layer = create_retina_layer(
@@ -66,8 +67,9 @@ class ConnectomeNetwork(nn.Module):
 
         # These are the shared weights for the connectome layers: Set weights
         #  for non-connected neurons to 0 and initialize the rest randomly
+        self.mask = (from_numpy(adjacency_matrix.values) > 0).float()
         self.shared_weights = nn.Parameter(
-            from_numpy(adjacency_matrix.values).float() * rand(neuron_count, neuron_count)
+            self.mask * rand(neuron_count, neuron_count)
         )
         self.shared_bias = nn.Parameter(ones(neuron_count))
 
@@ -78,10 +80,15 @@ class ConnectomeNetwork(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         # Pass the input through the retina layer
         out = self.retina_layer(x)
+        # For some reason, pytorch forgets that mask was set in the "dev" device
+        #  in the constructor, so we need to reset it here
+        self.mask = self.mask.to(out.device)
 
         # Pass the input through the layer with shared weights
         for _ in range(self.connectome_layer_number):
-            # Set the weights for all layers to be the same and do the forward pass
+            # Reset the weights of the non-connected neurons to 0
+            self.shared_weights.data = self.mask * self.shared_weights.data
+            # Do the forward pass
             out = matmul(self.shared_weights, out.t()).t() + self.shared_bias
 
         # Pass the input through the rational layer

@@ -84,7 +84,7 @@ def main(sweep_config=None):
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, factor=0.5, patience=1, verbose=True
     )
-    early_stopper = EarlyStopper(patience=10, min_delta=0.2)
+    early_stopper = EarlyStopper(patience=30, min_delta=0.2)
 
     # Logs
     # wandb sometimes screws up, so we might want to disable it (in config.yml)
@@ -108,6 +108,7 @@ def main(sweep_config=None):
 
     # Training loop
     for epoch in trange(epochs, position=1, leave=True, desc="Epochs"):
+        accuracy = 0
         running_loss = 0
         wandb.log({"Epoch": epoch})
 
@@ -150,7 +151,6 @@ def main(sweep_config=None):
 
     # Validation loop
     with torch.no_grad():
-        j = 0
         # This is overly complicated because I need to get the image names
         #  to compute the weber fraction
         for images, labels in tqdm(validation_loader):
@@ -179,7 +179,6 @@ def main(sweep_config=None):
             )
             # Save the plot to a file, taking into account the connectome layer number
             model_manager.save_model_plot(weber_plot)
-
 
     # Close logs
     if wb:

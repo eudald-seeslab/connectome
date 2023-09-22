@@ -62,6 +62,9 @@ def main(sweep_config=None):
     if config_manager.model_type == "pretrained" and batch_size > 8:
         # If it's a pretrained model, we need to be careful about batch size
         raise ValueError("Pretrained models can't handle batch sizes larger than 8")
+    if config_manager.model_type == "pretrained":
+        # If it's a pretrained model, save every epoch
+        save_every = 1
 
     combined_model = CombinedModel(
         adj_matrix,
@@ -107,37 +110,43 @@ def main(sweep_config=None):
     print_run_details(config_manager, debug, images_fraction, continue_training)
 
     # Training loop
-    for epoch in trange(epochs, position=1, leave=True, desc="Epochs"):
-        accuracy = 0
-        running_loss = 0
-        wandb.log({"Epoch": epoch})
+    try:
+        for epoch in trange(epochs, position=1, leave=True, desc="Epochs"):
+            accuracy = 0
+            running_loss = 0
+            wandb.log({"Epoch": epoch})
 
-        # for images, labels in loader:
-        for images, labels in tqdm(loader, position=0, leave=True, desc="Batches"):
-            loss, accuracy = run_train_epoch(
-                combined_model, criterion, optimizer, images, labels, dev
+            # for images, labels in loader:
+            for images, labels in tqdm(loader, position=0, leave=True, desc="Batches"):
+                loss, accuracy = run_train_epoch(
+                    combined_model, criterion, optimizer, images, labels, dev
+                )
+                running_loss += loss
+            # Run test
+            test_accuracy, test_loss = calculate_test_accuracy(
+                test_loader, combined_model, criterion, dev
             )
-            running_loss += loss
-        # Run test
-        test_accuracy, test_loss = calculate_test_accuracy(
-            test_loader, combined_model, criterion, dev
-        )
-        wandb.log({"Test loss": test_loss, "Test accuracy": test_accuracy})
-        scheduler.step(test_loss)
+            wandb.log({"Test loss": test_loss, "Test accuracy": test_accuracy})
+            scheduler.step(test_loss)
 
-        if early_stopper.early_stop(test_loss):
-            logger.info("Early stopping")
-            break
+            if early_stopper.early_stop(test_loss):
+                logger.info("Early stopping")
+                break
 
-        logger.info(
-            f"Epoch {epoch+1}/{epochs}, "
-            f"\nLoss: {running_loss/len(train_loader)}, Accuracy: {accuracy}"
-            f"\nTest loss: {test_loss}, Test accuracy: {test_accuracy}"
-        )
+            logger.info(
+                f"Epoch {epoch+1}/{epochs}, "
+                f"\nLoss: {running_loss/len(train_loader)}, Accuracy: {accuracy}"
+                f"\nTest loss: {test_loss}, Test accuracy: {test_accuracy}"
+            )
 
-        # Save model
-        if (epoch + 1) % save_every == 0:
-            model_manager.save_model(combined_model, epoch)
+            # Save model
+            if (epoch + 1) % save_every == 0:
+                model_manager.save_model(combined_model, epoch)
+
+    except KeyboardInterrupt:
+        logger.info("Interrupted by user")
+        model_manager.save_model(combined_model, epoch)
+        logger.info("Continuing to testing...")
 
     # Clean up intermediate models
     model_manager.clean_previous_runs()

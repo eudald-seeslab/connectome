@@ -25,7 +25,11 @@ class ModelManager:
         model_path = os.path.join(self.model_dir, self.last_model_filename)
 
         # Save the model state dictionary
-        torch.save(model.state_dict(), model_path)
+        try:
+            torch.save(model.state_dict(), model_path)
+        except RuntimeError as e:
+            self.logger.error(e)
+            self.logger.error("Failed to save model")
         self.logger.info(f"Saved model after {epoch + 1} runs")
 
     @staticmethod

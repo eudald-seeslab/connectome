@@ -3,9 +3,12 @@ from main import main
 from datetime import datetime
 
 
+# Get current datetime in a format that can be used as a sweep name
+sweep_name = datetime.now().strftime("%Y%m%d_%H%M%S")
+
 sweep_configuration = {
     'method': 'grid',
-    'name': 'sweep',
+    'name': sweep_name,
     'metric': {
         'goal': 'maximize',
         'name': 'Test accuracy'
@@ -15,9 +18,7 @@ sweep_configuration = {
      }
 }
 
-# Get current datetime in a format that can be used as a sweep name
-sweep_name = datetime.now().strftime("%Y%m%d_%H%M%S")
-sweep_id = wandb.sweep(sweep_configuration, project=f"{sweep_name}-test")
+sweep_id = wandb.sweep(sweep_configuration, project=f"afterbug")
 
 
 def train(config=None):

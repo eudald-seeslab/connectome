@@ -137,8 +137,12 @@ def get_retina_model(model_config: ModelConfig):
     if model_config.model_name in PRETRAINED_MODELS:
         # Load a pretrained model from torchvision
         retina_model = models.get_model(model_config.model_name, pretrained=True)
-        # Remove the last layer, since we will implement our own softmax
-        retina_model = nn.Sequential(*list(retina_model.children())[:-1])
+        if model_config.only_first_layer:
+            # Remove all layers except the first one
+            retina_model = nn.Sequential(*list(retina_model.children())[:1])
+        else:
+            # Remove the last layer, since we will implement our own softmax
+            retina_model = nn.Sequential(*list(retina_model.children())[:-1])
         retina_model.eval()
 
         return retina_model

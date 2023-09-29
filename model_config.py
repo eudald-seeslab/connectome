@@ -6,6 +6,7 @@ from typing import Dict, Union
 class ModelConfig:
     def __init__(self, model_config: Dict[str, Union[int, float, str, bool]]) -> None:
         # General config
+        self.only_first_layer = model_config.get("ONLY_FIRST_LAYER")
         self.connectome_layer_number = model_config.get("CONNECTOME_LAYER_NUMBER")
         self.model_name = model_config.get("RETINA_MODEL")
 

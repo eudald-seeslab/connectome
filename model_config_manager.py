@@ -61,6 +61,8 @@ class ModelConfigManager:
 
         if self.model_type == "pretrained":
             logger.info("This is a pretrained model")
+            if self.current_model_config.only_first_layer:
+                logger.warning("Only the first layer of the pretrained model will be used")
             return
 
         logger.info(f"Number of retina layers: {self.current_model_config.num_layers}")

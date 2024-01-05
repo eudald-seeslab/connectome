@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Black">
-    <option name="sdkUUID" value="beb8de2c-c38b-4d9a-8b79-7b1b60264db7" />
+    <option name="sdkName" value="Python 3.11 (connectome)" />
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.11 (connectome)" project-jdk-type="Python SDK" />
   <component name="PythonCompatibilityInspectionAdvertiser">

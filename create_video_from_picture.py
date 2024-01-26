@@ -10,7 +10,7 @@ N_BLACKS = 1
 N_IMAGES = 2
 BLACK_SQUARE = np.zeros((512, 512, 3), dtype=np.uint8)
 SEQUENCE_DIRECTORY = "videos"
-IMAGE_DIRECTORY = os.path.join("..", "images", "random_set")
+IMAGE_DIRECTORY = os.path.join("", "images", "random_set")
 
 # Functions
 def repeat_image(image_, times):

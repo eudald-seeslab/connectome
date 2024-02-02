@@ -3,7 +3,6 @@ import pandas as pd
 import torch
 from matplotlib import pyplot as plt
 from scipy.spatial import cKDTree, Voronoi, voronoi_plot_2d
-from tqdm import tqdm
 
 from flyvision.utils.hex_utils import get_hex_coords, get_hextent
 

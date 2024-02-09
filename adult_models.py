@@ -6,6 +6,8 @@ import torch.nn as nn
 
 from adult_models_helpers import get_synapse_df
 
+DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
 
 class AdultConnectomeNetwork(nn.Module):
     def __init__(
@@ -16,6 +18,8 @@ class AdultConnectomeNetwork(nn.Module):
     ):
         super(AdultConnectomeNetwork, self).__init__()
 
+        self.device = DEVICE
+
         # Convert the adjacency matrix to a PyTorch sparse tensor once in the initialization
         self.adjacency_matrix_coo = adjacency_matrix.tocoo()
         self.adj_matrix_sparse = torch.sparse_coo_tensor(
@@ -24,7 +28,8 @@ class AdultConnectomeNetwork(nn.Module):
             ),
             torch.FloatTensor(self.adjacency_matrix_coo.data),
             torch.Size(self.adjacency_matrix_coo.shape),
-            device="cuda",
+            device=self.device,
+            dtype=torch.float16,
         )
 
         self.connectome_layer_number = general_config["CONNECTOME_LAYER_NUMBER"]
@@ -35,31 +40,37 @@ class AdultConnectomeNetwork(nn.Module):
         )
         self.shared_bias = nn.Parameter(torch.ones(neuron_count))
 
-    @staticmethod
-    def initialize_sparse_weights(adjacency_matrix, neuron_count):
-        # Generate random weights for existing connections, ensuring the tensor is on the same device
-        weights = torch.rand(
-            len(adjacency_matrix.data), device="cuda"
-        )  # Specify device here
+    def initialize_sparse_weights(self, adjacency_matrix, neuron_count):
+        # Extract the non-zero indices from the adjacency matrix
+        non_zero_indices = torch.tensor(
+            [adjacency_matrix.row, adjacency_matrix.col],
+            device=self.device,
+            dtype=torch.long,
+        )
 
-        # Create sparse weights tensor, ensuring indices are on the same device
-        indices = torch.tensor(
-            [adjacency_matrix.row, adjacency_matrix.col], device="cuda"
-        )  # Specify device here
+        # Generate random weights only for the non-zero connections
+        non_zero_weights = torch.rand(
+            non_zero_indices.size(1), device=self.device, dtype=torch.float16
+        )
+
+        # Create a sparse tensor with the non-zero weights
         sparse_weights = torch.sparse_coo_tensor(
-            indices, weights, (neuron_count, neuron_count)
+            non_zero_indices,
+            non_zero_weights,
+            (neuron_count, neuron_count),
+            device=self.device,
         )
 
         return nn.Parameter(sparse_weights)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # Use the pre-converted adjacency matrix in sparse format
-        adj_matrix = self.adj_matrix_sparse.to(x.device)
 
         # Pass the input through the layer with shared weights
         for _ in range(self.connectome_layer_number):
             # Apply the mask from the adjacency matrix to the shared weights
-            masked_weights = torch.sparse.mm(adj_matrix, self.shared_weights)
+            masked_weights = torch.sparse.mm(
+                self.adj_matrix_sparse, self.shared_weights
+            )
 
             # Do the forward pass using sparse matrix multiplication
             x = torch.sparse.mm(masked_weights, x) + self.shared_bias.unsqueeze(0)
@@ -123,29 +134,14 @@ class IntegratedModel(nn.Module):
         return self.adult_connectome_net(x)
 
 
-if __name__ == "__main__":
-
-    synapse_df = get_synapse_df()
-
-    neuron_type = "TmY18"
-
-    # Create the integrated model
-
-    adult_connectome_net = AdultConnectomeNetwork(
-        adjacency_matrix_csr, neuron_count, general_config
-    )
-    # synapse_df = pd.DataFrame(...)  # Your synapse DataFrame
-    # neuron_type = 'TmY18'
-
-    integrated_model = IntegratedModel(
-        temporal_conv_net, adult_connectome_net, synapse_df, neuron_type
-    )
-
-    # Test the integrated model
-    batch_size = 1
-    hexal_size = 721  # Example hexal size
-    temporal_size = 84  # Example temporal size
-    input_tensor = torch.rand(batch_size, hexal_size, temporal_size)
-
-    output = integrated_model(input_tensor)
-    print(output.shape)
+# most likely deprecated
+def run_batched_inference(
+    network: nn.Module, input_tensor: torch.Tensor, batch_size: int
+) -> torch.Tensor:
+    outputs = []
+    for start_idx in range(0, input_tensor.size(0), batch_size):
+        end_idx = start_idx + batch_size
+        outputs.append(network(input_tensor[start_idx:end_idx, :]))
+        del input_tensor[start_idx:end_idx, :]
+        torch.cuda.empty_cache()
+    return torch.cat(outputs, dim=0)

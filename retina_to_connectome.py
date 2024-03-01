@@ -224,6 +224,17 @@ def get_synapse_df():
     )
 
 
+def voronoi_averages_to_df(dict_with_voronoi_averages):
+    dfs = []
+    for key, matrix in dict_with_voronoi_averages.items():
+        df = pd.DataFrame(matrix.transpose())
+        df["index_name"] = key
+        dfs.append(df)
+
+    # Concatenate all the DataFrames into one
+    return pd.concat(dfs, axis=0, ignore_index=True)
+
+
 if __name__ == "__main__":
     # Generate random values and calculate Voronoi averages
     vector_of_values = np.random.rand(721, 10)

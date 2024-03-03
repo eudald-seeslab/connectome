@@ -10,7 +10,8 @@ N_BLACKS = 1
 N_IMAGES = 2
 BLACK_SQUARE = np.zeros((512, 512, 3), dtype=np.uint8)
 SEQUENCE_DIRECTORY = "videos"
-IMAGE_DIRECTORY = os.path.join("", "images", "random_set")
+IMAGE_DIRECTORY = os.path.join("", "images", "easyval_images")
+
 
 # Functions
 def repeat_image(image_, times):
@@ -18,8 +19,14 @@ def repeat_image(image_, times):
 
 
 def create_sequence_from_image(input_image):
-    return np.concatenate((repeat_image(BLACK_SQUARE, N_BLACKS), repeat_image(input_image, N_IMAGES),
-                           repeat_image(BLACK_SQUARE, N_BLACKS)), axis=0)
+    return np.concatenate(
+        (
+            repeat_image(BLACK_SQUARE, N_BLACKS),
+            repeat_image(input_image, N_IMAGES),
+            repeat_image(BLACK_SQUARE, N_BLACKS),
+        ),
+        axis=0,
+    )
 
 
 def process_directory(directory):
@@ -32,8 +39,9 @@ def process_directory(directory):
         image = cv2.imread(image_path)
         sequence = create_sequence_from_image(image)
 
-        npy_filename = os.path.join(target_dir,
-                                    os.path.basename(image_path).split('.')[0] + "_sequence.npy")
+        npy_filename = os.path.join(
+            target_dir, os.path.basename(image_path).split(".")[0] + "_sequence.npy"
+        )
         np.save(npy_filename, sequence)
 
 

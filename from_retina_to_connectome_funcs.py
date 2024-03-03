@@ -161,3 +161,10 @@ def from_retina_to_model(
     )
     graph_list = from_connectome_to_model(activation_df, labels, device)
     return DataLoader(graph_list, batch_size=batch_size, shuffle=False)
+
+
+# todo: move elsewhere
+def get_decision_making_neurons():
+    # get a dataframe indicating which neurons will be used to classify
+    rational_neurons = pd.read_csv("adult_data/rational_neurons.csv", index_col=0)
+    return torch.tensor(rational_neurons.values.squeeze(), dtype=torch.float16).detach()

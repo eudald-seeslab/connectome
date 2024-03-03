@@ -1,6 +1,7 @@
 """
 Deep mechanistic network module.
 """
+
 from numbers import Number
 from os import PathLike
 from typing import Any, Dict, Iterable, List, Optional, Union, Callable
@@ -501,7 +502,11 @@ class Network(nn.Module):
             )
             self.stimulus.zero(batch_size, n_frames)
             self.stimulus.add_input(movie_input)
-            return self.forward(self.stimulus(), dt, initial_state, as_states)
+            result = self.forward(self.stimulus(), dt, initial_state, as_states)
+            del movie_input
+            torch.cuda.empty_cache()
+
+            return result
 
     def forward(
         self, x: Tensor, dt: float, state: AutoDeref = None, as_states: bool = False
@@ -538,7 +543,12 @@ class Network(nn.Module):
 
         if as_states is True:
             return list(handle(state))
-        return torch.stack(list(handle(state)), dim=1)
+
+        state_stack = torch.stack(list(handle(state)), dim=1)
+        del x, state
+        torch.cuda.empty_cache()
+
+        return state_stack
 
     def steady_state(
         self,

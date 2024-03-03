@@ -1,5 +1,6 @@
 """'Transduction' of cartesian pixels to hexals on a regular hexagonal lattice.
 """
+
 from typing import Iterator, Tuple
 
 import numpy as np
@@ -116,7 +117,9 @@ class BoxEye:
 
         if (self.min_frame_size > torch.tensor([height, width])).any():
             # to rescale to the minimum frame size
-            sequence = ttf.resize(sequence, self.min_frame_size.tolist())
+            sequence = ttf.resize(
+                sequence, self.min_frame_size.tolist(), antialias=True
+            )
             height, width = sequence.shape[2:]
 
         def _convolve():
@@ -140,6 +143,9 @@ class BoxEye:
         if hex_sample is True:
             return self.hex_sample(out).reshape(samples, frames, 1, -1)
 
+        del sequence
+        torch.cuda.empty_cache()
+
         return out.reshape(samples, frames, height, width)
 
     def hex_sample(self, sequence: torch.Tensor) -> torch.Tensor:
@@ -155,7 +161,9 @@ class BoxEye:
         """
         h, w = sequence.shape[2:]
         if (self.min_frame_size > torch.tensor([h, w])).any():
-            sequence = ttf.resize(sequence, self.min_frame_size.tolist())
+            sequence = ttf.resize(
+                sequence, self.min_frame_size.tolist(), antialias=True
+            )
             h, w = sequence.shape[2:]
         c = self.receptor_centers + torch.tensor([h // 2, w // 2])
         out = sequence[:, :, c[:, 0], c[:, 1]]

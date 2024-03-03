@@ -1,4 +1,5 @@
 import os
+import time
 
 from tqdm import tqdm
 import torch
@@ -161,6 +162,15 @@ class ResponseProcessor:
             la.append(LayerActivity(response, self.network.connectome, keepref=True))
         return la
 
+    def directly_compute_layer_activations(self):
+        data = CustomStimuli(input_path=self.input_path, extent=15, kernel_size=13)
+        la = []
+        for video in data:
+            response = self.network.simulate(video[None], data.dt)
+            la.append(LayerActivity(response, self.network.connectome, keepref=True))
+            del response
+            torch.cuda.empty_cache()
+
     def compute_animations(self, cell_type, _responses=None):
         if _responses is None:
             _responses = self.compute_responses()
@@ -203,13 +213,17 @@ class SerializedResponseProcessor:
 
 
 if __name__ == "__main__":
-    pass
+    # time the whole process
+    start = time.time()
+
     # load the data
-    response_processor = ResponseProcessor("../../videos/yellow")
-    # compute the responses
-    responses = response_processor.compute_responses()
+    response_processor = ResponseProcessor(
+        "/home/eudald/Desktop/doctorat/connectome/toy_videos/yellow"
+    )
     # compute the layer activations
-    layer_activations = response_processor.compute_layer_activations(responses)
+    layer_activations = response_processor.directly_compute_layer_activations()
+
+    print(f"process finished in {time.time() - start}")
     # save layer activations from decoding cells
 
     # get the animation objects to inspect them

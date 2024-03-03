@@ -1,4 +1,3 @@
-from pathlib import Path
 import numpy as np
 import os
 import glob
@@ -6,8 +5,7 @@ import cv2
 import torch
 from tqdm import tqdm
 
-from flyvis.examples.flyvision_ans import (
-    ResponseProcessor,
+from flyvision_ans import (
     DECODING_CELLS,
     SerializedResponseProcessor,
 )

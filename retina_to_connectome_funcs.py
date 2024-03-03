@@ -235,10 +235,13 @@ def voronoi_averages_to_df(dict_with_voronoi_averages):
     return pd.concat(dfs, axis=0, ignore_index=True)
 
 
-if __name__ == "__main__":
-    # Generate random values and calculate Voronoi averages
-    vector_of_values = np.random.rand(721, 10)
-    n_centers = 1200
-    avgs = get_voronoi_averages(vector_of_values, n_centers=n_centers)
+def create_root_id_mapping(classification):
+    # Create a dictionary to hold shuffled root_ids for each cell type
+    root_id_mapping = {}
 
-    print(avgs.shape)
+    # Populate the dictionary with shuffled root_ids for each cell type
+    for cell_type, group in classification.groupby("cell_type"):
+        # Shuffle the root_ids within each group
+        shuffled_root_ids = group["root_id"].sample(frac=1).values
+        root_id_mapping[cell_type] = shuffled_root_ids
+    return root_id_mapping

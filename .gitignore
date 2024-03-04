@@ -243,5 +243,3 @@ wandb
 # Temp plots
 sweep_plots
 
-# big datasets
-adult_data

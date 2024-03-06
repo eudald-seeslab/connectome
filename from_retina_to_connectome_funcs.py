@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import torch
 from scipy.sparse import coo_matrix, load_npz
-from torch_geometric.data import Data
+from torch_geometric.data import Data, Batch
 from torch_geometric.loader import DataLoader
 from tqdm import tqdm
 
@@ -23,7 +23,7 @@ def compute_voronoi_averages(
     Calculate Voronoi averages for each cell type in the classification.
     """
     averages_dict = {}
-    for cell_type in tqdm(decoding_cells):
+    for cell_type in decoding_cells:
         number_of_cells = len(classification[classification["cell_type"] == cell_type])
         if number_of_cells > 0:
             activation_tensor = (
@@ -127,31 +127,31 @@ def from_retina_to_connectome(voronoi_averages_df, classification, root_id_to_in
     )
 
 
-def from_connectome_to_model(activation_df_, labels_, device_):
+def from_connectome_to_model(activation_df_, labels_):
     synaptic_matrix = load_npz("adult_data/synaptic_matrix_sparse.npz")
     edges = torch.tensor(
         np.array([synaptic_matrix.row, synaptic_matrix.col]),
         dtype=torch.long,
-        device=device_,
     )
-    activation_tensor = torch.tensor(
-        activation_df_.values, dtype=torch.float16, device=device_
-    )
+    activation_tensor = torch.tensor(activation_df_.values, dtype=torch.float16)
     graph_list_ = []
     for i in range(activation_tensor.shape[1]):
         # Shape [num_nodes, 1], one feature per node
         node_features = activation_tensor[:, i].unsqueeze(1)
-        graph = Data(x=node_features.to(device_), edge_index=edges, y=labels_[i])
+        graph = Data(x=node_features, edge_index=edges, y=labels_[i])
         graph_list_.append(graph)
 
     return graph_list_
 
 
 def from_retina_to_model(
-    activations, labels, decoding_cells, last_good_frame, device, batch_size=1
+    activations,
+    labels,
+    decoding_cells,
+    last_good_frame,
+    classification,
+    root_id_to_index,
 ):
-    classification = pd.read_csv("adult_data/classification_clean.csv")
-    root_id_to_index = pd.read_csv("adult_data/root_id_to_index.csv")
 
     voronoi_averages_df = compute_voronoi_averages(
         activations, classification, decoding_cells, last_good_frame=last_good_frame
@@ -159,8 +159,11 @@ def from_retina_to_model(
     activation_df = from_retina_to_connectome(
         voronoi_averages_df, classification, root_id_to_index
     )
-    graph_list = from_connectome_to_model(activation_df, labels, device)
-    return DataLoader(graph_list, batch_size=batch_size, shuffle=False)
+    graph_list = from_connectome_to_model(activation_df, labels)
+    return (
+        Batch.from_data_list(graph_list),
+        torch.Tensor(labels),
+    )
 
 
 # todo: move elsewhere

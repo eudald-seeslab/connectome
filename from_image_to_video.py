@@ -7,9 +7,9 @@ import cv2
 
 # Constants
 N_BLACKS = 1
-N_IMAGES = 2
+N_IMAGES = 8
 BLACK_SQUARE = np.zeros((512, 512, 3), dtype=np.uint8)
-SEQUENCE_DIRECTORY = "videos"
+SEQUENCE_DIRECTORY = "easyval_videos"
 IMAGE_DIRECTORY = os.path.join("", "images", "easyval_images")
 
 
@@ -45,7 +45,12 @@ def process_directory(directory):
         np.save(npy_filename, sequence)
 
 
-# Main processing
-directories = ["blue", "yellow"]
-for dir_ in directories:
-    process_directory(dir_)
+def main():
+    directories = ["blue", "yellow"]
+    for dir_ in directories:
+        process_directory(dir_)
+
+
+if __name__ == "__main__":
+    main()
+    print("done")

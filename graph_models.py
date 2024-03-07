@@ -7,16 +7,25 @@ DROPOUT = 0.0
 
 
 class GNNModel(torch.nn.Module):
-    def __init__(self, num_node_features, decision_making_vector):
+    def __init__(self, num_node_features, decision_making_vector, num_passes):
         super(GNNModel, self).__init__()
         self.conv = GCNConv(num_node_features, 1)
         self.register_buffer("decision_making_vector", decision_making_vector)
+        self.num_passes = num_passes
+        self.leaky_relu = torch.nn.LeakyReLU(negative_slope=0.01)
+        self.norm = torch.nn.BatchNorm1d(num_node_features)
 
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
-        x = self.conv(x, edge_index)
-        x = F.relu(x)
-        x = F.dropout(x, training=self.training, p=DROPOUT)
+        x_res = x
+        # Multiple passes through the connectome
+        for _ in range(self.num_passes):
+            x = self.conv(x, edge_index)
+            x = self.norm(x)
+            x = self.leaky_relu(x)
+            x = F.dropout(x, training=self.training, p=DROPOUT)
+
+            x = x + x_res
 
         # Apply the decision-making mask
         batch_size = batch.max().item() + 1

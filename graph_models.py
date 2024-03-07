@@ -1,15 +1,18 @@
 import torch
 from torch.nn import functional as F
-from torch_geometric.nn import GCNConv, global_mean_pool
-
+from torch_geometric.nn import global_mean_pool, GATConv
 
 DROPOUT = 0.0
 
 
 class GNNModel(torch.nn.Module):
-    def __init__(self, num_node_features, decision_making_vector, num_passes):
+    def __init__(
+        self, num_node_features, decision_making_vector, num_passes, num_heads=1
+    ):
         super(GNNModel, self).__init__()
-        self.conv = GCNConv(num_node_features, 1)
+        self.attention_conv = GATConv(
+            num_node_features, out_channels=1, heads=num_heads, concat=False
+        )
         self.register_buffer("decision_making_vector", decision_making_vector)
         self.num_passes = num_passes
         self.leaky_relu = torch.nn.LeakyReLU(negative_slope=0.01)
@@ -20,7 +23,7 @@ class GNNModel(torch.nn.Module):
         x_res = x
         # Multiple passes through the connectome
         for _ in range(self.num_passes):
-            x = self.conv(x, edge_index)
+            x = self.attention_conv(x, edge_index)
             x = self.norm(x)
             x = self.leaky_relu(x)
             x = F.dropout(x, training=self.training, p=DROPOUT)
@@ -36,5 +39,4 @@ class GNNModel(torch.nn.Module):
 
         # Global pooling and final classifier
         x = global_mean_pool(x, batch)
-
         return F.log_softmax(x, dim=1)

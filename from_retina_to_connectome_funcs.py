@@ -3,8 +3,6 @@ import pandas as pd
 import torch
 from scipy.sparse import coo_matrix, load_npz
 from torch_geometric.data import Data, Batch
-from torch_geometric.loader import DataLoader
-from tqdm import tqdm
 
 from retina_to_connectome_funcs import (
     get_activation_tensor,
@@ -12,8 +10,6 @@ from retina_to_connectome_funcs import (
     voronoi_averages_to_df,
     get_synapse_df,
 )
-
-LAST_GOOD_FRAME = 8
 
 
 def compute_voronoi_averages(

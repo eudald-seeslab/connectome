@@ -37,6 +37,8 @@ class GNNModel(torch.nn.Module):
         )
         x = x * decision_mask
 
-        # Global pooling and final classifier
-        x = global_mean_pool(x, batch)
-        return F.log_softmax(x, dim=1)
+        # Global pooling and final classifier without additional scaling
+        x_pooled = global_mean_pool(x, batch)
+
+        # Scale the activations
+        return (x_pooled - x_pooled.min()) / (x_pooled.max() - x_pooled.min() + 1e-6)

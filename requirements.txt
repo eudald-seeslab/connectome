@@ -180,3 +180,4 @@ ffmpeg~=1.4
 json5~=0.9.14
 torch_geometric~=2.4.0
 opencv-python~=4.9.0.80
+wandb==0.15.12

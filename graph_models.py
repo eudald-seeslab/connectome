@@ -15,6 +15,7 @@ class GNNModel(torch.nn.Module):
         cell_type_indices,
         batch_size,
         num_heads=1,
+        visual_input_persistence_rate=1,
     ):
 
         super(GNNModel, self).__init__()
@@ -23,6 +24,7 @@ class GNNModel(torch.nn.Module):
         )
         self.register_buffer("decision_making_vector", decision_making_vector)
         self.num_passes = num_passes
+        self.visual_input_persistence_rate = visual_input_persistence_rate
         self.leaky_relu = torch.nn.LeakyReLU(negative_slope=0.01)
         self.norm = torch.nn.BatchNorm1d(num_node_features)
 
@@ -42,13 +44,14 @@ class GNNModel(torch.nn.Module):
         x = self.__add_noise(x)
 
         # Multiple passes through the connectome
-        for _ in range(self.num_passes):
+        for i in range(self.num_passes):
             x = self.attention_conv(x, edge_index)
             x = self.norm(x)
             x = self.leaky_relu(x)
             x = F.dropout(x, training=self.training, p=DROPOUT)
 
-            x = x + x_res
+            # Add the initial input (because we might still be visualizing the input, but decay its influence over time
+            x = x + x_res * self.visual_input_persistence_rate**i
 
         # Apply the decision-making mask
         batch_size = batch.max().item() + 1

@@ -205,10 +205,9 @@ def get_batch_voronoi_averages(activation_tensor, n_centers):
 
 
 def get_activation_tensor(activations_, cell_type, last_frame=8):
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     activation_tensor = torch.stack(
         [torch.swapaxes(a[cell_type], 1, 2).squeeze(0) for a in activations_]
-    ).to(device)
+    )
     # Get the activation vector for the last frame with real data, and for a given sample
     return activation_tensor[:, :, -last_frame].cpu().numpy()
 
@@ -226,6 +225,7 @@ def get_synapse_df():
 
 def voronoi_averages_to_df(dict_with_voronoi_averages):
     dfs = []
+    # This loop is over cell types >(~30), so it's not terrible
     for key, matrix in dict_with_voronoi_averages.items():
         df = pd.DataFrame(matrix.transpose())
         df["index_name"] = key

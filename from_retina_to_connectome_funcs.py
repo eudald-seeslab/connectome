@@ -167,3 +167,22 @@ def get_decision_making_neurons():
     # get a dataframe indicating which neurons will be used to classify
     rational_neurons = pd.read_csv("adult_data/rational_neurons.csv", index_col=0)
     return torch.tensor(rational_neurons.values.squeeze(), dtype=torch.float16).detach()
+
+
+def get_cell_type_indices(classification, root_id_to_index, decoding_cells):
+    # Merge classification with root_id_to_index to associate each index_id with a cell_type
+    merged_df = root_id_to_index.merge(classification, on="root_id", how="left")
+
+    # Filter only for cells in decoding_cells
+    merged_df = merged_df[merged_df["cell_type"].isin(decoding_cells)]
+
+    # Generate a mapping from cell types to unique integer indices
+    cell_type_to_index = {
+        cell_type: i for i, cell_type in enumerate(merged_df["cell_type"].unique())
+    }
+
+    # Apply the mapping to get cell_type indices
+    merged_df["cell_type_index"] = merged_df["cell_type"].map(cell_type_to_index)
+
+    # Return a series with one column indicating the cell type index for each node
+    return merged_df["cell_type_index"]

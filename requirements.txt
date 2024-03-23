@@ -153,7 +153,6 @@ smmap~=5.0.0
 setuptools~=68.2.0
 appdirs~=1.4.4
 tensorboard~=2.13.0
-wandb~=0.15.8
 pathtools~=0.1.2
 cachetools~=5.3.1
 Markdown~=3.4.4
@@ -180,4 +179,4 @@ ffmpeg~=1.4
 json5~=0.9.14
 torch_geometric~=2.4.0
 opencv-python~=4.9.0.80
-wandb==0.15.12
+wandb~=0.16.4

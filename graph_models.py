@@ -25,7 +25,9 @@ class GNNModel(torch.nn.Module):
         self.register_buffer("decision_making_vector", decision_making_vector)
         self.num_passes = num_passes
         self.visual_input_persistence_rate = visual_input_persistence_rate
-        self.leaky_relu = torch.nn.LeakyReLU(negative_slope=0.01)
+        # swish function; which I choose to attempt to mimic inhibitory behaviours too
+        # TODO: check whether this is a good idea
+        self.activation = torch.nn.SiLU()
         self.norm = torch.nn.BatchNorm1d(num_node_features)
 
         self.permutation_layer = CustomFullyConnectedLayer(
@@ -35,6 +37,7 @@ class GNNModel(torch.nn.Module):
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
 
+        # Match visual stimulus to correct connectome neuron
         x = self.permutation_layer(x)
 
         # Make a copy to be used later
@@ -47,7 +50,7 @@ class GNNModel(torch.nn.Module):
         for i in range(self.num_passes):
             x = self.attention_conv(x, edge_index)
             x = self.norm(x)
-            x = self.leaky_relu(x)
+            x = self.activation(x)
             x = F.dropout(x, training=self.training, p=DROPOUT)
 
             # Add the initial input (because we might still be visualizing the input, but decay its influence over time

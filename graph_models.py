@@ -68,39 +68,6 @@ class GNNModel(torch.nn.Module):
         return torch.where(mask, noise, x)
 
 
-class PermutationLayer(torch.nn.Module):
-    def __init__(self, max_indices, num_types):
-        super(PermutationLayer, self).__init__()
-        # Assuming max_indices is the maximum number of nodes for any cell type
-        self.max_indices = max_indices
-        self.num_types = num_types
-        # Initialize permutation indices for each cell type
-        self.permutations = Parameter(
-            torch.stack(
-                [torch.randperm(max_indices) for _ in range(num_types)]
-            ).float(),
-        )
-
-    def forward(self, x, cell_type_indices):
-        # cell_type_indices should be a vector indicating the cell type for each node in x
-        permuted_x = x.clone()
-        for type_index in range(self.num_types):
-            type_mask = cell_type_indices == type_index
-
-            if type_mask.any():
-                # Adjust perm_indices to only select as many as needed for this type in this batch
-                actual_num_nodes = type_mask.sum().item()
-                perm_indices = self.permutations[type_index][:actual_num_nodes]
-
-                # We gather the nodes of this cell type, then apply the perm_indices
-                permuted_nodes = x[type_mask][perm_indices.long()]
-
-                # Reassign permuted nodes back
-                permuted_x[type_mask] = permuted_nodes
-
-        return permuted_x
-
-
 class CustomFullyConnectedLayer(Module):
     def __init__(self, cell_type_indices, batch_size, num_features=1):
         super().__init__()
@@ -136,12 +103,17 @@ class CustomFullyConnectedLayer(Module):
 
             if len(mask_indices) > 0:
 
+                # To simulate a permutation pairing, apply gumbel softmax in the row dimension for each batch
+                soft_weight = F.gumbel_softmax(self.weights[type_index], dim=1)
+
+                # FIXME: with this approach, two visual neurons can map to the same connectome neuron
+
                 # Apply weights to the nodes of this cell type
                 # [num_neurons_for_selected_type, num_neurons_for_selected_type] *
                 # [batch_size, num_neurons_for_selected_type, num_features] =
                 # [batch_size, num_neurons_for_selected_type, num_features]
                 output[:, mask_indices] = torch.matmul(
-                    self.weights[type_index], torch.index_select(x, 1, mask_indices)
+                    soft_weight, torch.index_select(x, 1, mask_indices)
                 ).to(output.dtype)
 
         # We need to return output in the same shape as the input x
@@ -151,3 +123,37 @@ class CustomFullyConnectedLayer(Module):
     @staticmethod
     def get_neuron_counts(cell_type_indices):
         return dict(sorted(cell_type_indices.value_counts().to_dict().items()))
+
+
+# Probably deprecated
+class PermutationLayer(torch.nn.Module):
+    def __init__(self, max_indices, num_types):
+        super(PermutationLayer, self).__init__()
+        # Assuming max_indices is the maximum number of nodes for any cell type
+        self.max_indices = max_indices
+        self.num_types = num_types
+        # Initialize permutation indices for each cell type
+        self.permutations = Parameter(
+            torch.stack(
+                [torch.randperm(max_indices) for _ in range(num_types)]
+            ).float(),
+        )
+
+    def forward(self, x, cell_type_indices):
+        # cell_type_indices should be a vector indicating the cell type for each node in x
+        permuted_x = x.clone()
+        for type_index in range(self.num_types):
+            type_mask = cell_type_indices == type_index
+
+            if type_mask.any():
+                # Adjust perm_indices to only select as many as needed for this type in this batch
+                actual_num_nodes = type_mask.sum().item()
+                perm_indices = self.permutations[type_index][:actual_num_nodes]
+
+                # We gather the nodes of this cell type, then apply the perm_indices
+                permuted_nodes = x[type_mask][perm_indices.long()]
+
+                # Reassign permuted nodes back
+                permuted_x[type_mask] = permuted_nodes
+
+        return permuted_x

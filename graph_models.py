@@ -1,7 +1,7 @@
 import torch
 from torch.nn import functional as F
 from torch.nn import Parameter, ParameterList, Module
-from torch_geometric.nn import global_mean_pool, GATConv
+from torch_geometric.nn import GATConv, global_max_pool
 
 DROPOUT = 0.0
 
@@ -29,6 +29,7 @@ class GNNModel(torch.nn.Module):
         # swish function to attempt to mimic inhibitory behaviours too
         # TODO: check whether this is a good idea
         self.activation = torch.nn.SiLU()
+        self.final_activation = torch.nn.ReLU()
         self.norm = torch.nn.BatchNorm1d(num_node_features)
 
         self.permutation_layer = CustomFullyConnectedLayer(
@@ -66,11 +67,11 @@ class GNNModel(torch.nn.Module):
             .view(-1, 1)
         )
         x = x * decision_mask
-        pooled_x = global_mean_pool(x, batch)
+        pooled_x = global_max_pool(x, batch)
 
         # Create a final layer of just one neuron to "normalize" outputs
         # This is equivalent to the soul of the fruit fly
-        return torch.exp(self.final_decision_layer(pooled_x))
+        return self.final_activation(self.final_decision_layer(pooled_x))
 
     @staticmethod
     def __add_noise(x):

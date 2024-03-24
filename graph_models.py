@@ -70,7 +70,7 @@ class GNNModel(torch.nn.Module):
 
         # Create a final layer of just one neuron to "normalize" outputs
         # This is equivalent to the soul of the fruit fly
-        return self.final_decision_layer(pooled_x)
+        return torch.exp(self.final_decision_layer(pooled_x))
 
     @staticmethod
     def __add_noise(x):

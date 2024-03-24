@@ -24,8 +24,9 @@ class GNNModel(torch.nn.Module):
         )
         self.register_buffer("decision_making_vector", decision_making_vector)
         self.num_passes = num_passes
+        self.batch_size = batch_size
         self.visual_input_persistence_rate = visual_input_persistence_rate
-        # swish function; which I choose to attempt to mimic inhibitory behaviours too
+        # swish function to attempt to mimic inhibitory behaviours too
         # TODO: check whether this is a good idea
         self.activation = torch.nn.SiLU()
         self.norm = torch.nn.BatchNorm1d(num_node_features)
@@ -33,6 +34,7 @@ class GNNModel(torch.nn.Module):
         self.permutation_layer = CustomFullyConnectedLayer(
             cell_type_indices, batch_size, num_node_features
         )
+        self.final_decision_layer = torch.nn.Linear(in_features=1, out_features=1)
 
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
@@ -53,18 +55,22 @@ class GNNModel(torch.nn.Module):
             x = self.activation(x)
             x = F.dropout(x, training=self.training, p=DROPOUT)
 
-            # Add the initial input (because we might still be visualizing the input, but decay its influence over time
+            # Add the initial input (because we might still be visualizing the input)
+            # but decay its influence over time
             x = x + x_res * self.visual_input_persistence_rate**i
 
-        # Apply the decision-making mask
-        batch_size = batch.max().item() + 1
+        # Apply the decision-making mask and pool the results of decision-making neurons
         decision_mask = (
-            self.decision_making_vector.unsqueeze(0).repeat(batch_size, 1).view(-1, 1)
+            self.decision_making_vector.unsqueeze(0)
+            .repeat(self.batch_size, 1)
+            .view(-1, 1)
         )
         x = x * decision_mask
+        pooled_x = global_mean_pool(x, batch)
 
-        # Global pooling and return
-        return global_mean_pool(x, batch)
+        # Create a final layer of just one neuron to "normalize" outputs
+        # This is equivalent to the soul of the fruit fly
+        return self.final_decision_layer(pooled_x)
 
     @staticmethod
     def __add_noise(x):
@@ -109,10 +115,10 @@ class CustomFullyConnectedLayer(Module):
 
             if len(mask_indices) > 0:
 
-                # To simulate a permutation pairing, apply gumbel softmax in the row dimension for each batch
+                # To simulate a permutation pairing, apply gumbel softmax in the row dimension
                 soft_weight = F.gumbel_softmax(self.weights[type_index], dim=1)
 
-                # FIXME: with this approach, two visual neurons can map to the same connectome neuron
+                # FIXME: two visual neurons can map to the same connectome neuron
 
                 # Apply weights to the nodes of this cell type
                 # [num_neurons_for_selected_type, num_neurons_for_selected_type] *
@@ -152,7 +158,7 @@ class PermutationLayer(torch.nn.Module):
             type_mask = cell_type_indices == type_index
 
             if type_mask.any():
-                # Adjust perm_indices to only select as many as needed for this type in this batch
+                # Adjust perm_indices to only select as many as needed for this type
                 actual_num_nodes = type_mask.sum().item()
                 perm_indices = self.permutations[type_index][:actual_num_nodes]
 

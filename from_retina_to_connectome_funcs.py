@@ -164,9 +164,14 @@ def from_retina_to_model(
 
 # todo: move elsewhere
 def get_decision_making_neurons():
+    # Note: this is only run once
     # get a dataframe indicating which neurons will be used to classify
     rational_neurons = pd.read_csv("adult_data/rational_neurons.csv", index_col=0)
     return torch.tensor(rational_neurons.values.squeeze(), dtype=torch.float16).detach()
+
+
+def get_tensor_items(x):
+    return [a.item() for a in x]
 
 
 def get_cell_type_indices(classification, root_id_to_index, decoding_cells):
@@ -186,3 +191,12 @@ def get_cell_type_indices(classification, root_id_to_index, decoding_cells):
 
     # Return a series with one column indicating the cell type index for each node
     return merged_df["cell_type_index"]
+
+
+def compute_accuracy(probabilities, labels):
+
+    # Convert probabilities to binary predictions
+    predictions = (probabilities > 0.5).float()
+
+    # Calculate accuracy
+    return (predictions == labels).float().mean()

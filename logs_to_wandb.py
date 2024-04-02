@@ -40,3 +40,13 @@ def log_images_to_wandb(bs, rs, la, img_path, frame, cell_type):
             ),
         }
     )
+
+
+def log_original_to_wandb(vals, img_path):
+    wandb.log(
+        {
+            "Original image": wandb.Image(
+                vals, caption=f"Original image {os.path.basename(img_path)}"
+            ),
+        }
+    )

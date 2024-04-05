@@ -64,3 +64,7 @@ def update_results_df(results_, batch_files_, predictions_, batch_labels_, corre
             ),
         ]
     )
+
+
+def initialize_results_df():
+    return pd.DataFrame(columns=["Image", "Prediction", "True label", "Is correct"])

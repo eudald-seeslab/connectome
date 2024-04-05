@@ -18,7 +18,9 @@ def select_random_videos(all_files, batch_size, already_selected):
     remaining_files = [f for f in all_files if f not in already_selected]
 
     # Select batch_size random videos from the remaining files
-    selected_files = random.sample(remaining_files, min(batch_size, len(remaining_files)))
+    selected_files = random.sample(
+        remaining_files, min(batch_size, len(remaining_files))
+    )
 
     # Update the already_selected list
     already_selected.extend(selected_files)
@@ -26,8 +28,17 @@ def select_random_videos(all_files, batch_size, already_selected):
     return selected_files, already_selected
 
 
+def get_label(name):
+    x = name.split("/")[2]
+    if x == "yellow":
+        return 1
+    if x == "blue":
+        return 0
+    return np.nan
+
+
 def paths_to_labels(paths):
-    return [int(a.split("/")[1] == "yellow") for a in paths]
+    return [get_label(a) for a in paths]
 
 
 def load_custom_sequences(video_paths):

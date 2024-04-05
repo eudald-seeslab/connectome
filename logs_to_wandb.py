@@ -50,3 +50,27 @@ def log_original_to_wandb(vals, img_path):
             ),
         }
     )
+
+
+def log_running_stats_to_wandb(epoch_, running_loss_, total_correct_, total_, results_):
+    wandb.log(
+        {
+            "epoch": epoch_,
+            "loss": running_loss_ / total_,
+            "accuracy": total_correct_ / total_,
+            "results": wandb.Table(dataframe=results_),
+        }
+    )
+
+
+def log_validation_stats_to_wandb(
+    running_loss_, total_correct_, total_, results_, weber_plot_
+):
+    wandb.log(
+        {
+            "Validation loss": running_loss_ / total_,
+            "Validation accuracy": total_correct_ / total_,
+            "Validation results": wandb.Table(dataframe=results_),
+            "Weber Fraction Plot": wandb.Image(weber_plot_),
+        }
+    )

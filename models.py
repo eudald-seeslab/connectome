@@ -1,6 +1,6 @@
 import torch.nn.functional as F
 import torch.nn as nn
-from torch import Size, Tensor, where, from_numpy, rand, matmul, ones
+from torch import Size, Tensor, from_numpy, rand, matmul, ones
 from torchvision import models
 
 # Import model config manager
@@ -68,9 +68,7 @@ class ConnectomeNetwork(nn.Module):
         # These are the shared weights for the connectome layers: Set weights
         #  for non-connected neurons to 0 and initialize the rest randomly
         self.mask = (from_numpy(adjacency_matrix.values) > 0).float()
-        self.shared_weights = nn.Parameter(
-            self.mask * rand(neuron_count, neuron_count)
-        )
+        self.shared_weights = nn.Parameter(self.mask * rand(neuron_count, neuron_count))
         self.shared_bias = nn.Parameter(ones(neuron_count))
 
         self.rational_layer = create_rational_layer(

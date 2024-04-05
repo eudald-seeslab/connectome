@@ -242,3 +242,10 @@ wandb
 
 # Temp plots
 sweep_plots
+
+# big data files
+adult_data
+
+# input data
+/images
+/videos

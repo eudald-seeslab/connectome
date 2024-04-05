@@ -38,28 +38,23 @@ def log_training_images(
 
 def plot_weber_fraction(results_df: pd.DataFrame) -> plt.Figure:
     # Calculate the percentage of correct answers for each Weber ratio
-    results_df["yellow"] = results_df["Image"].apply(
-        lambda x: x.split("_")[2]
-    )
+    results_df["yellow"] = results_df["Image"].apply(lambda x: x.split("_")[2])
     results_df["blue"] = results_df["Image"].apply(lambda x: x.split("_")[3])
     results_df["weber_ratio"] = results_df.apply(
         lambda row: max(int(row["yellow"]), int(row["blue"]))
         / min(int(row["yellow"]), int(row["blue"])),
         axis=1,
     )
-    correct_percentage = (
-            results_df.groupby("weber_ratio")["Correct Prediction"].mean() * 100
-    )
+    correct_percentage = results_df.groupby("weber_ratio")["Is correct"].mean() * 100
     # Plot
-    plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize=(10, 6))
     sns.barplot(x=correct_percentage.index, y=correct_percentage.values)
     plt.xlabel("Weber Ratio")
     plt.ylabel("Percentage of Correct Answers")
-    plt.title("Percentage of Correct Answers for Each Weber Ratio")
     plt.xticks(rotation=45)
     plt.tight_layout()
 
-    return plt
+    return fig
 
 
 def print_run_details(
@@ -107,3 +102,11 @@ def preliminary_checks(
         raise ValueError("Can't log Weber fraction plot without wandb")
     if dev.type == "cpu":
         logger.warning("WARNING: Running on CPU, so it might be slow")
+
+
+def flush_cuda_memory():
+    import gc
+    import torch
+
+    torch.cuda.empty_cache()
+    gc.collect()

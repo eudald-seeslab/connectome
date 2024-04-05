@@ -22,7 +22,7 @@ def compute_accuracy(probabilities, labels):
     predictions = (probabilities > 0.5).float()
 
     # Calculate accuracy
-    return (predictions == labels).float().mean()
+    return np.where(predictions == labels, 1, 0).float().mean()
 
 
 def activation_vector_to_image(da):

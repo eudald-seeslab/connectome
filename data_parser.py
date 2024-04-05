@@ -5,7 +5,7 @@ adj_matrix = pd.read_csv(
     "data/science.add9330_data_s1/Supplementary-Data-S1/all-all_connectivity_matrix.csv",
     index_col=0,
 )
-nodes = pd.read_csv("node_properties_clean.csv")
+nodes = pd.read_csv("data/node_properties_clean.csv")
 
 # Create a column with info on whether the neuron is visual or not
 nodes["visual"] = nodes["additional_annotations"].apply(

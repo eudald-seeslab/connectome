@@ -159,7 +159,6 @@ Markdown~=3.4.4
 seaborn~=0.12.2
 oauthlib~=3.2.2
 Werkzeug~=2.3.6
-pip~=23.2.1
 toolz~=0.12.1
 pexpect~=4.9.0
 h5py~=3.10.0

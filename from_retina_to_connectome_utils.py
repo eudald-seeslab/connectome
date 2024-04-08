@@ -51,7 +51,7 @@ def update_running_loss(loss_, inputs_):
 
 
 def update_results_df(results_, batch_files_, predictions_, batch_labels_, correct_):
-    pd.concat(
+    return pd.concat(
         [
             results_,
             pd.DataFrame(

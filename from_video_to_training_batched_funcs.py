@@ -8,7 +8,7 @@ def get_files_from_directory(directory_path):
     files = []
     for root, dirs, filenames in os.walk(directory_path):
         for filename in filenames:
-            if filename.endswith(".npy"):
+            if filename.endswith(".npy") or filename.endswith(".png"):
                 files.append(os.path.join(root, filename))
     return files
 

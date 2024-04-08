@@ -52,10 +52,13 @@ def log_original_to_wandb(vals, img_path):
     )
 
 
-def log_running_stats_to_wandb(epoch_, running_loss_, total_correct_, total_, results_):
+def log_running_stats_to_wandb(
+    epoch_, iteration, running_loss_, total_correct_, total_, results_
+):
     wandb.log(
         {
             "epoch": epoch_,
+            "iteration": iteration,
             "loss": running_loss_ / total_,
             "accuracy": total_correct_ / total_,
             "results": wandb.Table(dataframe=results_),

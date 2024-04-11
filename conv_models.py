@@ -88,13 +88,13 @@ class DecodingImagesCNN(nn.Module):
     def forward(self, x):
         # Apply convolutional layers with ReLU and max pooling
         x = F.relu(self.conv1_bn(self.conv1(x)))
-        x = F.max_pool2d(x, kernel_size=2, stride=2)  # Reducing to 256x256
+        x = F.max_pool2d(x, kernel_size=2, stride=2)
         x = self.dropout(x)
         x = F.relu(self.conv2_bn(self.conv2(x)))
-        x = F.max_pool2d(x, kernel_size=2, stride=2)  # Reducing to 128x128
+        x = F.max_pool2d(x, kernel_size=2, stride=2)
         x = self.dropout(x)
         x = F.relu(self.conv3_bn(self.conv3(x)))
-        x = F.max_pool2d(x, kernel_size=2, stride=2)  # Reducing to 64x64
+        x = F.max_pool2d(x, kernel_size=2, stride=2)
         x = self.dropout(x)
 
         # Adaptive pooling to make the output size independent of the input size

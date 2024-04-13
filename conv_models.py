@@ -102,6 +102,4 @@ class DecodingImagesCNN(nn.Module):
 
         # Flatten the tensor for the fully connected layer
         x = torch.flatten(x, 1)
-
-        # Final fully connected layer
         return self.fc(x)

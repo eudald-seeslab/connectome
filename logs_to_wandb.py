@@ -1,15 +1,13 @@
 import os
 
-import torch
-
 import wandb
 
 from from_retina_to_connectome_utils import hex_to_square_grid
 
 
 def log_images_to_wandb(bs, rs, la, img_path, frame, cell_type):
-    la_vals = la[cell_type][:, -frame, :].squeeze()
-    max_la = la_vals.max()
+
+    max_la = la.max()
     wandb.log(
         {
             "Original image": wandb.Image(
@@ -20,7 +18,7 @@ def log_images_to_wandb(bs, rs, la, img_path, frame, cell_type):
                 caption=f"Rendered image",
             ),
             "Layer activation": wandb.Image(
-                torch.mul(torch.div(la_vals, max_la), 255),
+                la / max_la * 255,
                 caption=f"{cell_type} activation",
             ),
         }

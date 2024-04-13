@@ -82,6 +82,9 @@ class DecodingImagesCNN(nn.Module):
         # Adaptive pooling layer to reduce the spatial dimensions to 1x1 at the end
         self.adap_pool = nn.AdaptiveAvgPool2d((1, 1))
 
+        # one last batch normalization
+        self.bn = nn.BatchNorm1d(out_channels_3)
+
         # Fully connected layer for binary classification
         self.fc = nn.Linear(out_channels_3, 1)
 
@@ -99,6 +102,9 @@ class DecodingImagesCNN(nn.Module):
 
         # Adaptive pooling to make the output size independent of the input size
         x = self.adap_pool(x)
+
+        # normalize the output
+        x = self.bn(x.view(x.size(0), -1))
 
         # Flatten the tensor for the fully connected layer
         x = torch.flatten(x, 1)

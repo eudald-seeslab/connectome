@@ -872,3 +872,9 @@ flyvis/data/results/opticflow/000/clustering/TmY9/masked.h5
 flyvis/images/tweet_1_intro.png
 flyvis/images/tweet_4_network.gif
 flyvis/images/tweet_5_training_light.gif
+data/custom_stimuli/RenderedData_0000/_meta.yaml
+data/custom_stimuli/RenderedData_0000/sequences.h5
+flyvis/parsed_objects/decoding_activations.npy
+flyvis/parsed_objects/responses_blue.npy
+flyvis/parsed_objects/responses_yellow.npy
+data/cell_type_rational.csv

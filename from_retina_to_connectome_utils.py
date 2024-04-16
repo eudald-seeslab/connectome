@@ -5,12 +5,11 @@ import torch
 from flyvision import utils
 
 
-
-def get_decision_making_neurons():
+def get_decision_making_neurons(dtype):
     # Note: this is only run once
     # get a dataframe indicating which neurons will be used to classify
     rational_neurons = pd.read_csv("adult_data/rational_neurons.csv", index_col=0)
-    return torch.tensor(rational_neurons.values.squeeze(), dtype=torch.float16).detach()
+    return torch.tensor(rational_neurons.values.squeeze(), dtype=dtype).detach()
 
 
 def get_tensor_items(x):
@@ -86,3 +85,21 @@ def update_results_df(results_, batch_files_, predictions_, batch_labels_, corre
 
 def initialize_results_df():
     return pd.DataFrame(columns=["Image", "Prediction", "True label", "Is correct"])
+
+
+def create_csr_input(activation_df, dtype, device):
+    csr_matrix = scipy.sparse.coo_matrix(activation_df.values).tocsr()
+    crow_indices = csr_matrix.indptr
+    col_indices = csr_matrix.indices
+    values = csr_matrix.data
+    shape = csr_matrix.shape
+
+    return torch.sparse_csr_tensor(
+        crow_indices,
+        col_indices,
+        values,
+        size=shape,
+        dtype=dtype,
+        device=device,
+    )
+

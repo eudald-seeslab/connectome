@@ -1,13 +1,13 @@
 import os
 
 import wandb
+import numpy as np
 
 from from_retina_to_connectome_utils import hex_to_square_grid
 
 
 def log_images_to_wandb(bs, rs, la, img_path, frame, cell_type):
 
-    max_la = la.max()
     wandb.log(
         {
             "Original image": wandb.Image(
@@ -18,7 +18,7 @@ def log_images_to_wandb(bs, rs, la, img_path, frame, cell_type):
                 caption=f"Rendered image",
             ),
             "Layer activation": wandb.Image(
-                la / max_la * 255,
+                la / np.nanmax(la) * 255,
                 caption=f"{cell_type} activation",
             ),
         }

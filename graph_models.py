@@ -1,9 +1,46 @@
 import torch
 from torch.nn import functional as F
 from torch.nn import Parameter, ParameterList, Module
-from torch_geometric.nn import GATConv, global_max_pool
+from torch_geometric.nn import GATConv, global_max_pool, MessagePassing
 
 DROPOUT = 0.0
+
+
+class TrainableEdgeConv(MessagePassing):
+    def __init__(self, num_connectome_passes=1):
+        super(TrainableEdgeConv, self).__init__(aggr="add")
+
+        self.num_passes = num_connectome_passes
+
+    def forward(self, x, edge_index, edge_weight):
+        # Start propagating messages.
+        size = (x.size(0), x.size(0))
+
+        for _ in range(self.num_passes):
+            x = self.propagate(edge_index, size=size, x=x, edge_weight=edge_weight)
+
+        return x
+
+    def message(self, x_j, edge_weight):
+        # Message: edge_weight (learnable) multiplied by node feature of the neighbor
+        return x_j * edge_weight.unsqueeze(1)
+
+    def update(self, aggr_out):
+        # Each node gets its updated feature as the sum of its neighbor contributions.
+        return aggr_out
+
+
+class EdgeWeightedGNNModel(torch.nn.Module):
+
+    def __init__(self, num_node_features, num_connectome_passes):
+        super(EdgeWeightedGNNModel, self).__init__()
+        self.conv = TrainableEdgeConv(num_connectome_passes)
+        self.fc = torch.nn.Linear(num_node_features, 1)
+
+    def forward(self, data):
+        x, edge_index, edge_weight = data.x, data.edge_index, data.edge_attr
+        x = self.conv(x.to_sparse(), edge_index, edge_weight)
+        return self.fc(x)
 
 
 class GNNModel(torch.nn.Module):
@@ -136,37 +173,3 @@ class CustomFullyConnectedLayer(Module):
     @staticmethod
     def get_neuron_counts(cell_type_indices):
         return dict(sorted(cell_type_indices.value_counts().to_dict().items()))
-
-
-# Probably deprecated
-class PermutationLayer(torch.nn.Module):
-    def __init__(self, max_indices, num_types):
-        super(PermutationLayer, self).__init__()
-        # Assuming max_indices is the maximum number of nodes for any cell type
-        self.max_indices = max_indices
-        self.num_types = num_types
-        # Initialize permutation indices for each cell type
-        self.permutations = Parameter(
-            torch.stack(
-                [torch.randperm(max_indices) for _ in range(num_types)]
-            ).float(),
-        )
-
-    def forward(self, x, cell_type_indices):
-        # cell_type_indices should be a vector indicating the cell type for each node in x
-        permuted_x = x.clone()
-        for type_index in range(self.num_types):
-            type_mask = cell_type_indices == type_index
-
-            if type_mask.any():
-                # Adjust perm_indices to only select as many as needed for this type
-                actual_num_nodes = type_mask.sum().item()
-                perm_indices = self.permutations[type_index][:actual_num_nodes]
-
-                # We gather the nodes of this cell type, then apply the perm_indices
-                permuted_nodes = x[type_mask][perm_indices.long()]
-
-                # Reassign permuted nodes back
-                permuted_x[type_mask] = permuted_nodes
-
-        return permuted_x

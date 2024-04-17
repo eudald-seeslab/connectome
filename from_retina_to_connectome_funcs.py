@@ -129,12 +129,13 @@ def from_connectome_to_model(activation_df_, labels_):
         np.array([synaptic_matrix.row, synaptic_matrix.col]),
         dtype=torch.long,
     )
+    weights = torch.tensor(synaptic_matrix.data, dtype=torch.long)
     activation_tensor = torch.tensor(activation_df_.values, dtype=torch.float16)
     graph_list_ = []
     for i in range(activation_tensor.shape[1]):
         # Shape [num_nodes, 1], one feature per node
         node_features = activation_tensor[:, i].unsqueeze(1)
-        graph = Data(x=node_features, edge_index=edges, y=labels_[i])
+        graph = Data(x=node_features, edge_index=edges, edge_attr=weights, y=labels_[i])
         graph_list_.append(graph)
 
     return graph_list_

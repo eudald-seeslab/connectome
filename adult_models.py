@@ -21,7 +21,7 @@ class AdultConnectome(nn.Module):
         self.connectome_layer_number = layer_number
 
         self.shared_weights = nn.Parameter(
-            self.create_csr_tensor(adjacency_matrix, dtype)
+            self.create_coo_tensor(adjacency_matrix, dtype)
         )
         # self.shared_bias = nn.Parameter(
         #    torch.ones([neuron_count, batch_size], dtype=dtype).to_sparse()

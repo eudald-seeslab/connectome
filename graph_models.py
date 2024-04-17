@@ -39,7 +39,7 @@ class EdgeWeightedGNNModel(torch.nn.Module):
 
     def forward(self, data):
         x, edge_index, edge_weight = data.x, data.edge_index, data.edge_attr
-        x = self.conv(x.to_sparse(), edge_index, edge_weight)
+        x = self.conv(x.to_sparse(layout=torch.sparse_csr), edge_index, edge_weight)
         return self.fc(x)
 
 

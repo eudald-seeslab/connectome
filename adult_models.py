@@ -4,6 +4,8 @@ from unittest import TestCase
 import numpy as np
 import torch
 import torch.nn as nn
+from torch.sparse import to_sparse_semi_structured
+
 from scipy.sparse import csr_matrix
 
 
@@ -11,9 +13,7 @@ class AdultConnectome(nn.Module):
     def __init__(
         self,
         adjacency_matrix,
-        neuron_count: int,
         layer_number: int,
-        batch_size,
         dtype,
     ):
         super(AdultConnectome, self).__init__()
@@ -23,17 +23,16 @@ class AdultConnectome(nn.Module):
         self.shared_weights = nn.Parameter(
             self.create_coo_tensor(adjacency_matrix, dtype)
         )
+        # FIXME: This is not correct. We only need biases for the non-zero parameters
         # self.shared_bias = nn.Parameter(
-        #    torch.ones([neuron_count, batch_size], dtype=dtype).to_sparse()
+        #    torch.ones(neuron_count, dtype=dtype).to_sparse()
         # )
     def forward(self, x):
 
-        # x = x.unsqueeze(1)
-
         # Pass the input through the layer with shared weights
-        for _ in range(self.connectome_layer_number):
+        for i in range(self.connectome_layer_number):
             x = torch.sparse.mm(self.shared_weights, x) #+ self.shared_bias
-        return x.transpose(0, 1)
+        return x
 
     @staticmethod
     def create_coo_tensor(adjacency_matrix, dtype):
@@ -61,66 +60,39 @@ class AdultConnectome(nn.Module):
                 dtype=dtype,
             )
 
+
 class FullAdultModel(nn.Module):
 
     def __init__(
         self,
         adjacency_matrix,
-        decision_making_vector,
-        neuron_count: int,
+        decision_making_tensor,
         layer_number: int,
-        batch_size: int,
         dtype,
     ):
         super(FullAdultModel, self).__init__()
 
-        # get number of non-zero elements in decision_making_vector
-        num_decision_making_neurons = decision_making_vector.sum().int().item()
-
         # TODO: add the permutation layer
 
         self.connectome = AdultConnectome(
-            adjacency_matrix, neuron_count, layer_number, batch_size, dtype
+            adjacency_matrix, layer_number, dtype
         )
 
-        self.decision_making_vector = decision_making_vector
-        self.final_fc = nn.Linear(num_decision_making_neurons, 1, dtype=dtype)
+        self.decision_making_tensor = decision_making_tensor
+        self.final_fc = nn.Linear(self.decision_making_tensor._nnz(), 1, dtype=dtype)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.connectome(x).to_dense()
-        x = x[:, self.decision_making_vector.bool()]
-        x = x.view(x.size(0), -1)
+        x = self.connectome(x)
+        x = torch.sparse.mm(self.decision_making_tensor, x)
+        x = x.to_dense().squeeze(1)
 
         return self.final_fc(x)
 
-
-# deprecated
-class IntegratedModel(nn.Module):
-    def __init__(self, adult_connectome_net, synapse_df, neuron_type):
-        super(IntegratedModel, self).__init__()
-        self.adult_connectome_net = adult_connectome_net
-
-        # Filter the DataFrame for the specific neuron type and create a synaptic count matrix
-        filtered_df = synapse_df[synapse_df["cell_type"] == neuron_type]
-        self.synaptic_matrix = self.create_synaptic_matrix(filtered_df)
-
     @staticmethod
-    def create_synaptic_matrix(df):
-        # Assuming 'pre_root_id' and 'post_root_id' are integer indices.
-        max_index = max(df["pre_root_id"].max(), df["post_root_id"].max()) + 1
-        synaptic_matrix_csr = csr_matrix(
-            (df["syn_count"], (df["pre_root_id"], df["post_root_id"])),
-            shape=(max_index, max_index),
+    def create_sparse_decision_vector(decision_vector, batch_size):
+
+        decision_vector = decision_vector.unsqueeze(0).expand(
+            batch_size, decision_vector.shape[0], decision_vector.shape[1]
         )
-        return torch.LongTensor(synaptic_matrix_csr.toarray(), dtype=torch.float32)
 
-    def forward(self, x):
-        # Pass the input through the TemporalConvNet
-        x = self.temporal_conv_net(x)
-
-        # Reshape and multiply with the synaptic count matrix
-        x = x.view(x.size(0), -1)  # Flatten if necessary
-        x = torch.mm(x, self.synaptic_matrix)
-
-        # Pass through the AdultConnectomeNetwork
-        return self.adult_connectome_net(x)
+        return decision_vector.to_sparse()

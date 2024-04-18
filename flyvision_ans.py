@@ -52,6 +52,40 @@ DECODING_CELLS = [
 ]
 FINAL_CELLS = ["TmY15", "TmY18"]
 
+NON_DECODING_CELLS = [
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "L1",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "Lawf1",
+    "Lawf2",
+    "Am",
+    "C2",
+    "C3",
+    "CT1(Lo1)",
+    "CT1(M10)",
+    "Mi1",
+    "Mi2",
+    "Mi3",
+    "Mi4",
+    "Mi9",
+    "Mi10",
+    "Mi11",
+    "Mi12",
+    "Mi13",
+    "Mi14",
+    "Mi15",
+]
+
 
 def load_custom_sequences(video_dir):
     videos = [np.load(os.path.join(video_dir, a)) for a in os.listdir(video_dir)]

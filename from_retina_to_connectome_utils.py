@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
+import scipy
 import torch
+import torch.nn as nn
 
 from flyvision import utils
 
@@ -103,3 +105,6 @@ def create_csr_input(activation_df, dtype, device):
         device=device,
     )
 
+
+def vector_to_one_hot(vec, dtype):
+    return nn.functional.one_hot(torch.nonzero(vec).squeeze().cpu(), num_classes=vec.size(0)).to(dtype).to_sparse()

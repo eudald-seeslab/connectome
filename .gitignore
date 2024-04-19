@@ -253,7 +253,6 @@ flyvis/data/mnist_test_seq.npy
 flyvis/data/RenderedData_0000/_meta.yaml
 flyvis/data/RenderedData_0001/_meta.yaml
 flyvis/data/RenderedData_0002/_meta.yaml
-flyvis/data/connectome/fib25-fib19_v2.2.json
 flyvis/data/connectome/ConnectomeDir_0000/_meta.yaml
 flyvis/data/connectome/ConnectomeDir_0000/unique_cell_types.h5
 flyvis/data/connectome/ConnectomeDir_0001/_meta.yaml

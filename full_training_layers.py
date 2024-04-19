@@ -60,9 +60,9 @@ batch_size = 1
 
 dropout = .1
 max_lr = 0.01
-base_lr = 0.0002
+base_lr = 0.0001
 weight_decay = 0.0001
-NUM_CONNECTOME_PASSES = 10
+NUM_CONNECTOME_PASSES = 15
 
 use_one_cycle_lr = False
 
@@ -158,22 +158,25 @@ for i in tqdm(range(iterations)):
         )
 
     if wandb_ and i % wandb_images_every == 0:
-        la_0 = (
-            hex_to_square_grid(
-                layer_activations[0][cell_type_plot]
-                .squeeze()[-last_good_frame]
-                .cpu()
-                .numpy()
-            ),
-        )
-        log_images_to_wandb(
-            batch_sequences[0],
-            rendered_sequences[0],
-            la_0,
-            batch_files[0],
-            frame=last_good_frame,
-            cell_type=cell_type_plot,
-        )
+        try:
+            la_0 = (
+                hex_to_square_grid(
+                    layer_activations[0][cell_type_plot]
+                    .squeeze()[-last_good_frame]
+                    .cpu()
+                    .numpy()
+                ),
+            )
+            log_images_to_wandb(
+                batch_sequences[0],
+                rendered_sequences[0],
+                la_0,
+                batch_files[0],
+                frame=last_good_frame,
+                cell_type=cell_type_plot,
+            )
+        except Exception as e:
+            print(f"Error logging to wandb: {e}. Continuing...")
 
     voronoi_averages_df = compute_voronoi_averages(
         layer_activations,
@@ -216,7 +219,10 @@ for i in tqdm(range(iterations)):
     total_correct += correct.sum()
 
     if wandb_:
-        log_running_stats_to_wandb(0, i, running_loss, total_correct, total, results)
+        try:
+            log_running_stats_to_wandb(0, i, running_loss, total_correct, total, results)
+        except Exception as e:
+            print(f"Error logging to wandb: {e}. Continuing...")
 
 print(
     f"Finished training with loss {running_loss / total} and accuracy {total_correct / total}"
@@ -286,9 +292,13 @@ for _ in tqdm(range(validation_iterations)):
         total_correct += correct.sum().item()
 
 if wandb_:
-    log_running_stats_to_wandb(
-        0, 0, running_loss, total_correct, total, validation_results
-    )
+    try:
+        log_running_stats_to_wandb(
+            0, 0, running_loss, total_correct, total, validation_results
+        )
+    except Exception as e:
+        print(f"Error logging validation stats: {e}. Continuing...")
+
 
 print(
     f"Validation Loss: {running_loss / total}, "

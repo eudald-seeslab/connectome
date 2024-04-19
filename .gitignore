@@ -454,9 +454,6 @@ flyvis/data/custom_stimuli/RenderedData_0000/_meta.yaml
 flyvis/data/custom_stimuli/RenderedData_0001/_meta.yaml
 flyvis/data/custom_stimuli/RenderedData_0001/sequences.h5
 flyvis/data/results/opticflow/000/_meta.yaml
-flyvis/data/results/opticflow/000/0000/_meta.yaml
-flyvis/data/results/opticflow/000/0000/best_chkpt
-flyvis/data/results/opticflow/000/0000/validation_loss.h5
 flyvis/data/results/opticflow/000/0001/_meta.yaml
 flyvis/data/results/opticflow/000/0001/best_chkpt
 flyvis/data/results/opticflow/000/0001/validation_loss.h5

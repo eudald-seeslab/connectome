@@ -1,13 +1,8 @@
-import time
-from typing import Dict
-from unittest import TestCase
-
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.sparse import to_sparse_semi_structured
 
-from scipy.sparse import csr_matrix
+from graph_models import RetinaConnectionLayer
 
 
 class SparseMatrixMulFunction(torch.autograd.Function):
@@ -67,7 +62,9 @@ class AdultConnectome(nn.Module):
 
     def forward(self, x):
 
-        return SparseMatrixMulFunction.apply(self.indices, self.shared_weights, self.shape, self.layer_number, x)
+        return SparseMatrixMulFunction.apply(
+            self.indices, self.shared_weights, self.shape, self.layer_number, x
+            )
 
 
 class FullAdultModel(nn.Module):
@@ -76,12 +73,17 @@ class FullAdultModel(nn.Module):
         self,
         adjacency_matrix,
         decision_making_tensor,
+        cell_type_indices,
         layer_number: int,
+        sparse_layout,
         dtype,
     ):
         super(FullAdultModel, self).__init__()
 
-        # TODO: add the permutation layer
+        self.sparse_layout = sparse_layout
+        self.retina_connection = RetinaConnectionLayer(
+            cell_type_indices, 1, 1
+        )
 
         self.connectome = AdultConnectome(
             adjacency_matrix, layer_number, dtype
@@ -91,6 +93,9 @@ class FullAdultModel(nn.Module):
         self.final_fc = nn.Linear(self.decision_making_tensor._nnz(), 1, dtype=dtype)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+
+        x = self.retina_connection(x)
+        x = x.to_sparse(layout=self.sparse_layout)
         x = self.connectome(x)
         x = torch.sparse.mm(self.decision_making_tensor, x)
         x = x.to_dense().squeeze(1)

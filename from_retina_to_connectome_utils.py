@@ -106,5 +106,11 @@ def create_csr_input(activation_df, dtype, device):
     )
 
 
-def vector_to_one_hot(vec, dtype):
-    return nn.functional.one_hot(torch.nonzero(vec).squeeze().cpu(), num_classes=vec.size(0)).to(dtype).to_sparse()
+def vector_to_one_hot(vec, dtype, sparse_layout):
+    return (
+        nn.functional.one_hot(
+            torch.nonzero(vec).squeeze().cpu(), num_classes=vec.size(0)
+        )
+        .to(dtype)
+        .to_sparse(layout=sparse_layout)
+    )

@@ -1,3 +1,4 @@
+import time
 from typing import Dict
 from unittest import TestCase
 
@@ -9,6 +10,41 @@ from torch.sparse import to_sparse_semi_structured
 from scipy.sparse import csr_matrix
 
 
+class SparseMatrixMulFunction(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, indices, values, shape, layer_number, x):
+        ctx.layer_number = layer_number
+        # Create the sparse tensor only with indices and values, shape is passed separately and not saved
+        sparse_tensor = torch.sparse_coo_tensor(
+            indices, values, shape, dtype=values.dtype, device=values.device
+        )
+        result = x
+        for _ in range(layer_number):
+            result = torch.sparse.mm(sparse_tensor, result)
+
+        # Save tensors that will be needed in the backward pass
+        ctx.save_for_backward(indices, values, result)
+        ctx.shape = shape  # Just store shape as an attribute, not in the context
+
+        return result
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        indices, values, result = ctx.saved_tensors
+        shape = ctx.shape  # Retrieve the shape from the context attribute
+        layer_number = ctx.layer_number
+
+        # Rebuild the sparse tensor for use in the backward pass
+        sparse_tensor = torch.sparse_coo_tensor(
+            indices, values, shape, dtype=values.dtype, device=values.device
+        )
+        grad_input = grad_output
+        for _ in range(layer_number):
+            grad_input = torch.sparse.mm(sparse_tensor.t(), grad_input)
+
+        return None, None, None, None, grad_input
+
+
 class AdultConnectome(nn.Module):
     def __init__(
         self,
@@ -18,47 +54,20 @@ class AdultConnectome(nn.Module):
     ):
         super(AdultConnectome, self).__init__()
 
-        self.connectome_layer_number = layer_number
+        self.layer_number = layer_number
 
         self.shared_weights = nn.Parameter(
-            self.create_coo_tensor(adjacency_matrix, dtype)
+            torch.tensor(adjacency_matrix.data, dtype=dtype)
         )
-        # FIXME: This is not correct. We only need biases for the non-zero parameters
-        # self.shared_bias = nn.Parameter(
-        #    torch.ones(neuron_count, dtype=dtype).to_sparse()
-        # )
+        self.indices = torch.tensor(
+            np.vstack((adjacency_matrix.row, adjacency_matrix.col)),
+            dtype=torch.int64,
+        )
+        self.shape = adjacency_matrix.shape
+
     def forward(self, x):
 
-        # Pass the input through the layer with shared weights
-        for i in range(self.connectome_layer_number):
-            x = torch.sparse.mm(self.shared_weights, x) #+ self.shared_bias
-        return x
-
-    @staticmethod
-    def create_coo_tensor(adjacency_matrix, dtype):
-        return torch.sparse_coo_tensor(
-            np.array([adjacency_matrix.row, adjacency_matrix.col]),
-            adjacency_matrix.data,
-            adjacency_matrix.shape,
-            dtype=dtype,
-            check_invariants=True,
-        )
-
-    @staticmethod
-    def create_csr_tensor(adjacency_matrix, dtype):
-        # Extract CSR components
-        crow_indices = adjacency_matrix.indptr
-        col_indices = adjacency_matrix.indices
-        values = adjacency_matrix.data
-        shape = adjacency_matrix.shape
-
-        return torch.sparse_csr_tensor(
-                crow_indices,
-                col_indices,
-                values,
-                size=shape,
-                dtype=dtype,
-            )
+        return SparseMatrixMulFunction.apply(self.indices, self.shared_weights, self.shape, self.layer_number, x)
 
 
 class FullAdultModel(nn.Module):

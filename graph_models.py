@@ -69,7 +69,7 @@ class GNNModel(torch.nn.Module):
         self.final_activation = torch.nn.ReLU()
         self.norm = torch.nn.BatchNorm1d(num_node_features)
 
-        self.permutation_layer = CustomFullyConnectedLayer(
+        self.permutation_layer = RetinaConnectionLayer(
             cell_type_indices, batch_size, num_node_features
         )
         self.final_decision_layer = torch.nn.Linear(in_features=1, out_features=1)
@@ -118,7 +118,7 @@ class GNNModel(torch.nn.Module):
         return torch.where(mask, noise, x)
 
 
-class CustomFullyConnectedLayer(Module):
+class RetinaConnectionLayer(Module):
     def __init__(self, cell_type_indices, batch_size, num_features=1):
         super().__init__()
         self.cell_type_indices = cell_type_indices

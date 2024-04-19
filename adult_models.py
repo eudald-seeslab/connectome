@@ -45,15 +45,22 @@ class AdultConnectome(nn.Module):
         self,
         adjacency_matrix,
         layer_number: int,
+        log_transform_weights: bool,
         dtype,
     ):
         super(AdultConnectome, self).__init__()
 
         self.layer_number = layer_number
 
-        self.shared_weights = nn.Parameter(
-            torch.tensor(adjacency_matrix.data, dtype=dtype)
-        )
+        if log_transform_weights:
+            self.shared_weights = nn.Parameter(
+                torch.tensor(np.log1p(adjacency_matrix.data), dtype=dtype)
+            )
+        else:
+            self.shared_weights = nn.Parameter(
+                torch.tensor(adjacency_matrix.data, dtype=dtype)
+            )
+
         self.indices = torch.tensor(
             np.vstack((adjacency_matrix.row, adjacency_matrix.col)),
             dtype=torch.int64,
@@ -75,6 +82,7 @@ class FullAdultModel(nn.Module):
         decision_making_tensor,
         cell_type_indices,
         layer_number: int,
+        log_transform_weights: bool,
         sparse_layout,
         dtype,
     ):
@@ -86,7 +94,7 @@ class FullAdultModel(nn.Module):
         )
 
         self.connectome = AdultConnectome(
-            adjacency_matrix, layer_number, dtype
+            adjacency_matrix, layer_number, log_transform_weights, dtype
         )
 
         self.decision_making_tensor = decision_making_tensor

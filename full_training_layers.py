@@ -115,6 +115,7 @@ model = FullAdultModel(
     one_hot_decision_making,
     cell_type_indices,
     NUM_CONNECTOME_PASSES,
+    log_transform_weights=True,
     sparse_layout=sparse_layout,
     dtype=dtype,
 ).to(DEVICE)
@@ -215,8 +216,12 @@ for i in tqdm(range(iterations)):
     )
     results = update_results_df(results, batch_files, predictions, labels_cpu, correct)
     running_loss += update_running_loss(loss, inputs)
-    total += labels.shape[0]
+    total += batch_size
     total_correct += correct.sum()
+    print(
+        f"Loss: {running_loss / total}, Accuracy: {total_correct / total}"
+    )
+    print(predictions, labels_cpu, correct)
 
     if wandb_:
         try:
@@ -228,6 +233,8 @@ print(
     f"Finished training with loss {running_loss / total} and accuracy {total_correct / total}"
 )
 torch.cuda.empty_cache()
+
+# Validation
 
 already_selected_validation = []
 total_correct = 0

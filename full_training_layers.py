@@ -51,7 +51,7 @@ validation_length = 50
 wandb_ = True
 wandb_images_every = 100
 small = True
-small_length = 400
+small_length = 1000
 
 num_epochs = 1
 batch_size = 1

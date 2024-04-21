@@ -58,7 +58,7 @@ batch_size = 1
 
 dropout = 0.1
 max_lr = 0.01
-base_lr = 0.0001
+base_lr = 0.00001
 weight_decay = 0.0001
 NUM_CONNECTOME_PASSES = 10
 final_retina_cells = FINAL_CELLS
@@ -187,7 +187,7 @@ def main(wandb_logger):
         )
 
         labels, inputs = data_processor.process_full_models_data(
-            wandb_logger, j, batch_files
+            j, batch_files
         )
 
         with torch.no_grad():

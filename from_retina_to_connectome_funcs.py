@@ -13,7 +13,7 @@ from retina_to_connectome_funcs import (
 
 
 def compute_voronoi_averages(
-    activations, classification, decoding_cells, last_good_frame=8
+    activations, classification, decoding_cells, last_good_frame, normalize=True
 ):
     """
     Calculate Voronoi averages for each cell type in the classification.
@@ -31,7 +31,14 @@ def compute_voronoi_averages(
             averages_dict[cell_type] = get_batch_voronoi_averages(
                 activation_tensor, n_centers=number_of_cells
             )
-    return voronoi_averages_to_df(averages_dict)
+
+    voronoi_df = voronoi_averages_to_df(averages_dict)
+    if normalize:
+        values_cols = voronoi_df.columns != "index_name"
+        voronoi_df.loc[:, values_cols] = voronoi_df.loc[
+            :, values_cols
+        ].apply(lambda x: (x - x.min()) / (x.max() - x.min()), axis=0)
+    return voronoi_df
 
 
 def get_synaptic_matrix(activation_df):

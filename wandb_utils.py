@@ -1,5 +1,5 @@
 import wandb
-
+from wandb import AlertLevel
 from from_retina_to_connectome_utils import hex_to_square_grid
 from logs_to_wandb import log_images_to_wandb, log_running_stats_to_wandb
 
@@ -64,3 +64,15 @@ class WandBLogger:
                 )
             except Exception as e:
                 print(f"Error logging running stats to wandb: {e}. Continuing...")
+
+    def send_crash(self, message):
+        if self.enabled:
+            wandb.alert(
+                title=f"Error in run at {self.project_name}", 
+                text=message,
+                level=AlertLevel.ERROR
+                )
+
+    def finish(self):
+        if self.enabled:
+            wandb.finish()

@@ -1,7 +1,8 @@
+import os
+import numpy as np
 import wandb
 from wandb import AlertLevel
 from from_retina_to_connectome_utils import hex_to_square_grid
-from logs_to_wandb import log_images_to_wandb, log_running_stats_to_wandb
 
 
 class WandBLogger:
@@ -45,13 +46,11 @@ class WandBLogger:
                     .numpy()
                 )
                 # Log the images to wandb
-                log_images_to_wandb(
+                self.log_images(
                     batch_sequences[0],
                     rendered_sequences[0],
                     (transformed_activation,),
                     batch_files[0],
-                    frame=self.last_good_frame,
-                    cell_type=self.cell_type_plot,
                 )
             except Exception as e:
                 print(f"Error logging images to wandb: {e}. Continuing...")
@@ -59,12 +58,65 @@ class WandBLogger:
     def log_metrics(self, iteration, running_loss, total_correct, total, results):
         if self.enabled:
             try:
-                log_running_stats_to_wandb(
+                self.log_running_stats(
                     0, iteration, running_loss, total_correct, total, results
                 )
             except Exception as e:
                 print(f"Error logging running stats to wandb: {e}. Continuing...")
 
+    
+    def log_images(self, bs, rs, la, img_path,):
+        frame = self.last_good_frame
+        wandb.log(
+            {
+                "Original image": wandb.Image(
+                    bs[-frame], caption=f"Original image {os.path.basename(img_path)}"
+                ),
+                "Rendered sequence": wandb.Image(
+                    hex_to_square_grid(rs[-frame].squeeze()),
+                    caption=f"Rendered image",
+                ),
+                "Layer activation": wandb.Image(
+                    la / np.nanmax(la) * 255,
+                    caption=f"{self.cell_type_plot} activation",
+                ),
+            }
+        )
+
+    def log_original(self, vals, img_path):
+        wandb.log(
+            {
+                "Original image": wandb.Image(
+                    vals, caption=f"Original image {os.path.basename(img_path)}"
+                ),
+            }
+        )
+
+    def log_running_stats(
+        self, epoch_, iteration, running_loss_, total_correct_, total_, results_
+    ):
+        wandb.log(
+            {
+                "epoch": epoch_,
+                "iteration": iteration,
+                "loss": running_loss_ / total_,
+                "accuracy": total_correct_ / total_,
+                "results": wandb.Table(dataframe=results_),
+            }
+        )
+
+    def log_validation_stats(
+        self, running_loss_, total_correct_, total_, results_, weber_plot_
+    ):
+        wandb.log(
+            {
+                "Validation loss": running_loss_ / total_,
+                "Validation accuracy": total_correct_ / total_,
+                "Validation results": wandb.Table(dataframe=results_),
+                "Weber Fraction Plot": wandb.Image(weber_plot_),
+            }
+        )
+    
     def send_crash(self, message):
         if self.enabled:
             wandb.alert(

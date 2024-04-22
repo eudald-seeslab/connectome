@@ -51,14 +51,14 @@ validation_length = 50
 wandb_ = True
 wandb_images_every = 100
 small = True
-small_length = 1000
+small_length = 4000
 
 num_epochs = 1
 batch_size = 1
 
 dropout = 0.1
 max_lr = 0.01
-base_lr = 0.00001
+base_lr = 0.000001
 weight_decay = 0.0001
 NUM_CONNECTOME_PASSES = 10
 final_retina_cells = FINAL_CELLS

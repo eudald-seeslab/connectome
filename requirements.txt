@@ -171,8 +171,8 @@ triton~=2.1.0
 pyarrow~=14.0.2
 ptyprocess~=0.7.0
 datamate~=0.1.9
-jupyterlab~=4.0.10
-jupyterlab_server~=2.25.2
+jupyterlab
+jupyterlab_server
 referencing~=0.32.1
 ffmpeg~=1.4
 json5~=0.9.14
@@ -180,4 +180,4 @@ torch_geometric~=2.4.0
 torch-scatter
 torch-sparse
 opencv-python~=4.9.0.80
-wandb~=0.16.4
+wandb

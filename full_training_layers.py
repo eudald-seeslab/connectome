@@ -10,7 +10,7 @@ from scipy.sparse import load_npz
 import flyvision
 from flyvision_ans import DECODING_CELLS, FINAL_CELLS
 from from_retina_to_connectome_funcs import get_cell_type_indices
-from from_video_to_training_batched_funcs import (
+from from_retina_to_connectome_utils import (
     get_files_from_directory,
     select_random_videos,
 )
@@ -37,7 +37,7 @@ torch.manual_seed(1234)
 dtype = torch.float32
 
 device_type = "cuda" if cuda.is_available() else "cpu"
-# device_type = "cpu"
+device_type = "cpu"
 DEVICE = device(device_type)
 sparse_layout = torch.sparse_coo
 
@@ -48,19 +48,19 @@ VALIDATION_DATA_DIR = "images/easyval_images"
 debugging = False
 debug_length = 100
 validation_length = 50
-wandb_ = True
+wandb_ = False
 wandb_images_every = 100
 small = True
-small_length = 4000
+small_length = 400
 
 num_epochs = 1
 batch_size = 1
 
 dropout = 0.1
 max_lr = 0.01
-base_lr = 0.000001
+base_lr = 0.00001
 weight_decay = 0.0001
-NUM_CONNECTOME_PASSES = 10
+NUM_CONNECTOME_PASSES = 4
 final_retina_cells = FINAL_CELLS
 normalize_voronoi_cells = True
 
@@ -102,7 +102,7 @@ def main(wandb_logger):
     if len(training_videos) == 0:
         print("I can't find any training images or videos!")
 
-    synaptic_matrix = load_npz("adult_data/synaptic_matrix_sparse.npz")
+    synaptic_matrix = load_npz("adult_data/good_synaptic_matrix.npz")
     one_hot_decision_making = vector_to_one_hot(
         decision_making_vector, dtype, sparse_layout
     ).to(DEVICE)

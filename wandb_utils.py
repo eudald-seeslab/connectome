@@ -46,7 +46,7 @@ class WandBLogger:
                     .numpy()
                 )
                 # Log the images to wandb
-                self.log_images(
+                self.log_images_func(
                     batch_sequences[0],
                     rendered_sequences[0],
                     (transformed_activation,),
@@ -65,7 +65,7 @@ class WandBLogger:
                 print(f"Error logging running stats to wandb: {e}. Continuing...")
 
     
-    def log_images(self, bs, rs, la, img_path,):
+    def log_images_func(self, bs, rs, la, img_path,):
         frame = self.last_good_frame
         wandb.log(
             {

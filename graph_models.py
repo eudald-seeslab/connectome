@@ -149,6 +149,7 @@ class RetinaConnectionLayer(Module):
             mask_indices = torch.tensor(
                 self.cell_type_indices[self.cell_type_indices == type_index].index,
                 dtype=torch.long,
+                device=x.device,
             )
 
             if len(mask_indices) > 0:

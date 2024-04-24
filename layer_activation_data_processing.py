@@ -5,7 +5,6 @@ from flyvision_ans import DECODING_CELLS
 from from_image_to_video import image_paths_to_sequences
 from from_retina_to_connectome_utils import layer_activations_to_decoding_images
 from from_video_to_training_batched_funcs import paths_to_labels, select_random_videos
-from logs_to_wandb import log_images_to_wandb
 
 
 LAST_GOOD_FRAME = 2

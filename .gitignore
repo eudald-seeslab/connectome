@@ -244,7 +244,7 @@ wandb
 sweep_plots
 
 # big data files
-adult_data
+connections.csv
 
 # input data
 /images

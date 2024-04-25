@@ -5,7 +5,7 @@ import subprocess
 BASE_PATH = '/home/eudald/connectome'
 NODES_PER_TASK = 1
 PROC_PER_TASK = 1
-USER_MAIL = 'alejandro.horrillo@urv.cat'
+USER_MAIL = 'eudald.correig@urv.cat'
 JOB_NAME = 'Eudald_jobs'
 OUTPUT_PATH = BASE_PATH + '/logs_python_cluster.txt'
 COMMAND_PATH = BASE_PATH + '/eudald_venv/bin/python3'

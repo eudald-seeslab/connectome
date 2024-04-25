@@ -1,26 +1,16 @@
+import traceback
 import warnings
-import pandas as pd
 import torch
 from torch import device, cuda
 from torch.nn import BCEWithLogitsLoss
 from tqdm import tqdm
-from random import sample
-from scipy.sparse import load_npz
 
-import flyvision
-from flyvision_ans import DECODING_CELLS, FINAL_CELLS
-from from_retina_to_connectome_funcs import get_cell_type_indices
-from from_retina_to_connectome_utils import (
-    get_files_from_directory,
-    select_random_videos,
-)
+from from_retina_to_connectome_utils import select_random_videos
 from from_retina_to_connectome_utils import (
     initialize_results_df,
     predictions_and_corrects_from_model_results,
     update_results_df,
     update_running_loss,
-    get_decision_making_neurons,
-    vector_to_one_hot,
 )
 from adult_models import FullAdultModel
 from wandb_utils import WandBLogger
@@ -45,8 +35,8 @@ TRAINING_DATA_DIR = "images/easy_v2"
 TESTING_DATA_DIR = "images/easy_images"
 VALIDATION_DATA_DIR = "images/easyval_images"
 
-debugging = False
-debug_length = 100
+debugging = True
+debug_length = 2
 validation_length = 50
 wandb_ = False
 wandb_images_every = 100
@@ -61,7 +51,6 @@ max_lr = 0.01
 base_lr = 0.00001
 weight_decay = 0.0001
 NUM_CONNECTOME_PASSES = 4
-final_retina_cells = FINAL_CELLS
 normalize_voronoi_cells = True
 
 model_config = {
@@ -77,37 +66,22 @@ model_config = {
 
 
 def main(wandb_logger):
-    # TODO: move this to the data processing file
-    extent, kernel_size = 15, 13
-    decision_making_vector = get_decision_making_neurons(dtype)
-    receptors = flyvision.rendering.BoxEye(extent=extent, kernel_size=kernel_size)
-    network_view = flyvision.NetworkView(flyvision.results_dir / "opticflow/000/0000")
-    network = network_view.init_network(chkpt="best_chkpt")
-    classification = pd.read_csv("adult_data/classification_clean.csv")
-    root_id_to_index = pd.read_csv("adult_data/root_id_to_index.csv")
 
-    cell_type_indices = get_cell_type_indices(
-        classification, root_id_to_index, final_retina_cells
+    # get data
+    data_processor = FullModelsDataProcessor(
+        wandb_logger=wandb_logger,
+        normalize_voronoi_cells=normalize_voronoi_cells,
+        dtype=dtype,
+        DEVICE=DEVICE,
+        sparse_layout=sparse_layout,
     )
+    training_videos = data_processor.get_videos(TRAINING_DATA_DIR, small, small_length)
+    validation_videos = data_processor.get_videos(VALIDATION_DATA_DIR, small, small_length)
+    synaptic_matrix = data_processor.synaptic_matrix()
+    one_hot_decision_making = data_processor.decision_making_neurons()
+    cell_type_indices = data_processor.cell_type_indices()
 
-    training_videos = get_files_from_directory(TRAINING_DATA_DIR)
-    test_videos = get_files_from_directory(TESTING_DATA_DIR)
-    validation_videos = get_files_from_directory(TESTING_DATA_DIR)
-
-    if small:
-        training_videos = sample(training_videos, small_length)
-        test_videos = sample(test_videos, small_length)
-        validation_videos = sample(validation_videos, int(small_length / 5))
-
-    if len(training_videos) == 0:
-        print("I can't find any training images or videos!")
-
-    synaptic_matrix = load_npz("adult_data/good_synaptic_matrix.npz")
-    one_hot_decision_making = vector_to_one_hot(
-        decision_making_vector, dtype, sparse_layout
-    ).to(DEVICE)
-
-    # init models and data processor
+    # init model
     model = FullAdultModel(
         synaptic_matrix,
         one_hot_decision_making,
@@ -120,19 +94,6 @@ def main(wandb_logger):
 
     optimizer = torch.optim.Adam(model.parameters(), lr=base_lr)
     criterion = BCEWithLogitsLoss()
-
-    # initialize the data processor
-    data_processor = FullModelsDataProcessor(
-        wandb_logger=wandb_logger,
-        receptors=receptors,
-        network=network,
-        classification=classification,
-        final_retina_cells=final_retina_cells,
-        normalize_voronoi_cells=normalize_voronoi_cells,
-        root_id_to_index=root_id_to_index,
-        dtype=dtype,
-        DEVICE=DEVICE,
-    )
 
     # train
     results = initialize_results_df()
@@ -176,6 +137,7 @@ def main(wandb_logger):
     total_correct, total, running_loss = 0, 0, 0.0
     validation_results = initialize_results_df()
 
+    # FIXME: this clashes with the small_length in the validation_videos
     validation_iterations = (
         validation_length
         if validation_length is not None
@@ -226,6 +188,7 @@ if __name__ == "__main__":
     wandb_logger.initialize()
     try:
         main(wandb_logger)
-    except Exception as e:
-        print(f"Error during training: {e}")
-        wandb_logger.send_crash(f"Error during training: {e}")
+    except Exception:
+        error = traceback.format_exc()
+        print(error)
+        wandb_logger.send_crash(f"Error during training: {error}")

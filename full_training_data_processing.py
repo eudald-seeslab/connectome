@@ -1,28 +1,89 @@
+from random import sample
+import pandas as pd
 import torch
+from scipy.sparse import load_npz
 
+import flyvision
 from flyvision.utils.activity_utils import LayerActivity
+from flyvision_ans import FINAL_CELLS
 from from_image_to_video import image_paths_to_sequences
 from from_retina_to_connectome_funcs import compute_voronoi_averages, from_retina_to_connectome
-from from_retina_to_connectome_utils import paths_to_labels
+from from_retina_to_connectome_utils import get_files_from_directory, paths_to_labels, vector_to_one_hot
 
 
 DT = 1 / 100
 LAST_GOOD_FRAME = 2
+FINAL_RETINA_CELLS = FINAL_CELLS
 
 
 class FullModelsDataProcessor:
-    def __init__(self, wandb_logger, receptors, network, classification, final_retina_cells, normalize_voronoi_cells, root_id_to_index, dtype, DEVICE):
+    extent = 15
+    kernel_size = 13
+    dt = DT
+    last_good_frame = LAST_GOOD_FRAME
+    final_retina_cells = FINAL_RETINA_CELLS
+
+    def __init__(
+        self,
+        wandb_logger,
+        normalize_voronoi_cells,
+        dtype,
+        DEVICE,
+        sparse_layout,
+    ):
         self.wandb_logger = wandb_logger
-        self.receptors = receptors
-        self.network = network
-        self.dt = DT
-        self.classification = classification
-        self.final_retina_cells = final_retina_cells
-        self.last_good_frame = LAST_GOOD_FRAME
+        self.receptors = flyvision.rendering.BoxEye(
+            extent=self.extent, kernel_size=self.kernel_size
+        )
+        network_view = flyvision.NetworkView(flyvision.results_dir / "opticflow/000/0000")
+        self.network = network_view.init_network(chkpt="best_chkpt")
+        self.root_id_to_index = pd.read_csv("adult_data/root_id_to_index.csv")
+        self.classification = pd.read_csv("adult_data/classification_clean.csv")
         self.normalize_voronoi_cells = normalize_voronoi_cells
-        self.root_id_to_index = root_id_to_index
         self.dtype = dtype
         self.DEVICE = DEVICE
+        self.sparse_layout = sparse_layout
+
+    @staticmethod
+    def get_videos(data_dir, small, small_length):
+        videos = get_files_from_directory(data_dir)
+        if small:
+            videos = sample(videos, small_length)
+
+        if len(videos) == 0:
+            raise ValueError("No videos found in the specified directory.")
+
+        return videos
+
+    def cell_type_indices(self):
+
+        merged_df = self.root_id_to_index.merge(
+            self.classification, on="root_id", how="left"
+        )
+
+        # Filter only for cells in decoding_cells
+        merged_df = merged_df[merged_df["cell_type"].isin(self.final_retina_cells)]
+
+        # Generate a mapping from cell types to unique integer indices
+        cell_type_to_index = {
+            cell_type: i for i, cell_type in enumerate(merged_df["cell_type"].unique())
+        }
+
+        # Apply the mapping to get cell_type indices
+        merged_df["cell_type_index"] = merged_df["cell_type"].map(cell_type_to_index)
+
+        # Return a series with one column indicating the cell type index for each node
+        return merged_df["cell_type_index"]
+
+    def decision_making_neurons(self):
+        rational_neurons = pd.read_csv("adult_data/rational_neurons.csv", index_col=0)
+        decision_making_vector = torch.tensor(rational_neurons.values.squeeze(), dtype=self.dtype).detach()
+        return vector_to_one_hot(decision_making_vector, self.dtype, self.sparse_layout).to(
+            self.DEVICE
+        )
+
+    def synaptic_matrix(self):
+        return load_npz("adult_data/good_synaptic_matrix.npz")
 
     def process_full_models_data(self, i, batch_files):
         labels = paths_to_labels(batch_files)
@@ -58,4 +119,3 @@ class FullModelsDataProcessor:
         inputs = torch.tensor(activation_df.values, dtype=self.dtype, device=self.DEVICE)
         labels = torch.tensor(labels, dtype=self.dtype, device=self.DEVICE)
         return labels, inputs
-    

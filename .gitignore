@@ -874,3 +874,7 @@ flyvis/parsed_objects/decoding_activations.npy
 flyvis/parsed_objects/responses_blue.npy
 flyvis/parsed_objects/responses_yellow.npy
 data/cell_type_rational.csv
+
+# drafts
+*draft.py
+*draft.ipynb

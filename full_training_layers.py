@@ -31,6 +31,7 @@ device_type = "cpu"
 DEVICE = device(device_type)
 sparse_layout = torch.sparse_coo
 
+# these need bo be relative to the root of the project
 TRAINING_DATA_DIR = "images/easy_v2"
 TESTING_DATA_DIR = "images/easy_images"
 VALIDATION_DATA_DIR = "images/easyval_images"

@@ -1,3 +1,4 @@
+import pathlib
 from random import sample
 import pandas as pd
 import torch
@@ -35,23 +36,25 @@ class FullModelsDataProcessor:
         self.receptors = flyvision.rendering.BoxEye(
             extent=self.extent, kernel_size=self.kernel_size
         )
+        self.cwd = pathlib.Path().resolve()
+        self.data_dir = self.cwd / "adult_data"
         network_view = flyvision.NetworkView(flyvision.results_dir / "opticflow/000/0000")
         self.network = network_view.init_network(chkpt="best_chkpt")
-        self.root_id_to_index = pd.read_csv("adult_data/root_id_to_index.csv")
-        self.classification = pd.read_csv("adult_data/classification_clean.csv")
+        self.root_id_to_index = pd.read_csv(self.data_dir / "root_id_to_index.csv")
+        self.classification = pd.read_csv(
+            self.data_dir / "classification_clean.csv"
+        )
         self.normalize_voronoi_cells = normalize_voronoi_cells
         self.dtype = dtype
         self.DEVICE = DEVICE
         self.sparse_layout = sparse_layout
 
-    @staticmethod
-    def get_videos(data_dir, small, small_length):
-        videos = get_files_from_directory(data_dir)
+    def get_videos(self, data_dir, small, small_length):
+        videos = get_files_from_directory(self.cwd / data_dir)
+        assert len(videos) > 0, f"No videos found in {data_dir}."
+
         if small:
             videos = sample(videos, small_length)
-
-        if len(videos) == 0:
-            raise ValueError("No videos found in the specified directory.")
 
         return videos
 
@@ -76,14 +79,16 @@ class FullModelsDataProcessor:
         return merged_df["cell_type_index"]
 
     def decision_making_neurons(self):
-        rational_neurons = pd.read_csv("adult_data/rational_neurons.csv", index_col=0)
+        rational_neurons = pd.read_csv(
+            self.data_dir / "rational_neurons.csv", index_col=0
+        )
         decision_making_vector = torch.tensor(rational_neurons.values.squeeze(), dtype=self.dtype).detach()
         return vector_to_one_hot(decision_making_vector, self.dtype, self.sparse_layout).to(
             self.DEVICE
         )
 
     def synaptic_matrix(self):
-        return load_npz("adult_data/good_synaptic_matrix.npz")
+        return load_npz(self.data_dir / "good_synaptic_matrix.npz")
 
     def process_full_models_data(self, i, batch_files):
         labels = paths_to_labels(batch_files)

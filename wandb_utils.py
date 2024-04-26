@@ -2,30 +2,34 @@ import os
 import numpy as np
 import wandb
 from wandb import AlertLevel
+import config
 from from_retina_to_connectome_utils import hex_to_square_grid
 
 
+MODEL_CONFIG = {
+    "debugging": config.debugging,
+    "num_epochs": config.num_epochs,
+    "batch_size": config.batch_size,
+    "dropout": config.dropout,
+    "base_lr": config.base_lr,
+    "weight_decay": config.weight_decay,
+    "num_connectome_passes": config.NUM_CONNECTOME_PASSES,
+}
+
+
 class WandBLogger:
-    def __init__(
-        self,
-        project_name,
-        config,
-        enabled=True,
-        log_images_every=100,
-        cell_type_plot="TmY18",
-        last_good_frame=2,
-    ):
+    def __init__(self, project_name):
         self.project_name = project_name
-        self.config = config
-        self.enabled = enabled
-        self.log_images_every = log_images_every
-        self.cell_type_plot = cell_type_plot
-        self.last_good_frame = last_good_frame
+        self.model_config = MODEL_CONFIG
+        self.enabled = config.wandb_
+        self.log_images_every = config.wandb_images_every
+        self.cell_type_plot = config.cell_type_plot
+        self.last_good_frame = config.last_good_frame
         self.initialized = False
 
     def initialize(self):
         if self.enabled and not self.initialized:
-            wandb.init(project=self.project_name, config=self.config)
+            wandb.init(project=self.project_name, config=self.model_config)
             self.initialized = True
 
     def log_images(
@@ -38,7 +42,7 @@ class WandBLogger:
     ):
         if self.enabled and iteration % self.log_images_every == 0:
             try:
-                # Process layer activations to prepare for logging
+                # TODO: this should probably be elsewhere
                 transformed_activation = hex_to_square_grid(
                     layer_activations[0][self.cell_type_plot]
                     .squeeze()[-self.last_good_frame]
@@ -64,7 +68,6 @@ class WandBLogger:
             except Exception as e:
                 print(f"Error logging running stats to wandb: {e}. Continuing...")
 
-    
     def log_images_func(self, bs, rs, la, img_path,):
         frame = self.last_good_frame
         wandb.log(
@@ -116,7 +119,7 @@ class WandBLogger:
                 "Weber Fraction Plot": wandb.Image(weber_plot_),
             }
         )
-    
+
     def send_crash(self, message):
         if self.enabled:
             wandb.alert(

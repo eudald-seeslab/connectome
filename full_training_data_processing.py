@@ -4,6 +4,7 @@ import pandas as pd
 import torch
 from scipy.sparse import load_npz
 
+import config
 import flyvision
 from flyvision.utils.activity_utils import LayerActivity
 from flyvision_ans import FINAL_CELLS
@@ -12,26 +13,18 @@ from from_retina_to_connectome_funcs import compute_voronoi_averages, from_retin
 from from_retina_to_connectome_utils import get_files_from_directory, paths_to_labels, vector_to_one_hot
 
 
-DT = 1 / 100
-LAST_GOOD_FRAME = 2
-FINAL_RETINA_CELLS = FINAL_CELLS
-
-
 class FullModelsDataProcessor:
     extent = 15
     kernel_size = 13
-    dt = DT
-    last_good_frame = LAST_GOOD_FRAME
-    final_retina_cells = FINAL_RETINA_CELLS
+    dt = config.dt
+    last_good_frame = config.last_good_frame
+    final_retina_cells = config.final_retina_cells
+    dtype = config.dtype
+    DEVICE = config.DEVICE
+    sparse_layout = config.sparse_layout
+    normalize_voronoi_cells = config.normalize_voronoi_cells
 
-    def __init__(
-        self,
-        wandb_logger,
-        normalize_voronoi_cells,
-        dtype,
-        DEVICE,
-        sparse_layout,
-    ):
+    def __init__(self, wandb_logger):
         self.wandb_logger = wandb_logger
         self.receptors = flyvision.rendering.BoxEye(
             extent=self.extent, kernel_size=self.kernel_size
@@ -44,14 +37,10 @@ class FullModelsDataProcessor:
         self.classification = pd.read_csv(
             self.data_dir / "classification_clean.csv"
         )
-        self.normalize_voronoi_cells = normalize_voronoi_cells
-        self.dtype = dtype
-        self.DEVICE = DEVICE
-        self.sparse_layout = sparse_layout
 
-    def get_videos(self, data_dir, small, small_length):
-        videos = get_files_from_directory(self.cwd / data_dir)
-        assert len(videos) > 0, f"No videos found in {data_dir}."
+    def get_videos(self, images_dir, small, small_length):
+        videos = get_files_from_directory(self.cwd / images_dir)
+        assert len(videos) > 0, f"No videos found in {images_dir}."
 
         if small:
             videos = sample(videos, small_length)

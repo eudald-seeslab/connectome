@@ -3,30 +3,6 @@ import torch
 from torch.autograd import Function
 
 
-def create_sparse_diagonal_matrix(size, dtype=torch.float32, device="cpu"):
-    """
-    Creates a sparse diagonal matrix (identity matrix) of the given size.
-
-    Parameters:
-    - size (int): The size of the NxN diagonal matrix.
-    - dtype (torch.dtype): The data type of the matrix elements.
-    - device (str or torch.device): The device on which to store the matrix.
-
-    Returns:
-    - torch.Tensor: A sparse diagonal matrix of shape (size, size).
-    """
-    indices = torch.arange(size, dtype=dtype, device=device).unsqueeze(0)
-    indices = torch.cat(
-        [indices, indices], dim=0
-    )  # Make it 2D for COO format (rows and cols)
-    values = torch.ones(size, dtype=dtype, device=device) 
-
-    # Create the sparse COO tensor
-    return torch.sparse_coo_tensor(
-        indices, values, (size, size), dtype=dtype, device=device
-    )
-
-
 def sparse_outer_product(sp1, sp2, dtype=torch.float32):
     """
     Computes a sparse "outer product" of two sparse tensors, where sp1 is an N x 1 column vector
@@ -102,27 +78,21 @@ class SparseMatrixMulFunction(Function):
                 grad_output, intermediates[layer_number - 1 - i], dtype=torch.float
             )
 
-            print("i'm before the if")
-
             if i == 0:
                 full_weight_tensor = outer_product
             elif i == 1:
-                print("alive")
-                full_weight_tensor = torch.sparse.mm(
-                    sparse_tensor, outer_product
-                )
+                full_weight_tensor = torch.sparse.mm(sparse_tensor, outer_product)
             else:
                 for _ in range(i - 2):
                     sparse_tensor = torch.sparse.mm(sparse_tensor, sparse_tensor)
                 full_weight_tensor = torch.sparse.mm(sparse_tensor, outer_product)
             del outer_product
+            gc.collect()
 
-            print(f"I'm before the grad_weights +=")
             grad_weights += (
                 (full_weight_tensor * sparse_tensor_non_zero).coalesce().values()
             )
             del full_weight_tensor
-            # garbage collect
             gc.collect()
 
             print(f"Done with layer {i}")

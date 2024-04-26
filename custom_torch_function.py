@@ -49,7 +49,7 @@ class SparseMatrixMul(Function):
             x = torch.sparse.mm(sparse_tensor, x)
             results.append(x)
 
-        ctx.save_for_backward(indices, values, sparse_tensor)
+        ctx.save_for_backward(sparse_tensor)
         ctx.intermediates = results
         ctx.layer_number = layer_number
 
@@ -57,17 +57,17 @@ class SparseMatrixMul(Function):
 
     @staticmethod
     def backward(ctx, grad_output):
-        indices, weights, sparse_tensor = ctx.saved_tensors
+        sparse_tensor = ctx.saved_tensors[0].coalesce()
         intermediates = ctx.intermediates
         layer_number = ctx.layer_number
         device = grad_output.device
 
         # this is to be able to retrieve the values only in the correct positions
         sparse_tensor_non_zero = torch.sparse_coo_tensor(
-            indices, torch.ones_like(weights), sparse_tensor.shape, device=device
+            sparse_tensor.indices(), torch.ones_like(sparse_tensor.values()), sparse_tensor.shape, device=device
         )
 
-        grad_weights = torch.zeros_like(weights, dtype=torch.float)
+        grad_weights = torch.zeros_like(sparse_tensor.values(), dtype=torch.float)
         sparse_tensor = sparse_tensor.t()
         for i in range(layer_number):
             print(f"Computing layer {i}")
@@ -118,7 +118,7 @@ class CompressedSparseMatrixMul(Function):
             x = torch.sparse.mm(sparse_tensor, x)
             results.append(x)
 
-        ctx.save_for_backward(indices, values, sparse_tensor)
+        ctx.save_for_backward(sparse_tensor)
         ctx.intermediates = results
         ctx.layer_number = layer_number
 
@@ -126,17 +126,17 @@ class CompressedSparseMatrixMul(Function):
 
     @staticmethod
     def backward(ctx, grad_output):
-        indices, weights, sparse_tensor = ctx.saved_tensors
+        sparse_tensor = ctx.saved_tensors
         intermediates = ctx.intermediates
         layer_number = ctx.layer_number
         device = grad_output.device
 
         # this is to be able to retrieve the values only in the correct positions
         sparse_tensor_non_zero = torch.sparse_coo_tensor(
-            indices, torch.ones_like(weights), sparse_tensor.shape, device=device
+            sparse_tensor.indices(), torch.ones_like(sparse_tensor.values()), sparse_tensor.shape, device=device
         )
 
-        grad_weights = torch.zeros_like(weights, dtype=torch.float)
+        grad_weights = torch.zeros_like(sparse_tensor.values(), dtype=torch.float)
         sparse_tensor = sparse_tensor.t()
         for i in range(layer_number):
             print(f"Computing layer {i}")

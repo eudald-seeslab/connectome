@@ -1,6 +1,6 @@
 import torch
 from torch.autograd import gradcheck
-from adult_models import SparseMatrixMulFunction
+from adult_models import SparseMatrixMul
 
 
 def test_sparse_matrix_mul_function():
@@ -14,12 +14,13 @@ def test_sparse_matrix_mul_function():
 
     # Run gradcheck
     success = gradcheck(
-        SparseMatrixMulFunction.apply,
+        SparseMatrixMul.apply,
         (indices, values, shape, layer_number, x),
         eps=1e-6,
         atol=1e-4,
     )
 
     assert success, "Gradcheck failed for SparseMatrixMulFunction"
+
 
 test_sparse_matrix_mul_function()

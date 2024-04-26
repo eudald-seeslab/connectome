@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from custom_torch_function import SparseMatrixMulFunction
+from custom_torch_function import SparseMatrixMul
 from graph_models import RetinaConnectionLayer
 
 
@@ -13,6 +13,7 @@ class AdultConnectome(nn.Module):
         layer_number: int,
         log_transform_weights: bool,
         dtype,
+        sparse_layout=torch.sparse_coo,
     ):
         super(AdultConnectome, self).__init__()
 
@@ -35,7 +36,7 @@ class AdultConnectome(nn.Module):
 
     def forward(self, x):
 
-        return SparseMatrixMulFunction.apply(
+        return SparseMatrixMul.apply(
             self.indices, self.shared_weights, self.shape, self.layer_number, x
         )
 
@@ -55,9 +56,7 @@ class FullAdultModel(nn.Module):
         super(FullAdultModel, self).__init__()
 
         self.sparse_layout = sparse_layout
-        self.retina_connection = RetinaConnectionLayer(
-            cell_type_indices, 1, 1
-        )
+        self.retina_connection = RetinaConnectionLayer(cell_type_indices, 1, 1)
 
         self.connectome = AdultConnectome(
             adjacency_matrix, layer_number, log_transform_weights, dtype

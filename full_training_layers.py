@@ -50,6 +50,7 @@ def main(wandb_logger):
         log_transform_weights=config.log_transform_weights,
         sparse_layout=config.sparse_layout,
         dtype=config.dtype,
+        device=config.DEVICE,
     ).to(config.DEVICE)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=config.base_lr)

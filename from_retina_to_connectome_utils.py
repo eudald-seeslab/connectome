@@ -143,12 +143,12 @@ def select_random_videos(all_files, batch_size, already_selected):
 
 
 def get_label(name):
-    x = name.split("/")[2]
+    x = os.path.basename(os.path.dirname(name))
     if x == "yellow":
         return 1
     if x == "blue":
         return 0
-    return np.nan
+    raise ValueError(f"Unexpected directory label {x}")
 
 
 def paths_to_labels(paths):

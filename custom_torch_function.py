@@ -39,11 +39,8 @@ def custom_mask_csr(tensor, mask_indices):
 
 class SparseMatrixMul(Function):
     @staticmethod
-    def forward(ctx, indices, values, shape, layer_number, x):
+    def forward(ctx, sparse_tensor, layer_number, x):
 
-        sparse_tensor = torch.sparse_coo_tensor(
-            indices, values, shape, dtype=values.dtype, device=values.device
-        )
         results = [x]
         for _ in range(layer_number):
             x = torch.sparse.mm(sparse_tensor, x)
@@ -57,35 +54,34 @@ class SparseMatrixMul(Function):
 
     @staticmethod
     def backward(ctx, grad_output):
-        sparse_tensor = ctx.saved_tensors[0].coalesce()
-        intermediates = ctx.intermediates
-        layer_number = ctx.layer_number
+        w = ctx.saved_tensors[0].coalesce()
+        x = ctx.intermediates
+        layer_num = ctx.layer_number
         device = grad_output.device
 
         # this is to be able to retrieve the values only in the correct positions
         sparse_tensor_non_zero = torch.sparse_coo_tensor(
-            sparse_tensor.indices(), torch.ones_like(sparse_tensor.values()), sparse_tensor.shape, device=device
+            w.indices(), torch.ones_like(w.values()), w.shape, device=device
         )
 
-        grad_weights = torch.zeros_like(sparse_tensor.values(), dtype=torch.float)
-        sparse_tensor = sparse_tensor.t()
-        for i in range(layer_number):
+        grad_weights = torch.zeros_like(w.values(), dtype=torch.float)
+        w_t = w.t()
+        for i in range(layer_num):
             print(f"Computing layer {i}")
 
             start_time = time.time()
             outer_product = torch.sparse.mm(
-                grad_output, intermediates[layer_number - 1 - i].t()
+                grad_output, x[layer_num - 1 - i].t()
             )
             print(f"Time to compute outer product: {time.time() - start_time}")
 
             if i == 0:
                 full_weight_tensor = outer_product
             elif i == 1:
-                full_weight_tensor = torch.sparse.mm(sparse_tensor, outer_product)
+                full_weight_tensor = torch.sparse.mm(w_t, outer_product)
             else:
-                for _ in range(i - 2):
-                    sparse_tensor = torch.sparse.mm(sparse_tensor, sparse_tensor)
-                full_weight_tensor = torch.sparse.mm(sparse_tensor, outer_product)
+                w_t = torch.sparse.mm(w_t, w_t)
+                full_weight_tensor = torch.sparse.mm(w_t, outer_product)
             del outer_product
             gc.collect()
 
@@ -99,7 +95,7 @@ class SparseMatrixMul(Function):
 
         # Lookout, we are reusing the last sparse_tensor computed before
         grad_input = torch.sparse.mm(
-            torch.sparse.mm(sparse_tensor, sparse_tensor),
+            torch.sparse.mm(w, w),
             grad_output,
         )
 
@@ -108,58 +104,63 @@ class SparseMatrixMul(Function):
 
 class CompressedSparseMatrixMul(Function):
     @staticmethod
-    def forward(ctx, indices, values, shape, layer_number, x, sparse_layout):
+    def forward(ctx, w, layer_number, x, sparse_layout):
 
-        sparse_tensor = torch.sparse_compressed_tensor(
-            indices, values, shape, dtype=values.dtype, device=values.device, layout=sparse_layout
-        )
         results = [x]
         for _ in range(layer_number):
-            x = torch.sparse.mm(sparse_tensor, x)
+            x = w.matmul(x)
             results.append(x)
 
-        ctx.save_for_backward(sparse_tensor)
+        ctx.save_for_backward(w)
         ctx.intermediates = results
         ctx.layer_number = layer_number
+        ctx.sparse_layout = sparse_layout
 
         return results[-1]
 
     @staticmethod
     def backward(ctx, grad_output):
-        sparse_tensor = ctx.saved_tensors
-        intermediates = ctx.intermediates
+        w = ctx.saved_tensors[0]
+        x = ctx.intermediates
         layer_number = ctx.layer_number
+        sparse_layout = ctx.sparse_layout
         device = grad_output.device
 
         # this is to be able to retrieve the values only in the correct positions
-        sparse_tensor_non_zero = torch.sparse_coo_tensor(
-            sparse_tensor.indices(), torch.ones_like(sparse_tensor.values()), sparse_tensor.shape, device=device
+        sparse_tensor_non_zero = torch.sparse_compressed_tensor(
+            w.crow_indices(), 
+            w.col_indices(), 
+            torch.ones_like(w.values()), 
+            layout=sparse_layout, 
+            device=device
         )
+        # We will only use the transpose of w to some power
+        # Note that we don't create new tensors each time we multiply w by itself
+        #  for the sake of memory efficiency. Be careful with this.
+        w_t = w.t()
 
-        grad_weights = torch.zeros_like(sparse_tensor.values(), dtype=torch.float)
-        sparse_tensor = sparse_tensor.t()
+        grad_weights = torch.zeros_like(w.values(), dtype=torch.float)
         for i in range(layer_number):
             print(f"Computing layer {i}")
 
             start_time = time.time()
-            outer_product = torch.sparse.mm(
-                grad_output, intermediates[layer_number - 1 - i].t()
-            )
+            outer_product = grad_output.matmul(x[layer_number - 1 - i].t())
             print(f"Time to compute outer product: {time.time() - start_time}")
 
             if i == 0:
                 full_weight_tensor = outer_product
             elif i == 1:
-                full_weight_tensor = torch.sparse.mm(sparse_tensor, outer_product)
+                full_weight_tensor = w_t.matmul(outer_product)
             else:
-                for _ in range(i - 2):
-                    sparse_tensor = torch.sparse.mm(sparse_tensor, sparse_tensor)
-                full_weight_tensor = torch.sparse.mm(sparse_tensor, outer_product)
+                # the sparse_tensor carries over the previous computation,
+                #  so we only have to multiply it by itself once each time
+                w_t = w_t.matmul(w_t)
+                full_weight_tensor = w_t.matmul(outer_product)
             del outer_product
             gc.collect()
 
             grad_weights += (
-                (full_weight_tensor * sparse_tensor_non_zero).coalesce().values()
+                (full_weight_tensor * sparse_tensor_non_zero).values()
             )
             del full_weight_tensor
             gc.collect()
@@ -167,9 +168,7 @@ class CompressedSparseMatrixMul(Function):
             print(f"Done with layer {i}")
 
         # Lookout, we are reusing the last sparse_tensor computed before
-        grad_input = torch.sparse.mm(
-            torch.sparse.mm(sparse_tensor, sparse_tensor),
-            grad_output,
+        grad_input = w.matmul(
+            w.matmul(grad_output),
         )
-
         return None, grad_weights, None, None, grad_input

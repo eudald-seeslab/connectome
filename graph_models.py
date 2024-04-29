@@ -119,18 +119,19 @@ class GNNModel(torch.nn.Module):
 
 
 class RetinaConnectionLayer(Module):
-    def __init__(self, cell_type_indices, batch_size, num_features=1):
+    def __init__(self, cell_type_indices, batch_size, num_features=1, dtype=torch.float):
         super().__init__()
         self.cell_type_indices = cell_type_indices
         # Dictionary: cell type -> count of neurons
         self.neuron_counts = self.get_neuron_counts(cell_type_indices)
         self.num_features = num_features
         self.batch_size = batch_size
+        self.dtype = dtype
 
         # Initialize weight matrices for each cell type based on neuron_counts
         self.weights = ParameterList(
             [
-                Parameter(torch.randn(batch_size, count, count, dtype=torch.float))
+                Parameter(torch.randn(batch_size, count, count, dtype=dtype))
                 for count in self.neuron_counts.values()
             ]
         )
@@ -148,7 +149,7 @@ class RetinaConnectionLayer(Module):
             # [num_neurons_for_selected_type]
             mask_indices = torch.tensor(
                 self.cell_type_indices[self.cell_type_indices == type_index].index,
-                dtype=torch.long,
+                dtype=torch.int32,
                 device=x.device,
             )
 
@@ -165,7 +166,7 @@ class RetinaConnectionLayer(Module):
                 # [batch_size, num_neurons_for_selected_type, num_features]
                 output[:, mask_indices] = torch.matmul(
                     soft_weight, torch.index_select(x, 1, mask_indices)
-                ).to(output.dtype)
+                )
 
         # We need to return output in the same shape as the input x
         # [num_neurons * batch_size, num_features]

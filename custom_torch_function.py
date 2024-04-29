@@ -127,13 +127,13 @@ class CompressedSparseMatrixMul(Function):
         device = grad_output.device
 
         # this is to be able to retrieve the values only in the correct positions
-        sparse_tensor_non_zero = torch.sparse_compressed_tensor(
-            w.crow_indices(), 
-            w.col_indices(), 
-            torch.ones_like(w.values()), 
-            layout=sparse_layout, 
-            device=device
-        )
+        # sparse_tensor_non_zero = torch.sparse_compressed_tensor(
+        #     w.crow_indices(), 
+        #     w.col_indices(), 
+        #     torch.ones_like(w.values()), 
+        #     layout=sparse_layout, 
+        #     device=device
+        # )
         # We will only use the transpose of w to some power
         # Note that we don't create new tensors each time we multiply w by itself
         #  for the sake of memory efficiency. Be careful with this.
@@ -159,9 +159,7 @@ class CompressedSparseMatrixMul(Function):
             del outer_product
             gc.collect()
 
-            grad_weights += (
-                (full_weight_tensor * sparse_tensor_non_zero).values()
-            )
+            grad_weights += custom_mask_csr(full_weight_tensor, w.col_indices())
             del full_weight_tensor
             gc.collect()
 

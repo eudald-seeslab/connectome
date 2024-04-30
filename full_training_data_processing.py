@@ -52,7 +52,13 @@ class FullModelsDataProcessor:
         assert len(videos) > 0, f"No videos found in {images_dir}."
 
         if small:
-            videos = sample(videos, small_length)
+            try:
+                videos = sample(videos, small_length)
+            except ValueError:
+                print(
+                    f"Not enough videos in {images_dir} to sample {small_length}. 
+                    Continuing with {len(videos)}."
+                )
 
         return videos
 

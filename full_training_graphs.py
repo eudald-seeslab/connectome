@@ -1,4 +1,3 @@
-import time
 import traceback
 import warnings
 import torch
@@ -15,7 +14,7 @@ from from_retina_to_connectome_utils import (
     update_running_loss,
 )
 from full_training_data_processing import FullModelsDataProcessor
-from graph_models import EdgeWeightedGNNModel, FullGraphModel, GNNModel
+from graph_models import FullGraphModel
 from utils import plot_weber_fraction
 from wandb_utils import WandBLogger
 
@@ -45,12 +44,11 @@ def main(wandb_logger):
     decision_making_vector = get_decision_making_neurons(config.dtype)
 
     model = FullGraphModel(
-        # FIXME: this is very inefficient
-        data_processor.synaptic_matrix().shape[0],
-        config.NUM_CONNECTOME_PASSES,
-        data_processor.cell_type_indices(),
-        decision_making_vector,
-        config.log_transform_weights,
+        input_shape=data_processor.synaptic_matrix.shape[0],
+        num_connectome_passes=config.NUM_CONNECTOME_PASSES,
+        cell_type_indices=data_processor.cell_type_indices(),
+        decision_making_vector=decision_making_vector,
+        log_transform_weights=config.log_transform_weights,
         batch_size=config.batch_size,
         dtype=config.dtype,
     ).to(config.DEVICE)
@@ -104,13 +102,7 @@ def main(wandb_logger):
     total_correct, total, running_loss = 0, 0, 0.0
     validation_results = initialize_results_df()
 
-    # FIXME: this clashes with the small_length in the validation_videos
-    validation_iterations = (
-        config.validation_length
-        if config.validation_length is not None
-        else len(validation_videos) // config.batch_size
-    )
-    for j in tqdm(range(validation_iterations)):
+    for j in tqdm(range(len(validation_videos) // config.batch_size)):
         batch_files, already_selected_validation = select_random_videos(
             validation_videos, config.batch_size, already_selected_validation
         )

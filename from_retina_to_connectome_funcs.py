@@ -130,49 +130,6 @@ def from_retina_to_connectome(voronoi_averages_df, classification, root_id_to_in
     )
 
 
-def from_connectome_to_model(activation_df_, labels_, dtype=torch.float32, device=torch.cpu):
-    synaptic_matrix = load_npz("adult_data/good_synaptic_matrix.npz")
-    edges = torch.tensor(
-        np.array([synaptic_matrix.row, synaptic_matrix.col]),
-        # Note: the edges need to be specificaly int64
-        dtype=torch.int64,
-    )
-    weights = torch.tensor(synaptic_matrix.data, dtype=dtype)
-    activation_tensor = torch.tensor(activation_df_.values, dtype=dtype)
-    graph_list_ = []
-    for i in range(activation_tensor.shape[1]):
-        # Shape [num_nodes, 1], one feature per node
-        node_features = activation_tensor[:, i].unsqueeze(1)
-        graph = Data(x=node_features, edge_index=edges, edge_attr=weights, y=labels_[i], device=device)
-        graph_list_.append(graph)
-
-    return graph_list_
-
-
-def from_retina_to_model(
-    activations,
-    labels,
-    decoding_cells,
-    last_good_frame,
-    classification,
-    root_id_to_index,
-    dtype=torch.float32,
-    device=torch.cpu,
-):
-
-    voronoi_averages_df = compute_voronoi_averages(
-        activations, classification, decoding_cells, last_good_frame=last_good_frame
-    )
-    activation_df = from_retina_to_connectome(
-        voronoi_averages_df, classification, root_id_to_index
-    )
-    graph_list = from_connectome_to_model(activation_df, labels, dtype=dtype, device=device)
-    return (
-        Batch.from_data_list(graph_list),
-        torch.tensor(labels, dtype=dtype, device=device),
-    )
-
-
 def get_cell_type_indices(classification, root_id_to_index, decoding_cells):
     # Merge classification with root_id_to_index to associate each index_id with a cell_type
     merged_df = root_id_to_index.merge(classification, on="root_id", how="left")

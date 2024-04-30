@@ -3,6 +3,7 @@ from torch.nn import functional as F
 from torch.nn import Parameter, ParameterList, Module
 from torch_geometric.nn import GATConv, global_max_pool, MessagePassing
 from torch import nn
+from torch_scatter import scatter_mean, scatter_std
 
 DROPOUT = 0.0
 
@@ -12,17 +13,19 @@ class TrainableEdgeConv(MessagePassing):
         super(TrainableEdgeConv, self).__init__(aggr="add")
 
         self.num_passes = num_connectome_passes
-        self.norm = nn.LayerNorm(normalized_shape=input_shape)
+        self.num_nodes_per_graph = input_shape
 
-    def forward(self, x, edge_index, edge_weight):
+    def forward(self, x, edge_index, edge_weight, batch):
         # Start propagating messages.
         size = (x.size(0), x.size(0))
+        batch_size = batch.max().item() + 1
 
         for _ in range(self.num_passes):
             x = self.propagate(edge_index, size=size, x=x, edge_weight=edge_weight)
-            # otherwise the thing will explode
-            # todo: think about only doing this after all passes
-            x = self.norm(x.t()).t()
+            # Reshape, normalize, and then flatten back
+            x = x.view(batch_size, self.num_nodes_per_graph, -1)
+            x = x / x.norm(dim=1, keepdim=True)
+            x = x.view(-1, x.size(2))
 
         return x
 
@@ -33,22 +36,6 @@ class TrainableEdgeConv(MessagePassing):
     def update(self, aggr_out):
         # Each node gets its updated feature as the sum of its neighbor contributions.
         return aggr_out
-
-
-class EdgeWeightedGNNModel(torch.nn.Module):
-    def __init__(self, input_shape, log_transform_weights, num_connectome_passes):
-        super(EdgeWeightedGNNModel, self).__init__()
-
-        self.conv = TrainableEdgeConv(input_shape, num_connectome_passes)
-        self.log_transform_weights = log_transform_weights
-
-    def forward(self, data):
-        x, edge_index, edge_weight = data.x, data.edge_index, data.edge_attr
-        if self.log_transform_weights:
-            edge_weight = torch.log1p(edge_weight)
-        x = self.conv(x, edge_index, edge_weight)
-
-        return x
 
 
 class FullGraphModel(nn.Module):
@@ -67,7 +54,7 @@ class FullGraphModel(nn.Module):
         super(FullGraphModel, self).__init__()
 
         self.retina_connection = RetinaConnectionLayer(
-            cell_type_indices, 1, 1, dtype=dtype
+            cell_type_indices, batch_size, num_features=1, dtype=dtype
         )
         self.register_buffer("decision_making_vector", decision_making_vector)
 
@@ -79,31 +66,53 @@ class FullGraphModel(nn.Module):
         self.batch_size = batch_size
 
     def forward(self, data):
-        x, edge_index, edge_weight = data.x, data.edge_index, data.edge_attr
+        x, edge_index, edge_weight, batch = data.x, data.edge_index, data.edge_attr, data.batch
         if self.log_transform_weights:
             # if there are a lot of passes, this prevents the system from exploding
             edge_weight = torch.log1p(edge_weight)
 
         # find the optimal connection between retina model and connectome
         x = self.retina_connection(x)
-        x = self.normalize_non_zero(x)
+        x = self.normalize_non_zero(x, batch)
         # pass through the connectome
-        x = self.connectome(x, edge_index, edge_weight)
+        x = self.connectome(x, edge_index, edge_weight, batch)
         # get final decision
-        x = x[self.decision_making_vector == 1]
-        x = self.min_max_norm(x)
-        # fixme: this only works for batch size 1
-        x = torch.mean(x, dim=0, keepdim=True)
+        x, batch = self.decision_making_mask(x, batch)
+        x = self.normalize_non_zero(x, batch)
+        x = x.view(self.batch_size, -1, self.num_features)
+        x = torch.mean(x, dim=1, keepdim=True)
 
         # final layer to get the correct magnitude
         x = self.final_fc(x)
-        return F.relu(x).squeeze(0)
+        return F.relu(x).squeeze()
+    
+    def decision_making_mask(self, x, batch):
+        x = x.view(self.batch_size, -1, self.num_features)
+        x = x[:, self.decision_making_vector == 1, :]
+
+        batch = batch.view(self.batch_size, -1)
+        batch = batch[:, self.decision_making_vector == 1]
+        return x.view(-1, self.num_features), batch.view(-1)
 
     @staticmethod
-    def normalize_non_zero(x):
-        # normalize only non-zero values
-        mask = x != 0
-        x[mask] = (x[mask] - x[mask].mean()) / x[mask].std()
+    def normalize_non_zero(x, batch, epsilon=1e-5):
+        # x has shape [batch_size * num_neurons, num_features]
+        # batch has shape [batch_size * num_neurons]
+        batch_size = batch.max().item() + 1
+        non_zero_mask = x != 0
+
+        non_zero_entries = x[non_zero_mask]
+        non_zero_batch = batch[non_zero_mask.squeeze()]
+
+        mean_per_batch = scatter_mean(non_zero_entries, non_zero_batch, dim=0, dim_size=batch_size)
+        std_per_batch = (
+            scatter_std(non_zero_entries, non_zero_batch, dim=0, dim_size=batch_size)
+            + epsilon
+        )
+
+        x[non_zero_mask] = (
+            non_zero_entries - mean_per_batch[non_zero_batch]
+        ) / std_per_batch[non_zero_batch]
 
         return x
 

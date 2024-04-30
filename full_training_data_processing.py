@@ -1,18 +1,18 @@
 import pathlib
 from random import sample
+import numpy as np
 import pandas as pd
 import torch
 from scipy.sparse import load_npz
+from torch_geometric.data import Data, Batch
 
 import config
 import flyvision
 from flyvision.utils.activity_utils import LayerActivity
-from flyvision_ans import FINAL_CELLS
 from from_image_to_video import image_paths_to_sequences
 from from_retina_to_connectome_funcs import (
     compute_voronoi_averages,
     from_retina_to_connectome,
-    from_retina_to_model,
 )
 from from_retina_to_connectome_utils import (
     get_files_from_directory,
@@ -45,6 +45,7 @@ class FullModelsDataProcessor:
         self.network = network_view.init_network(chkpt="best_chkpt")
         self.root_id_to_index = pd.read_csv(self.data_dir / "root_id_to_index.csv")
         self.classification = pd.read_csv(self.data_dir / "classification_clean.csv")
+        self.synaptic_matrix = load_npz(self.data_dir / "good_synaptic_matrix.npz")
 
     def get_videos(self, images_dir, small, small_length):
         videos = get_files_from_directory(self.cwd / images_dir)
@@ -86,9 +87,6 @@ class FullModelsDataProcessor:
             decision_making_vector, self.dtype, self.sparse_layout
         ).to(self.DEVICE)
 
-    def synaptic_matrix(self):
-        return load_npz(self.data_dir / "good_synaptic_matrix.npz")
-
     def process_full_models_layers_data(self, i, batch_files):
         labels = paths_to_labels(batch_files)
         batch_sequences = image_paths_to_sequences(batch_files)
@@ -125,7 +123,7 @@ class FullModelsDataProcessor:
         )
         labels = torch.tensor(labels, dtype=self.dtype, device=self.DEVICE)
         return labels, inputs
-    
+
     def process_full_models_graph_data(self, i, batch_files):
         labels = paths_to_labels(batch_files)
         batch_sequences = image_paths_to_sequences(batch_files)
@@ -143,19 +141,47 @@ class FullModelsDataProcessor:
         self.wandb_logger.log_images(
             i, layer_activations, batch_sequences, rendered_sequences, batch_files
         )
-
-        inputs, labels = from_retina_to_model(
-            layer_activations, 
-            labels, 
-            config.final_retina_cells, 
-            config.last_good_frame, 
-            self.classification, 
-            self.root_id_to_index, 
-            dtype=self.dtype, 
-            device=self.DEVICE
-        )
+        inputs, labels = self.from_retina_to_model(layer_activations, labels)
 
         del layer_activations, rendered_sequences, rendered_sequence, simulation
         torch.cuda.empty_cache()
 
         return inputs, labels
+
+    def from_retina_to_model(self, activations, labels):
+
+        voronoi_averages_df = compute_voronoi_averages(
+            activations, self.classification, self.final_retina_cells, last_good_frame=self.last_good_frame
+        )
+        activation_df = from_retina_to_connectome(
+            voronoi_averages_df, self.classification, self.root_id_to_index
+        )
+        graph_list = self.from_connectome_to_model(activation_df, labels)
+        return (
+            Batch.from_data_list(graph_list),
+            torch.tensor(labels, dtype=self.dtype, device=self.DEVICE),
+        )
+
+    def from_connectome_to_model(self, activation_df_, labels_):
+
+        edges = torch.tensor(
+            np.array([self.synaptic_matrix.row, self.synaptic_matrix.col]),
+            # Note: the edges need to be specificaly int64
+            dtype=torch.int64,
+        )
+        weights = torch.tensor(self.synaptic_matrix.data, dtype=self.dtype)
+        activation_tensor = torch.tensor(activation_df_.values, dtype=self.dtype)
+        graph_list_ = []
+        for i in range(activation_tensor.shape[1]):
+            # Shape [num_nodes, 1], one feature per node
+            node_features = activation_tensor[:, i].unsqueeze(1)
+            graph = Data(
+                x=node_features,
+                edge_index=edges,
+                edge_attr=weights,
+                y=labels_[i],
+                device=self.DEVICE,
+            )
+            graph_list_.append(graph)
+
+        return graph_list_

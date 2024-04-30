@@ -44,6 +44,8 @@ class ImageGenerator:
             self.config["init_size"],
             yellow=self.config["yellow"],
             blue=self.config["blue"],
+            min_point_radius=self.config["min_point_radius"],
+            max_point_radius=self.config["max_point_radius"],
         )
         point_array = number_points.design_n_points(n1, self.config["colour_1"])
         point_array = number_points.design_n_points(
@@ -54,7 +56,7 @@ class ImageGenerator:
         return number_points.draw_points(point_array)
 
     def create_and_save(self, n1, n2, equalized, tag=""):
-        name = f"img_{n1}_{n2}_{tag}{'_equalized' if equalized else ''}v3.png"
+        name = f"img_{n1}_{n2}_{tag}{'_equalized' if equalized else ''}.png"
         img = self.create_image(n1, n2, equalized)
         img.save(
             os.path.join(
@@ -118,12 +120,12 @@ def get_config():
         "yellow": "#fffe04",
         "blue": "#0003f9",
         "point_sep": 20,
-        "min_point_radius": 8,
-        "max_point_radius": 16,
+        "min_point_radius": 16,
+        "max_point_radius": 32,
         "init_size": 512,
         "mode": "RGB",
         "min_point_num": 4,
-        "max_point_num": 16,
+        "max_point_num": 8,
     }
     return config
 

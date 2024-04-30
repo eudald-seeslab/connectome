@@ -2,25 +2,25 @@ from random import randint
 from PIL import ImageDraw
 import numpy as np
 
+np.random.seed(1234)
+
 
 class NumberPoints:
 
     boundary_width = 5
     background_colour = "#ebecf0"
     point_sep = 10
-    min_point_radius = 8
-    max_point_radius = 16
     # We consider equal areas if they differ by less than this number:
     area_tolerance = 0.1
 
-    def __init__(self, img, init_size, yellow, blue):
+    def __init__(self, img, init_size, yellow, blue, min_point_radius=8, max_point_radius=16, point_sep=10):
         self.img = img
         self.init_size = init_size
         self.draw = ImageDraw.Draw(img)
         self.yellow = yellow
         self.blue = blue
-        # TODO: this is deprecated
-        np.random.seed(1234)
+        self.min_point_radius = min_point_radius
+        self.max_point_radius = max_point_radius        
 
     def _create_random_point(self):
         radius = randint(self.min_point_radius, self.max_point_radius + 1)

@@ -98,27 +98,29 @@ class WandBLogger:
     def log_running_stats(
         self, epoch_, iteration, running_loss_, total_correct_, total_, results_
     ):
-        wandb.log(
-            {
-                "epoch": epoch_,
-                "iteration": iteration,
-                "loss": running_loss_ / total_,
-                "accuracy": total_correct_ / total_,
-                "results": wandb.Table(dataframe=results_),
-            }
-        )
+        if self.enabled:
+            wandb.log(
+                {
+                    "epoch": epoch_,
+                    "iteration": iteration + 1,
+                    "loss": running_loss_ / total_,
+                    "accuracy": total_correct_ / total_,
+                    # "results": wandb.Table(dataframe=results_),
+                }
+            )
 
     def log_validation_stats(
         self, running_loss_, total_correct_, total_, results_, weber_plot_
     ):
-        wandb.log(
-            {
-                "Validation loss": running_loss_ / total_,
-                "Validation accuracy": total_correct_ / total_,
-                "Validation results": wandb.Table(dataframe=results_),
-                "Weber Fraction Plot": wandb.Image(weber_plot_),
-            }
-        )
+        if self.enabled:
+            wandb.log(
+                {
+                    "Validation loss": running_loss_ / total_,
+                    "Validation accuracy": total_correct_ / total_,
+                    "Validation results": wandb.Table(dataframe=results_),
+                    "Weber Fraction Plot": wandb.Image(weber_plot_),
+                }
+            )
 
     def send_crash(self, message):
         if self.enabled:

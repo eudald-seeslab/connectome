@@ -9,7 +9,7 @@ import config
 from from_retina_to_connectome_utils import select_random_videos
 from from_retina_to_connectome_utils import (
     initialize_results_df,
-    predictions_and_corrects_from_model_results,
+    clean_model_outputs,
     update_results_df,
     update_running_loss,
 )
@@ -71,7 +71,7 @@ def main(wandb_logger):
         batch_files, already_selected = select_random_videos(
             training_videos, config.batch_size, already_selected
         )
-        labels, inputs = data_processor.process_full_models_data(i, batch_files)
+        labels, inputs = data_processor.process_full_models_layers_data(i, batch_files)
 
         optimizer.zero_grad()
         out = model(inputs)
@@ -80,9 +80,7 @@ def main(wandb_logger):
         optimizer.step()
 
         # Calculate run parameters
-        predictions, labels_cpu, correct = predictions_and_corrects_from_model_results(
-            out, labels
-        )
+        predictions, labels_cpu, correct = clean_model_outputs(out, labels)
         results = update_results_df(
             results, batch_files, predictions, labels_cpu, correct
         )
@@ -113,17 +111,15 @@ def main(wandb_logger):
             validation_videos, config.batch_size, already_selected_validation
         )
 
-        labels, inputs = data_processor.process_full_models_data(
-            j, batch_files
-        )
+        labels, inputs = data_processor.process_full_models_layers_data(j, batch_files)
 
         with torch.no_grad():
             model.eval()
             outputs = model(inputs)
             loss = criterion(outputs, labels)
 
-            predictions, batch_labels_cpu, correct = (
-                predictions_and_corrects_from_model_results(outputs, labels)
+            predictions, batch_labels_cpu, correct = clean_model_outputs(
+                outputs, labels
             )
             validation_results = update_results_df(
                 validation_results, batch_files, predictions, batch_labels_cpu, correct

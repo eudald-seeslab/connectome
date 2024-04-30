@@ -2,15 +2,17 @@ import torch
 from torch.nn import functional as F
 from torch.nn import Parameter, ParameterList, Module
 from torch_geometric.nn import GATConv, global_max_pool, MessagePassing
+from torch import nn
 
 DROPOUT = 0.0
 
 
 class TrainableEdgeConv(MessagePassing):
-    def __init__(self, num_connectome_passes=1):
+    def __init__(self, input_shape, num_connectome_passes=1):
         super(TrainableEdgeConv, self).__init__(aggr="add")
 
         self.num_passes = num_connectome_passes
+        self.norm = nn.LayerNorm(normalized_shape=input_shape)
 
     def forward(self, x, edge_index, edge_weight):
         # Start propagating messages.
@@ -18,6 +20,9 @@ class TrainableEdgeConv(MessagePassing):
 
         for _ in range(self.num_passes):
             x = self.propagate(edge_index, size=size, x=x, edge_weight=edge_weight)
+            # otherwise the thing will explode
+            # todo: think about only doing this after all passes
+            x = self.norm(x.t()).t()
 
         return x
 
@@ -31,16 +36,80 @@ class TrainableEdgeConv(MessagePassing):
 
 
 class EdgeWeightedGNNModel(torch.nn.Module):
-
-    def __init__(self, num_node_features, num_connectome_passes):
+    def __init__(self, input_shape, log_transform_weights, num_connectome_passes):
         super(EdgeWeightedGNNModel, self).__init__()
-        self.conv = TrainableEdgeConv(num_connectome_passes)
-        self.fc = torch.nn.Linear(num_node_features, 1)
+
+        self.conv = TrainableEdgeConv(input_shape, num_connectome_passes)
+        self.log_transform_weights = log_transform_weights
 
     def forward(self, data):
         x, edge_index, edge_weight = data.x, data.edge_index, data.edge_attr
-        x = self.conv(x.to_sparse(layout=torch.sparse_csr), edge_index, edge_weight)
-        return self.fc(x)
+        if self.log_transform_weights:
+            edge_weight = torch.log1p(edge_weight)
+        x = self.conv(x, edge_index, edge_weight)
+
+        return x
+
+
+class FullGraphModel(nn.Module):
+
+    def __init__(
+        self,
+        input_shape,
+        num_connectome_passes,
+        cell_type_indices,
+        decision_making_vector,
+        log_transform_weights: bool,
+        batch_size,
+        dtype,
+        num_features=1,
+    ):
+        super(FullGraphModel, self).__init__()
+
+        self.retina_connection = RetinaConnectionLayer(
+            cell_type_indices, 1, 1, dtype=dtype
+        )
+        self.register_buffer("decision_making_vector", decision_making_vector)
+
+        self.connectome = TrainableEdgeConv(input_shape, num_connectome_passes)
+
+        self.final_fc = nn.Linear(1, 1, dtype=dtype)
+        self.log_transform_weights = log_transform_weights
+        self.num_features = num_features
+        self.batch_size = batch_size
+
+    def forward(self, data):
+        x, edge_index, edge_weight = data.x, data.edge_index, data.edge_attr
+        if self.log_transform_weights:
+            # if there are a lot of passes, this prevents the system from exploding
+            edge_weight = torch.log1p(edge_weight)
+
+        # find the optimal connection between retina model and connectome
+        x = self.retina_connection(x)
+        x = self.normalize_non_zero(x)
+        # pass through the connectome
+        x = self.connectome(x, edge_index, edge_weight)
+        # get final decision
+        x = x[self.decision_making_vector == 1]
+        x = self.min_max_norm(x)
+        # fixme: this only works for batch size 1
+        x = torch.mean(x, dim=0, keepdim=True)
+
+        # final layer to get the correct magnitude
+        x = self.final_fc(x)
+        return F.relu(x).squeeze(0)
+
+    @staticmethod
+    def normalize_non_zero(x):
+        # normalize only non-zero values
+        mask = x != 0
+        x[mask] = (x[mask] - x[mask].mean()) / x[mask].std()
+
+        return x
+
+    @staticmethod
+    def min_max_norm(x):
+        return (x - x.min()) / (x.max() - x.min())
 
 
 class GNNModel(torch.nn.Module):

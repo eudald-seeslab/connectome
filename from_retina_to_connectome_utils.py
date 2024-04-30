@@ -59,25 +59,29 @@ def layer_activations_to_decoding_images(la, frame, decoding_cells):
     return np.array([activation_vector_to_image(a) for a in da])
 
 
-def predictions_and_corrects_from_model_results(outputs_, batch_labels_):
-    predictions_ = torch.round(torch.sigmoid(outputs_).squeeze()).detach().cpu().float().numpy()
+def clean_model_outputs(outputs_, batch_labels_):
+    outputs_ = torch.sigmoid(outputs_.squeeze().detach().cpu().float())
+    predictions_ = torch.round(outputs_).numpy()
     batch_labels_cpu = batch_labels_.detach().cpu().float().numpy()
     correct_ = np.where(predictions_ == batch_labels_cpu, 1, 0)
 
-    return predictions_, batch_labels_cpu, correct_
+    return outputs_.numpy(), predictions_, batch_labels_cpu, correct_
 
 
 def update_running_loss(loss_, inputs_):
     return loss_.item() * inputs_.size(0)
 
 
-def update_results_df(results_, batch_files_, predictions_, batch_labels_, correct_):
+def update_results_df(
+    results_, batch_files_, outputs_, predictions_, batch_labels_, correct_
+):
     return pd.concat(
         [
             results_,
             pd.DataFrame(
                 {
                     "Image": batch_files_,
+                    "Model outputs": outputs_,
                     "Prediction": predictions_,
                     "True label": batch_labels_,
                     "Is correct": correct_,
@@ -88,7 +92,7 @@ def update_results_df(results_, batch_files_, predictions_, batch_labels_, corre
 
 
 def initialize_results_df():
-    return pd.DataFrame(columns=["Image", "Prediction", "True label", "Is correct"])
+    return pd.DataFrame(columns=["Image", "Model outputs", "Prediction", "True label", "Is correct"])
 
 
 def create_csr_input(activation_df, dtype, device):

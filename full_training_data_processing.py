@@ -9,8 +9,16 @@ import flyvision
 from flyvision.utils.activity_utils import LayerActivity
 from flyvision_ans import FINAL_CELLS
 from from_image_to_video import image_paths_to_sequences
-from from_retina_to_connectome_funcs import compute_voronoi_averages, from_retina_to_connectome
-from from_retina_to_connectome_utils import get_files_from_directory, paths_to_labels, vector_to_one_hot
+from from_retina_to_connectome_funcs import (
+    compute_voronoi_averages,
+    from_retina_to_connectome,
+    from_retina_to_model,
+)
+from from_retina_to_connectome_utils import (
+    get_files_from_directory,
+    paths_to_labels,
+    vector_to_one_hot,
+)
 
 
 class FullModelsDataProcessor:
@@ -31,12 +39,12 @@ class FullModelsDataProcessor:
         )
         self.cwd = pathlib.Path().resolve()
         self.data_dir = self.cwd / "adult_data"
-        network_view = flyvision.NetworkView(flyvision.results_dir / "opticflow/000/0000")
+        network_view = flyvision.NetworkView(
+            flyvision.results_dir / "opticflow/000/0000"
+        )
         self.network = network_view.init_network(chkpt="best_chkpt")
         self.root_id_to_index = pd.read_csv(self.data_dir / "root_id_to_index.csv")
-        self.classification = pd.read_csv(
-            self.data_dir / "classification_clean.csv"
-        )
+        self.classification = pd.read_csv(self.data_dir / "classification_clean.csv")
 
     def get_videos(self, images_dir, small, small_length):
         videos = get_files_from_directory(self.cwd / images_dir)
@@ -71,15 +79,17 @@ class FullModelsDataProcessor:
         rational_neurons = pd.read_csv(
             self.data_dir / "rational_neurons.csv", index_col=0
         )
-        decision_making_vector = torch.tensor(rational_neurons.values.squeeze(), dtype=self.dtype).detach()
-        return vector_to_one_hot(decision_making_vector, self.dtype, self.sparse_layout).to(
-            self.DEVICE
-        )
+        decision_making_vector = torch.tensor(
+            rational_neurons.values.squeeze(), dtype=self.dtype
+        ).detach()
+        return vector_to_one_hot(
+            decision_making_vector, self.dtype, self.sparse_layout
+        ).to(self.DEVICE)
 
     def synaptic_matrix(self):
         return load_npz(self.data_dir / "good_synaptic_matrix.npz")
 
-    def process_full_models_data(self, i, batch_files):
+    def process_full_models_layers_data(self, i, batch_files):
         labels = paths_to_labels(batch_files)
         batch_sequences = image_paths_to_sequences(batch_files)
         rendered_sequences = self.receptors(batch_sequences)
@@ -110,6 +120,42 @@ class FullModelsDataProcessor:
         del layer_activations, rendered_sequences, rendered_sequence, simulation
         torch.cuda.empty_cache()
 
-        inputs = torch.tensor(activation_df.values, dtype=self.dtype, device=self.DEVICE)
+        inputs = torch.tensor(
+            activation_df.values, dtype=self.dtype, device=self.DEVICE
+        )
         labels = torch.tensor(labels, dtype=self.dtype, device=self.DEVICE)
         return labels, inputs
+    
+    def process_full_models_graph_data(self, i, batch_files):
+        labels = paths_to_labels(batch_files)
+        batch_sequences = image_paths_to_sequences(batch_files)
+        rendered_sequences = self.receptors(batch_sequences)
+
+        layer_activations = []
+        for rendered_sequence in rendered_sequences:
+            # rendered sequences are in RGB; move it to 0-1 for better training
+            rendered_sequence = torch.div(rendered_sequence, 255)
+            simulation = self.network.simulate(rendered_sequence[None], self.dt)
+            layer_activations.append(
+                LayerActivity(simulation, self.network.connectome, keepref=True)
+            )
+
+        self.wandb_logger.log_images(
+            i, layer_activations, batch_sequences, rendered_sequences, batch_files
+        )
+
+        inputs, labels = from_retina_to_model(
+            layer_activations, 
+            labels, 
+            config.final_retina_cells, 
+            config.last_good_frame, 
+            self.classification, 
+            self.root_id_to_index, 
+            dtype=self.dtype, 
+            device=self.DEVICE
+        )
+
+        del layer_activations, rendered_sequences, rendered_sequence, simulation
+        torch.cuda.empty_cache()
+
+        return inputs, labels

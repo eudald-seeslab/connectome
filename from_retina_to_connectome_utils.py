@@ -92,7 +92,9 @@ def update_results_df(
 
 
 def initialize_results_df():
-    return pd.DataFrame(columns=["Image", "Model outputs", "Prediction", "True label", "Is correct"])
+    return pd.DataFrame(
+        columns=["Image", "Model outputs", "Prediction", "True label", "Is correct"]
+    )
 
 
 def create_csr_input(activation_df, dtype, device):
@@ -122,16 +124,7 @@ def vector_to_one_hot(vec, dtype, sparse_layout):
     )
 
 
-def get_files_from_directory(directory_path):
-    files = []
-    for root, dirs, filenames in os.walk(directory_path):
-        for filename in filenames:
-            if filename.endswith(".npy") or filename.endswith(".png"):
-                files.append(os.path.join(root, filename))
-    return files
-
-
-def select_random_videos(all_files, batch_size, already_selected):
+def select_random_images(all_files, batch_size, already_selected):
     # Filter out files that have already been selected
     remaining_files = [f for f in all_files if f not in already_selected]
 

@@ -44,18 +44,20 @@ class FullGraphModel(nn.Module):
         self,
         input_shape,
         num_connectome_passes,
-        cell_type_indices,
         decision_making_vector,
         log_transform_weights: bool,
         batch_size,
         dtype,
         num_features=1,
+        cell_type_indices=None,
+        retina_connection=True,
     ):
         super(FullGraphModel, self).__init__()
-
-        self.retina_connection = RetinaConnectionLayer(
-            cell_type_indices, batch_size, num_features=1, dtype=dtype
-        )
+        self.retina_connection = retina_connection
+        if retina_connection:
+            self.retina_connection = RetinaConnectionLayer(
+                cell_type_indices, batch_size, num_features=1, dtype=dtype
+            )
         self.register_buffer("decision_making_vector", decision_making_vector)
 
         self.connectome = TrainableEdgeConv(input_shape, num_connectome_passes)
@@ -71,9 +73,11 @@ class FullGraphModel(nn.Module):
             # if there are a lot of passes, this prevents the system from exploding
             edge_weight = torch.log1p(edge_weight)
 
-        # find the optimal connection between retina model and connectome
-        x = self.retina_connection(x)
-        x = self.normalize_non_zero(x, batch)
+        if self.retina_connection:
+            # find the optimal connection between retina model and connectome
+            x = self.retina_connection(x)
+            x = self.normalize_non_zero(x, batch)
+
         # pass through the connectome
         x = self.connectome(x, edge_index, edge_weight, batch)
         # get final decision

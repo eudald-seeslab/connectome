@@ -1,14 +1,11 @@
 import numpy as np
 import pandas as pd
-import torch
-from scipy.sparse import coo_matrix, load_npz
-from torch_geometric.data import Data, Batch
+from scipy.sparse import coo_matrix
 
 from retina_to_connectome_funcs import (
     get_activation_tensor,
     get_batch_voronoi_averages,
     voronoi_averages_to_df,
-    get_synapse_df,
 )
 
 
@@ -41,11 +38,10 @@ def compute_voronoi_averages(
     return voronoi_df
 
 
-def get_synaptic_matrix(activation_df):
+# synapse_df = get_synapse_df()
+def get_synaptic_matrix(activation_df, synapse_df):
 
     # not in use unless we have to recreate it, since it's now saved in an external file
-
-    synapse_df = get_synapse_df()
 
     # Step 1: Identify Common Neurons
     # Unique root_ids in merged_df

@@ -6,7 +6,7 @@ from torch.nn import BCEWithLogitsLoss
 from tqdm import tqdm
 
 import config
-from from_retina_to_connectome_utils import select_random_videos
+from from_retina_to_connectome_utils import select_random_images
 from from_retina_to_connectome_utils import (
     initialize_results_df,
     clean_model_outputs,
@@ -31,10 +31,10 @@ def main(wandb_logger):
 
     # get data
     data_processor = FullModelsDataProcessor(wandb_logger=wandb_logger)
-    training_videos = data_processor.get_videos(
+    training_videos = data_processor.get_images(
         config.TRAINING_DATA_DIR, config.small, config.small_length
     )
-    validation_videos = data_processor.get_videos(
+    validation_videos = data_processor.get_images(
         config.VALIDATION_DATA_DIR, config.small, config.small_length
     )
     synaptic_matrix = data_processor.synaptic_matrix()
@@ -68,7 +68,7 @@ def main(wandb_logger):
         else len(training_videos) // config.batch_size
     )
     for i in tqdm(range(iterations)):
-        batch_files, already_selected = select_random_videos(
+        batch_files, already_selected = select_random_images(
             training_videos, config.batch_size, already_selected
         )
         labels, inputs = data_processor.process_full_models_layers_data(i, batch_files)
@@ -107,7 +107,7 @@ def main(wandb_logger):
         else len(validation_videos) // config.batch_size
     )
     for j in tqdm(range(validation_iterations)):
-        batch_files, already_selected_validation = select_random_videos(
+        batch_files, already_selected_validation = select_random_images(
             validation_videos, config.batch_size, already_selected_validation
         )
 

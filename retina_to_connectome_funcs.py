@@ -212,13 +212,26 @@ def get_activation_tensor(activations_, cell_type, last_frame=8):
     return activation_tensor[:, :, -last_frame].cpu().numpy()
 
 
-def get_synapse_df():
+def get_synapse_df(side=None):
     classification = pd.read_csv("adult_data/classification.csv")
+    if side is not None:
+        classification = classification[classification["side"] == side]        
+
     connections = pd.read_csv("adult_data/connections.csv")
-    return pd.merge(
+
+    # there are repeated connections, so we add them
+    connections = connections.groupby(["pre_root_id", "post_root_id"]).sum("syn_count").reset_index()
+    
+    left_merge = pd.merge(
         connections,
         classification[["root_id", "cell_type"]],
         left_on="pre_root_id",
+        right_on="root_id",
+    )
+    return pd.merge(
+        left_merge,
+        classification[["root_id", "cell_type"]],
+        left_on="post_root_id",
         right_on="root_id",
     )
 

@@ -9,7 +9,7 @@ from from_retina_to_connectome_utils import (
     get_decision_making_neurons,
     initialize_results_df,
     clean_model_outputs,
-    select_random_videos,
+    select_random_images,
     update_results_df,
     update_running_loss,
 )
@@ -32,13 +32,13 @@ def main(wandb_logger):
 
     # get data
     data_processor = FullModelsDataProcessor(wandb_logger=wandb_logger)
-    training_videos = data_processor.get_videos(
+    training_videos = data_processor.get_images(
         config.TRAINING_DATA_DIR, config.small, config.small_length
     )
-    validation_videos = data_processor.get_videos(
-        config.VALIDATION_DATA_DIR, 
+    validation_videos = data_processor.get_images(
+        config.VALIDATION_DATA_DIR,
         config.validation_length is not None,
-        config.validation_length
+        config.validation_length,
     )
     # TODO: move this into data_processor
     decision_making_vector = get_decision_making_neurons(config.dtype)
@@ -46,11 +46,11 @@ def main(wandb_logger):
     model = FullGraphModel(
         input_shape=data_processor.synaptic_matrix.shape[0],
         num_connectome_passes=config.NUM_CONNECTOME_PASSES,
-        cell_type_indices=data_processor.cell_type_indices(),
         decision_making_vector=decision_making_vector,
         log_transform_weights=config.log_transform_weights,
         batch_size=config.batch_size,
         dtype=config.dtype,
+        cell_type_indices=data_processor.cell_type_indices(),
     ).to(config.DEVICE)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.base_lr)
 
@@ -68,7 +68,7 @@ def main(wandb_logger):
         else len(training_videos) // config.batch_size
     )
     for i in tqdm(range(iterations)):
-        batch_files, already_selected = select_random_videos(
+        batch_files, already_selected = select_random_images(
             training_videos, config.batch_size, already_selected
         )
 
@@ -103,7 +103,7 @@ def main(wandb_logger):
     validation_results = initialize_results_df()
 
     for j in tqdm(range(len(validation_videos) // config.batch_size)):
-        batch_files, already_selected_validation = select_random_videos(
+        batch_files, already_selected_validation = select_random_images(
             validation_videos, config.batch_size, already_selected_validation
         )
 
@@ -136,7 +136,9 @@ def main(wandb_logger):
     )
 
     weber_plot = plot_weber_fraction(results)
-    wandb_logger.log_validation_stats(running_loss, total_correct, total, validation_results, weber_plot)
+    wandb_logger.log_validation_stats(
+        running_loss, total_correct, total, validation_results, weber_plot
+    )
     wandb_logger.finish()
 
 

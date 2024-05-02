@@ -15,10 +15,10 @@ from from_retina_to_connectome_funcs import (
     from_retina_to_connectome,
 )
 from from_retina_to_connectome_utils import (
-    get_files_from_directory,
     paths_to_labels,
     vector_to_one_hot,
 )
+from utils import get_image_paths
 
 
 class FullModelsDataProcessor:
@@ -47,20 +47,8 @@ class FullModelsDataProcessor:
         self.classification = pd.read_csv(self.data_dir / "classification_clean.csv")
         self.synaptic_matrix = load_npz(self.data_dir / "good_synaptic_matrix.npz")
 
-    def get_videos(self, images_dir, small, small_length):
-        videos = get_files_from_directory(self.cwd / images_dir)
-        assert len(videos) > 0, f"No videos found in {images_dir}."
-
-        if small:
-            try:
-                videos = sample(videos, small_length)
-            except ValueError:
-                print(
-                    f"Not enough videos in {images_dir} to sample {small_length}. 
-                    Continuing with {len(videos)}."
-                )
-
-        return videos
+    def get_images(self, images_dir, small, small_length):
+        return get_image_paths(self.cwd / images_dir, small, small_length)
 
     def cell_type_indices(self):
 
@@ -157,7 +145,10 @@ class FullModelsDataProcessor:
     def from_retina_to_model(self, activations, labels):
 
         voronoi_averages_df = compute_voronoi_averages(
-            activations, self.classification, self.final_retina_cells, last_good_frame=self.last_good_frame
+            activations,
+            self.classification,
+            self.final_retina_cells,
+            last_good_frame=self.last_good_frame,
         )
         activation_df = from_retina_to_connectome(
             voronoi_averages_df, self.classification, self.root_id_to_index

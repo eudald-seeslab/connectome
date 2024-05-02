@@ -1,0 +1,41 @@
+---
+title: "Untitled"
+output: html_document
+date: "2024-04-30"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+library(dplyr)
+library(tidyr)
+library(nat)
+library(stringr)
+library(plotly)
+```
+
+```{r}
+df <- readr::read_csv("coordinates.csv") |> 
+  mutate(across(where(is.numeric), as.character),
+    position = gsub("[", "", position, fixed = T),
+    position = gsub("]", "", position, fixed = T),
+    position = str_trim(position),
+    position = str_squish(position)
+    ) |> 
+  separate_wider_delim(position, " ", names = c("x", "y", "z")) |> 
+  mutate(across(c(x, y, z), as.numeric))
+```
+
+```{r}
+dfg <- df |> 
+  group_by(root_id) |> 
+  summarise(x = mean(x), y = mean(y), z = mean(z)) |> 
+  mutate(root_id = as.character(root_id))
+```
+
+
+```{r}
+fig <- plot_ly(dfg |> sample_frac(.1), x = ~x, y = ~y, z = ~z)
+fig <- fig %>% add_markers()
+fig
+```
+

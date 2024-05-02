@@ -878,3 +878,6 @@ data/cell_type_rational.csv
 # drafts
 *draft.py
 *draft.ipynb
+
+# R stuff
+.Rproj.user

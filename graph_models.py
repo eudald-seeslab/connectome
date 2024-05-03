@@ -9,21 +9,22 @@ DROPOUT = 0.0
 
 
 class TrainableEdgeConv(MessagePassing):
-    def __init__(self, input_shape, num_connectome_passes=1):
+    def __init__(self, input_shape, num_edges, num_connectome_passes, batch_size):
         super(TrainableEdgeConv, self).__init__(aggr="add")
 
         self.num_passes = num_connectome_passes
         self.num_nodes_per_graph = input_shape
+        self.batch_size = batch_size
+        self.edge_weight = Parameter(torch.rand(num_edges))
 
-    def forward(self, x, edge_index, edge_weight, batch):
+    def forward(self, x, edge_index, batch):
         # Start propagating messages.
         size = (x.size(0), x.size(0))
-        batch_size = batch.max().item() + 1
 
         for _ in range(self.num_passes):
-            x = self.propagate(edge_index, size=size, x=x, edge_weight=edge_weight)
+            x = self.propagate(edge_index, size=size, x=x, edge_weight=self.edge_weight)
             # Reshape, normalize, and then flatten back
-            x = x.view(batch_size, self.num_nodes_per_graph, -1)
+            x = x.view(self.batch_size, self.num_nodes_per_graph, -1)
             x = x / x.norm(dim=1, keepdim=True)
             x = x.view(-1, x.size(2))
 
@@ -31,7 +32,12 @@ class TrainableEdgeConv(MessagePassing):
 
     def message(self, x_j, edge_weight):
         # Message: edge_weight (learnable) multiplied by node feature of the neighbor
-        return x_j * edge_weight.unsqueeze(1)
+        # manual reshape to make sure that the multiplication is done correctly
+        x_j = x_j.view(self.batch_size, -1)
+        # multiplication
+        x_j = x_j * edge_weight
+        # reshape back
+        return x_j.view(-1, 1)
 
     def update(self, aggr_out):
         # Each node gets its updated feature as the sum of its neighbor contributions.
@@ -48,6 +54,7 @@ class FullGraphModel(nn.Module):
         log_transform_weights: bool,
         batch_size,
         dtype,
+        num_edges,
         num_features=1,
         cell_type_indices=None,
         retina_connection=True,
@@ -60,7 +67,7 @@ class FullGraphModel(nn.Module):
             )
         self.register_buffer("decision_making_vector", decision_making_vector)
 
-        self.connectome = TrainableEdgeConv(input_shape, num_connectome_passes)
+        self.connectome = TrainableEdgeConv(input_shape, num_edges, num_connectome_passes, batch_size)
 
         self.final_fc = nn.Linear(1, 1, dtype=dtype)
         self.log_transform_weights = log_transform_weights
@@ -79,12 +86,13 @@ class FullGraphModel(nn.Module):
             x = self.normalize_non_zero(x, batch)
 
         # pass through the connectome
-        x = self.connectome(x, edge_index, edge_weight, batch)
+        x = self.connectome(x, edge_index, batch)
         # get final decision
         x, batch = self.decision_making_mask(x, batch)
         x = self.normalize_non_zero(x, batch)
         x = x.view(self.batch_size, -1, self.num_features)
-        x = torch.mean(x, dim=1, keepdim=True)
+        # note the '[0]' to get the median and not the indices
+        x = torch.median(x, dim=1)[0]
 
         # final layer to get the correct magnitude
         x = self.final_fc(x)

@@ -8,13 +8,16 @@ date: "2024-04-30"
 knitr::opts_chunk$set(echo = F, message = F, warning = F)
 library(dplyr)
 library(tidyr)
+library(readr)
 library(nat)
 library(stringr)
+library(ggplot2)
+theme_set(theme_bw())
 library(plotly)
 ```
 
 ```{r}
-df <- readr::read_csv("coordinates.csv") |> 
+df <- read_csv("adult_data/coordinates.csv") |> 
   mutate(across(where(is.numeric), as.character),
     position = gsub("[", "", position, fixed = T),
     position = gsub("]", "", position, fixed = T),
@@ -30,12 +33,76 @@ dfg <- df |>
   group_by(root_id) |> 
   summarise(x = mean(x), y = mean(y), z = mean(z)) |> 
   mutate(root_id = as.character(root_id))
+
+dfg |> write_csv("coordinates_clean.csv")
 ```
 
+Get data for cell types
 
 ```{r}
-fig <- plot_ly(dfg |> sample_frac(.1), x = ~x, y = ~y, z = ~z)
-fig <- fig %>% add_markers()
+cla <- read_csv("adult_data/classification.csv") |> 
+  select(root_id, cell_type, side) |> 
+  mutate(root_id = as.character(root_id))
+```
+
+
+Let's go only for the visual input neurons:
+
+```{r}
+vins <- cla |> 
+  filter(
+    # side == "left",
+    cell_type %in% c("R1-6", "R7", "R8")
+    ) |> 
+  left_join(dfg)
+```
+
+```{r}
+fig <- plot_ly(vins, x = ~x, y = ~y, z = ~z, color = ~cell_type)
+fig <- fig |> add_markers(size=.5)
 fig
 ```
+
+```{r}
+vins |> 
+  filter(side == "right") |> 
+  ggplot(aes(x = y, y = z, colour = cell_type)) + 
+  geom_point(size = .5)
+
+vins |> write_csv("adult_data/visual_neuron_positions.csv")
+```
+
+```{r}
+vins |>
+  filter(
+    y > 225000 & y < 325000,
+    z > 75000 & z < 175000,
+    side == "right"
+    ) |> 
+    ggplot(aes(x = y, y = z, colour = cell_type)) + 
+  geom_point(size = .5)
+```
+
+```{r}
+library(deldir)
+library(magrittr)
+
+data <- vins |>
+  filter(
+    y > 225000 & y < 325000,
+    z > 75000 & z < 175000,
+    side == "right"
+    ) |> 
+  mutate(cell_type = as.factor(cell_type))
+tesselation <- data |> 
+  sample_n(330) %$%
+  deldir(y, z) |>  
+  tile.list()   
+```
+
+```{r}
+plot(tesselation, showpoints = F)
+points(z ~ y, data = data, col=cell_type, pch=20, cex=.4)
+```
+
 

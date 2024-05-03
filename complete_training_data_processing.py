@@ -1,0 +1,71 @@
+import numpy as np
+import pandas as pd
+import torch
+from complete_training_funcs import assign_cell_type, get_neuron_activations, get_side_decision_making_vector, get_voronoi_averages, get_voronoi_cells, import_images, process_images
+from from_retina_to_connectome_utils import paths_to_labels
+import config
+from scipy.sparse import load_npz
+from torch_geometric.data import Data, Batch
+
+
+class CompleteModelsDataProcessor:
+
+    def __init__(self):
+        # get data
+        right_visual = pd.read_csv("adult_data/right_filtered.csv").drop(
+            columns=["side", "x"]
+        )
+        neuron_indices, voronoi_indices = get_voronoi_cells(right_visual)
+        right_visual["voronoi_indices"] = neuron_indices
+        right_visual["cell_type"] = right_visual.apply(assign_cell_type, axis=1)
+        self.right_visual = right_visual.drop(columns=["y", "z"])
+        self.right_root_ids = pd.read_csv("adult_data/right_root_id_to_index.csv")
+
+        self.decision_making_vector = get_side_decision_making_vector(
+            self.right_root_ids, "right"
+        )
+        self.synaptic_matrix = load_npz("adult_data/right_synaptic_matrix.npz")
+        self.voronoi_indices = voronoi_indices
+
+    # FIXME: this needs a lot of cleaning
+    def process_batch(self, batch_files):
+        labels = paths_to_labels(batch_files)
+        imgs = import_images(batch_files)
+        processed_imgs = process_images(imgs, self.voronoi_indices)
+        voronoi_averages = get_voronoi_averages(processed_imgs)
+        neuron_activations = pd.concat(
+            [get_neuron_activations(self.right_visual, a) for a in voronoi_averages],
+            axis=1,
+        )
+        activation_df = (
+            self.right_root_ids.merge(
+                neuron_activations, left_on="root_id", right_index=True, how="left"
+            )
+            .fillna(0)
+            .set_index("index")
+            .drop(columns=["root_id"])
+        )
+        edges = torch.tensor(
+            np.array([self.synaptic_matrix.row, self.synaptic_matrix.col]),
+            # Note: the edges need to be specificaly int64
+            dtype=torch.int64,
+        )
+        weights = torch.tensor(self.synaptic_matrix.data, dtype=config.dtype)
+        activation_tensor = torch.tensor(activation_df.values, dtype=config.dtype)
+        graph_list_ = []
+        for j in range(activation_tensor.shape[1]):
+            # Shape [num_nodes, 1], one feature per node
+            node_features = activation_tensor[:, j].unsqueeze(1)
+            graph = Data(
+                x=node_features,
+                edge_index=edges,
+                edge_attr=weights,
+                y=labels[j],
+                device=config.DEVICE,
+            )
+            graph_list_.append(graph)
+
+        inputs = Batch.from_data_list(graph_list_).to(config.DEVICE)
+        labels = torch.tensor(labels, dtype=config.dtype).to(config.DEVICE)
+
+        return inputs, labels

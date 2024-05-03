@@ -19,12 +19,12 @@ TESTING_DATA_DIR = "images/big_pointsval"
 VALIDATION_DATA_DIR = "images/big_pointsval"
 
 # Debugging and logging
-debugging = False
+debugging = True
 debug_length = 2
 validation_length = 400
 wandb_ = True
 wandb_images_every = 100
-small = False
+small = True
 small_length = 2400
 
 # Training configuration
@@ -45,4 +45,5 @@ cell_type_plot = "TmY18"
 
 # small checks so that i don't screw up
 wandb_ = False if debugger_is_active() else wandb_
+wandb_ = False if debugging else wandb_
 validation_length = validation_length if small else None

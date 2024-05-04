@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import sys
 from scipy.sparse import coo_matrix
+import config
 
 
 def debugger_is_active() -> bool:
@@ -83,3 +84,11 @@ def synapses_to_matrix_and_dict(right_synapses):
     )
 
     return matrix, root_id_to_index
+
+
+def get_iteration_number(im_num, batch_size):
+    if config.debugging:
+        return config.debug_length
+    if config.small:
+        return config.small_length // batch_size
+    return im_num // batch_size

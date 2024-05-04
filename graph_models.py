@@ -9,24 +9,26 @@ DROPOUT = 0.0
 
 
 class TrainableEdgeConv(MessagePassing):
-    def __init__(self, input_shape, num_edges, num_connectome_passes, batch_size):
+    def __init__(self, input_shape, edge_weights, num_connectome_passes, batch_size, dtype, device):
         super(TrainableEdgeConv, self).__init__(aggr="add")
 
         self.num_passes = num_connectome_passes
         self.num_nodes_per_graph = input_shape
         self.batch_size = batch_size
-        self.edge_weight = Parameter(torch.rand(num_edges))
+        # This allows us to have negative weights, as well as synapses comprised
+        #  of many weights, where some are positive and some negative, and the result
+        #  is edge_weight * edge_weight_multiplier
+        self.edge_weight = torch.tensor(edge_weights, dtype=dtype, device=device)
+        self.edge_weight_multiplier = Parameter(torch.Tensor(edge_weights.shape[0]).to(device))
+        nn.init.uniform_(self.edge_weight_multiplier, a=-0.1, b=0.1)
 
-    def forward(self, x, edge_index, batch):
+    def forward(self, x, edge_index):
         # Start propagating messages.
         size = (x.size(0), x.size(0))
 
         for _ in range(self.num_passes):
             x = self.propagate(edge_index, size=size, x=x, edge_weight=self.edge_weight)
-            # Reshape, normalize, and then flatten back
-            x = x.view(self.batch_size, self.num_nodes_per_graph, -1)
-            x = x / x.norm(dim=1, keepdim=True)
-            x = x.view(-1, x.size(2))
+            # we might want to normalize the output
 
         return x
 
@@ -34,14 +36,24 @@ class TrainableEdgeConv(MessagePassing):
         # Message: edge_weight (learnable) multiplied by node feature of the neighbor
         # manual reshape to make sure that the multiplication is done correctly
         x_j = x_j.view(self.batch_size, -1)
-        # multiplication
-        x_j = x_j * edge_weight
+        # multiply by the modulated edge weight
+        x_j = x_j * edge_weight * self.edge_weight_multiplier 
         # reshape back
         return x_j.view(-1, 1)
 
     def update(self, aggr_out):
         # Each node gets its updated feature as the sum of its neighbor contributions.
+        # sigmoid tries to emulate the biological process of the neuron, 
+        # where the signal is passed if the signal is strong enough, and then it's only 1
+        # aggr_out = aggr_out / aggr_out.abs().max()
+        # return torch.sigmoid(aggr_out)
         return aggr_out
+
+    def reshape_and_normalize(self, x):
+        x = x.view(self.batch_size, self.num_nodes_per_graph, -1)
+        x = x / x.norm(dim=1, keepdim=True)
+        x = x.view(-1, x.size(2))
+        return x
 
 
 class FullGraphModel(nn.Module):
@@ -51,10 +63,10 @@ class FullGraphModel(nn.Module):
         input_shape,
         num_connectome_passes,
         decision_making_vector,
-        log_transform_weights: bool,
         batch_size,
         dtype,
-        num_edges,
+        edge_weights,
+        device,
         num_features=1,
         cell_type_indices=None,
         retina_connection=True,
@@ -67,18 +79,14 @@ class FullGraphModel(nn.Module):
             )
         self.register_buffer("decision_making_vector", decision_making_vector)
 
-        self.connectome = TrainableEdgeConv(input_shape, num_edges, num_connectome_passes, batch_size)
+        self.connectome = TrainableEdgeConv(input_shape, edge_weights, num_connectome_passes, batch_size, dtype, device)
 
         self.final_fc = nn.Linear(1, 1, dtype=dtype)
-        self.log_transform_weights = log_transform_weights
         self.num_features = num_features
         self.batch_size = batch_size
 
     def forward(self, data):
-        x, edge_index, edge_weight, batch = data.x, data.edge_index, data.edge_attr, data.batch
-        if self.log_transform_weights:
-            # if there are a lot of passes, this prevents the system from exploding
-            edge_weight = torch.log1p(edge_weight)
+        x, edge_index, batch = data.x, data.edge_index, data.batch
 
         if self.retina_connection:
             # find the optimal connection between retina model and connectome
@@ -86,18 +94,22 @@ class FullGraphModel(nn.Module):
             x = self.normalize_non_zero(x, batch)
 
         # pass through the connectome
-        x = self.connectome(x, edge_index, batch)
+        x = self.connectome(x, edge_index)
         # get final decision
         x, batch = self.decision_making_mask(x, batch)
-        x = self.normalize_non_zero(x, batch)
+        # x = self.normalize_non_zero(x, batch)
         x = x.view(self.batch_size, -1, self.num_features)
+        # get the mean for each batch
+        x = torch.mean(x, dim=1, keepdim=True)
         # note the '[0]' to get the median and not the indices
-        x = torch.median(x, dim=1)[0]
+        # x = torch.max(x, dim=1)[0]
+        # normalize to 0-1
+        # x = self.min_max_norm(x)
 
         # final layer to get the correct magnitude
         x = self.final_fc(x)
         return F.relu(x).squeeze()
-    
+
     def decision_making_mask(self, x, batch):
         x = x.view(self.batch_size, -1, self.num_features)
         x = x[:, self.decision_making_vector == 1, :]

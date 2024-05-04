@@ -4,7 +4,6 @@ from imageio.v3 import imread
 import pandas as pd
 import numpy as np
 from scipy.spatial import cKDTree
-from itertools import repeat
 
 import torch
 
@@ -108,7 +107,7 @@ def get_neuron_activations(right_visual, voronoi_average):
 
 
 def get_side_decision_making_vector(right_root_ids, side):
-    cell_type_rational = pd.read_csv("data/cell_type_rational.csv")
+    cell_type_rational = pd.read_csv("data/cell_type_rational_short.csv")
     # get the cell types with rational = 1
     rational_cell_types = cell_type_rational[cell_type_rational["rational"] == 1][
         "cell_type"

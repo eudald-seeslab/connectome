@@ -10,21 +10,30 @@ from torch_geometric.data import Data, Batch
 
 class CompleteModelsDataProcessor:
 
-    def __init__(self):
-        # get data
-        right_visual = pd.read_csv("adult_data/right_filtered.csv").drop(
-            columns=["side", "x"]
-        )
-        neuron_indices, voronoi_indices = get_voronoi_cells(right_visual)
-        right_visual["voronoi_indices"] = neuron_indices
-        right_visual["cell_type"] = right_visual.apply(assign_cell_type, axis=1)
-        self.right_visual = right_visual.drop(columns=["y", "z"])
-        self.right_root_ids = pd.read_csv("adult_data/right_root_id_to_index.csv")
+    tesselated_df = None
 
+    def __init__(self, log_transform_weights=False):
+        # get data
+        self.right_visual_neurons_df = pd.read_csv(
+            "adult_data/right_visual_neurons_positions.csv").drop(
+            columns=["x"]
+        )
+        self.right_root_ids = pd.read_csv("adult_data/root_id_to_index.csv")
+        self.synaptic_matrix = load_npz("adult_data/good_synaptic_matrix.npz")
+        if log_transform_weights:
+            self.synaptic_matrix.data = np.log1p(self.synaptic_matrix.data)
         self.decision_making_vector = get_side_decision_making_vector(
             self.right_root_ids, "right"
         )
-        self.synaptic_matrix = load_npz("adult_data/right_synaptic_matrix.npz")
+
+    def create_voronoi_cells(self):
+        neuron_indices, voronoi_indices = get_voronoi_cells(self.right_visual_neurons_df)
+        self.tesselated_df = self.right_visual_neurons_df.copy()
+        self.tesselated_df["voronoi_indices"] = neuron_indices
+        self.tesselated_df["cell_type"] = self.tesselated_df.apply(
+            assign_cell_type, axis=1
+        )
+        self.tesselated_df = self.tesselated_df.drop(columns=["y", "z"])
         self.voronoi_indices = voronoi_indices
 
     # FIXME: this needs a lot of cleaning
@@ -34,7 +43,7 @@ class CompleteModelsDataProcessor:
         processed_imgs = process_images(imgs, self.voronoi_indices)
         voronoi_averages = get_voronoi_averages(processed_imgs)
         neuron_activations = pd.concat(
-            [get_neuron_activations(self.right_visual, a) for a in voronoi_averages],
+            [get_neuron_activations(self.tesselated_df, a) for a in voronoi_averages],
             axis=1,
         )
         activation_df = (
@@ -42,7 +51,7 @@ class CompleteModelsDataProcessor:
                 neuron_activations, left_on="root_id", right_index=True, how="left"
             )
             .fillna(0)
-            .set_index("index")
+            .set_index("index_id")
             .drop(columns=["root_id"])
         )
         edges = torch.tensor(

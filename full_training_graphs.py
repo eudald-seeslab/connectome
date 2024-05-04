@@ -135,7 +135,7 @@ def main(wandb_logger):
         f"Validation Accuracy: {total_correct / total}"
     )
 
-    weber_plot = plot_weber_fraction(results)
+    weber_plot = plot_weber_fraction(validation_results)
     wandb_logger.log_validation_stats(
         running_loss, total_correct, total, validation_results, weber_plot
     )

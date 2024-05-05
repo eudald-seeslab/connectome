@@ -1,8 +1,13 @@
+import itertools
 from random import randint
 from PIL import ImageDraw
 import numpy as np
 
 np.random.seed(1234)
+
+
+class PointLayoutError(ValueError):
+    pass
 
 
 class NumberPoints:
@@ -13,14 +18,15 @@ class NumberPoints:
     # We consider equal areas if they differ by less than this number:
     area_tolerance = 0.1
 
-    def __init__(self, img, init_size, yellow, blue, min_point_radius=8, max_point_radius=16, point_sep=10):
+    def __init__(self, img, init_size, yellow, blue, min_point_radius=8, max_point_radius=16, attempts_limit=10):
         self.img = img
         self.init_size = init_size
         self.draw = ImageDraw.Draw(img)
         self.yellow = yellow
         self.blue = blue
         self.min_point_radius = min_point_radius
-        self.max_point_radius = max_point_radius        
+        self.max_point_radius = max_point_radius
+        self.attempts_limit = attempts_limit
 
     def _create_random_point(self):
         radius = randint(self.min_point_radius, self.max_point_radius + 1)
@@ -40,9 +46,9 @@ class NumberPoints:
         return x, y, radius
 
     def _check_no_overlaps(self, point_array, new_point):
-        return all([self._check_overlapping_points(a[0], new_point) for a in point_array])
+        return all([self._check_points_not_overlapping(a[0], new_point) for a in point_array])
 
-    def _check_overlapping_points(self, point, new_point):
+    def _check_points_not_overlapping(self, point, new_point):
         dist = np.sqrt((point[0] - new_point[0]) ** 2 + (point[1] - new_point[1]) ** 2)
 
         return dist > point[2] + new_point[2] + self.point_sep
@@ -55,8 +61,12 @@ class NumberPoints:
         for i in range(n):
             new_point = self._create_random_point()
 
+            attempts = 0
             while not self._check_no_overlaps(point_array, new_point):
                 new_point = self._create_random_point()
+                attempts += 1
+                if attempts > self.attempts_limit:
+                    raise PointLayoutError("Too many attempts to create a good layout.")
             point_array.append((new_point, colour))
 
         return point_array
@@ -108,5 +118,10 @@ class NumberPoints:
             point_array = [self._increase_radius(a) if a[1] == small else a for a in point_array]
             # Recompute
             small, big_area, small_area = self._get_areas(point_array)
+
+        # Recheck that we haven't created any overlap
+        for pair in itertools.combinations(point_array, 2):
+            if not self._check_points_not_overlapping(pair[0][0], pair[1][0]):
+                raise PointLayoutError("Overlapping points created")
 
         return point_array

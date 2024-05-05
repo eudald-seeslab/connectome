@@ -1,9 +1,12 @@
 import os
 import argparse
 from PIL import Image
-from points import NumberPoints
+from points import NumberPoints, PointLayoutError
 import random
 from tqdm import tqdm
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 EASY_RATIOS = [2 / 5, 1 / 2, 2 / 3, 3 / 4]
@@ -16,6 +19,10 @@ HARD_RATIOS = [
     10 / 11,
     11 / 12,
 ]
+
+
+class TerminalPointLayoutError(ValueError):
+    pass
 
 
 class ImageGenerator:
@@ -46,6 +53,7 @@ class ImageGenerator:
             blue=self.config["blue"],
             min_point_radius=self.config["min_point_radius"],
             max_point_radius=self.config["max_point_radius"],
+            attempts_limit=self.config["attempts_limit"],
         )
         point_array = number_points.design_n_points(n1, self.config["colour_1"])
         point_array = number_points.design_n_points(
@@ -56,28 +64,55 @@ class ImageGenerator:
         return number_points.draw_points(point_array)
 
     def create_and_save(self, n1, n2, equalized, tag=""):
-        name = f"img_{n1}_{n2}_{tag}{'_equalized' if equalized else ''}.png"
+        name = f"img_{n1}_{n2}_{tag}{'_equalized' if equalized else ''}v2.png"
+
+        attempts = 0
+
+        while attempts < self.config["attempts_limit"]:
+            try:
+                self.create_and_save_image(name, n1, n2, equalized)
+                break
+            except PointLayoutError as e:
+                logging.debug(f"Failed to create image {name} because '{e}' Retrying.")
+                attempts += 1
+
+                if attempts == self.config["attempts_limit"]:
+                    raise TerminalPointLayoutError(
+                        f"""Failed to create image {name} after {attempts} attempts. 
+                        Your points are probably too big, or there are too many. 
+                        Stopping."""
+                    )
+
+    def create_and_save_image(self, name, n1, n2, equalized):
         img = self.create_image(n1, n2, equalized)
         img.save(
-            os.path.join(
-                self.config["IMG_DIR"],
-                self.config["colour_1"] if n1 > n2 else self.config["colour_2"],
-                name,
+        os.path.join(
+            self.config["IMG_DIR"],
+            self.config["colour_1"] if n1 > n2 else self.config["colour_2"],
+            name,
             )
         )
 
     def get_positions(self):
         min_p = self.config["min_point_num"]
         max_p = self.config["max_point_num"]
-        p = [
-            [(b, int(b / a)) for a in self.ratios if max_p >= b / a == round(b / a)]
-            for b in range(min_p, max_p + 1)
-        ]
-        return [item for sublist in p for item in sublist]
+
+        positions = []
+        # Note that we don't need the last value of 'a', since 'b' will always be greater.
+        for a in range(min_p, max_p):
+            # Given 'a', we need to find 'b' in the tuple (a, b) such that b/a is in the ratios list.
+            for ratio in self.ratios:
+                b = a / ratio
+
+                # We keep this tuple if b is an integer and within the allowed range.
+                if b == round(b) and b <= max_p:
+                    positions.append((a, int(b)))
+
+        return positions
 
     def generate_images(self):
         positions = self.get_positions()
-        print(
+        logging.info(
             f"This will make {self.config['IMAGE_SET_NUM'] * len(positions) * 4} images."
         )
         for i in tqdm(range(self.config["IMAGE_SET_NUM"])):
@@ -95,13 +130,13 @@ def get_config():
     parser.add_argument(
         "--image_set_num",
         type=int,
-        default=10,
+        default=100,
         help="Number of image sets to generate.",
     )
     parser.add_argument(
         "--img_dir",
         type=str,
-        default="images/easy_v2",
+        default="images/extremely_easy",
         help="Directory to save images.",
     )
     parser.add_argument(
@@ -120,12 +155,14 @@ def get_config():
         "yellow": "#fffe04",
         "blue": "#0003f9",
         "point_sep": 20,
-        "min_point_radius": 16,
-        "max_point_radius": 32,
+        "min_point_radius": 40,
+        "max_point_radius": 80,
         "init_size": 512,
         "mode": "RGB",
-        "min_point_num": 4,
-        "max_point_num": 8,
+        # these are per colour
+        "min_point_num": 1,
+        "max_point_num": 4,
+        "attempts_limit": 20,
     }
     return config
 

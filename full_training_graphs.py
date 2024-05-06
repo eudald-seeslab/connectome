@@ -15,7 +15,7 @@ from from_retina_to_connectome_utils import (
 )
 from full_training_data_processing import FullModelsDataProcessor
 from graph_models import FullGraphModel
-from utils import plot_weber_fraction
+from plots import plot_weber_fraction
 from wandb_utils import WandBLogger
 
 warnings.filterwarnings(
@@ -98,6 +98,7 @@ def main(wandb_logger):
     torch.cuda.empty_cache()
 
     # test
+    model.eval()
     already_selected_validation = []
     total_correct, total, running_loss = 0, 0, 0.0
     validation_results = initialize_results_df()
@@ -111,7 +112,6 @@ def main(wandb_logger):
         inputs = inputs.to(config.DEVICE)
 
         with torch.no_grad():
-            model.eval()
             outputs = model(inputs)
             loss = criterion(outputs, labels)
 

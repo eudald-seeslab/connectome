@@ -9,6 +9,27 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 
+GENERAL_CONFIG = {
+    # so that we can create more images without the names clashing with the previous
+    "version_tag": None,
+    "colour_1": "yellow",
+    "colour_2": "blue",
+    "boundary_width": 5,
+    "background_colour": "#808080",
+    "yellow": "#fffe04",
+    "blue": "#0003f9",
+    "point_sep": 20,
+    "min_point_radius": 40,
+    "max_point_radius": 80,
+    "init_size": 512,
+    "mode": "RGB",
+    # these are per colour
+    "min_point_num": 1,
+    "max_point_num": 3,
+    "attempts_limit": 200,
+}
+
+
 EASY_RATIOS = [2 / 5, 1 / 2, 2 / 3, 3 / 4]
 HARD_RATIOS = [
     4 / 5,
@@ -64,13 +85,14 @@ class ImageGenerator:
         return number_points.draw_points(point_array)
 
     def create_and_save(self, n1, n2, equalized, tag=""):
-        name = f"img_{n1}_{n2}_{tag}{'_equalized' if equalized else ''}v2.png"
+        eq = "_equalized" if equalized else ""
+        v_tag = f"_{config['version_tag']}" if config["version_tag"] is not None else ""
+        name = f"img_{n1}_{n2}_{tag}{eq}{v_tag}.png"
 
         attempts = 0
-
         while attempts < self.config["attempts_limit"]:
             try:
-                self.create_and_save_image(name, n1, n2, equalized)
+                self.create_and_save_once(name, n1, n2, equalized)
                 break
             except PointLayoutError as e:
                 logging.debug(f"Failed to create image {name} because '{e}' Retrying.")
@@ -83,7 +105,7 @@ class ImageGenerator:
                         Stopping."""
                     )
 
-    def create_and_save_image(self, name, n1, n2, equalized):
+    def create_and_save_once(self, name, n1, n2, equalized):
         img = self.create_image(n1, n2, equalized)
         img.save(
         os.path.join(
@@ -144,25 +166,10 @@ def get_config():
     )
     args = parser.parse_args()
 
-    config = {
+    config = GENERAL_CONFIG | {
         "EASY": args.easy,
         "IMAGE_SET_NUM": args.image_set_num,
         "IMG_DIR": args.img_dir,
-        "colour_1": "yellow",
-        "colour_2": "blue",
-        "boundary_width": 5,
-        "background_colour": "#808080",
-        "yellow": "#fffe04",
-        "blue": "#0003f9",
-        "point_sep": 20,
-        "min_point_radius": 40,
-        "max_point_radius": 80,
-        "init_size": 512,
-        "mode": "RGB",
-        # these are per colour
-        "min_point_num": 1,
-        "max_point_num": 4,
-        "attempts_limit": 20,
     }
     return config
 

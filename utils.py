@@ -14,6 +14,18 @@ def debugger_is_active() -> bool:
     return hasattr(sys, "gettrace") and sys.gettrace() is not None
 
 
+def plot_results(results_, plot_type="weber"):
+    try:
+        if plot_type == "weber":
+            plot = plot_weber_fraction(results_)
+        # here i might add more plots in the future
+    except:
+        plot = None
+
+    return plot
+
+
+
 def plot_weber_fraction(results_df: pd.DataFrame) -> plt.Figure:
     # Calculate the percentage of correct answers for each Weber ratio
     results_df["yellow"] = results_df["Image"].apply(lambda x: x.split("_")[2])

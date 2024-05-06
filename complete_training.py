@@ -5,7 +5,7 @@ from torch.nn import BCEWithLogitsLoss
 from tqdm import tqdm
 
 import config
-from utils import get_image_paths, get_iteration_number, plot_weber_fraction
+from utils import get_image_paths, get_iteration_number, plot_results
 from complete_training_data_processing import CompleteModelsDataProcessor
 from graph_models import FullGraphModel
 from from_retina_to_connectome_utils import (
@@ -30,7 +30,9 @@ torch.manual_seed(1234)
 
 def main(wandb_logger):
     # get data and prepare model
-    training_images = get_image_paths(config.TRAINING_DATA_DIR, config.small, config.small_length)
+    training_images = get_image_paths(
+        config.TRAINING_DATA_DIR, config.small, config.small_length
+        )
     data_processor = CompleteModelsDataProcessor(config.log_transform_weights)
 
     model = FullGraphModel(
@@ -61,7 +63,7 @@ def main(wandb_logger):
             # create voronoi cells each batch so they are different
             data_processor.create_voronoi_cells()
             inputs, labels = data_processor.process_batch(batch_files)
-            
+
             optimizer.zero_grad()
             out = model(inputs)
             loss = criterion(out, labels)
@@ -80,20 +82,19 @@ def main(wandb_logger):
             wandb_logger.log_metrics(i, running_loss, total_correct, total, results)
 
         print(
-            f"Finished epoch {ep} with loss {running_loss / total} and accuracy {total_correct / total}"
+            f"""Finished epoch {ep} with loss {running_loss / total} 
+            and accuracy {total_correct / total}"""
         )
         torch.cuda.empty_cache()
 
-    try:
-        weber_plot = plot_weber_fraction(results)
-    except:
-        weber_plot = None
+    final_plot = plot_results(results)
     wandb_logger.log_validation_stats(
-        running_loss, total_correct, total, results, weber_plot
+        running_loss, total_correct, total, results, final_plot
     )
 
     print(
-        f"Finished training with loss {running_loss / total} and accuracy {total_correct / total}"
+        f"""Finished training with loss {running_loss / total} and 
+        accuracy {total_correct / total}"""
     )
 
 

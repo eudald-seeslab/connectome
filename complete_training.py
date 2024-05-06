@@ -82,18 +82,47 @@ def main(wandb_logger):
             wandb_logger.log_metrics(i, running_loss, total_correct, total, results)
 
         print(
-            f"""Finished epoch {ep} with loss {running_loss / total} 
+            f"""Finished epoch {ep + 1} with loss {running_loss / total} 
             and accuracy {total_correct / total}"""
         )
         torch.cuda.empty_cache()
 
-    final_plot = plot_results(results)
+    # test
+    testing_images = get_image_paths(
+        config.TESTING_DATA_DIR, config.small, config.small_length
+    )
+    already_selected_testing = []
+    total_correct, total, running_loss = 0, 0, 0.0
+    test_results = initialize_results_df()
+
+    model.eval()
+    iterations = get_iteration_number(len(testing_images), config.batch_size)
+    for j in tqdm(range(iterations)):
+        batch_files, already_selected_testing = select_random_images(
+            testing_images, config.batch_size, already_selected_testing
+        )
+        inputs, labels = data_processor.process_batch(batch_files)
+        inputs = inputs.to(config.DEVICE)
+
+        out = model(inputs)
+        loss = criterion(out, labels)
+
+        # Calculate run parameters
+        outputs, predictions, labels_cpu, correct = clean_model_outputs(out, labels)
+        test_results = update_results_df(
+            test_results, batch_files, outputs, predictions, labels_cpu, correct
+        )
+        running_loss += update_running_loss(loss, inputs)
+        total += config.batch_size
+        total_correct += correct.sum()
+
+    final_plots = plot_results(test_results, plot_types=config.plot_types)
     wandb_logger.log_validation_stats(
-        running_loss, total_correct, total, results, final_plot
+        running_loss, total_correct, total, test_results, final_plots
     )
 
     print(
-        f"""Finished training with loss {running_loss / total} and 
+        f"""Finished testign with loss {running_loss / total} and 
         accuracy {total_correct / total}"""
     )
 

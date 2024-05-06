@@ -26,6 +26,10 @@ class CompleteModelsDataProcessor:
             self.right_root_ids, "right"
         )
 
+    @property
+    def number_of_synapses(self):
+        return self.synaptic_matrix.shape[0]
+
     def create_voronoi_cells(self):
         neuron_indices, voronoi_indices = get_voronoi_cells(self.right_visual_neurons_df)
         self.tesselated_df = self.right_visual_neurons_df.copy()

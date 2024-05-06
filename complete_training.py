@@ -27,18 +27,14 @@ warnings.filterwarnings(
 
 torch.manual_seed(1234)
 
-num_epochs = config.num_epochs
-training_images_dir = config.TRAINING_DATA_DIR
-small = config.small
-small_length = config.small_length
 
 def main(wandb_logger):
     # get data and prepare model
-    training_images = get_image_paths(training_images_dir, small, small_length)
+    training_images = get_image_paths(config.TRAINING_DATA_DIR, config.small, config.small_length)
     data_processor = CompleteModelsDataProcessor(config.log_transform_weights)
 
     model = FullGraphModel(
-        input_shape=data_processor.synaptic_matrix.shape[0],
+        input_shape=data_processor.number_of_synapses,
         num_connectome_passes=config.NUM_CONNECTOME_PASSES,
         decision_making_vector=data_processor.decision_making_vector,
         batch_size=config.batch_size,
@@ -48,7 +44,6 @@ def main(wandb_logger):
         retina_connection=False,
     ).to(config.DEVICE)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.base_lr)
-
     criterion = BCEWithLogitsLoss()
 
     # train
@@ -57,15 +52,16 @@ def main(wandb_logger):
     running_loss, total_correct, total = 0, 0, 0
 
     iterations = get_iteration_number(len(training_images), config.batch_size)
-    for ep in range(num_epochs):
+    for ep in range(config.num_epochs):
         already_selected = []
         for i in tqdm(range(iterations)):
             batch_files, already_selected = select_random_images(
                 training_images, config.batch_size, already_selected
             )
-            # create voronoi cells here so they are different
+            # create voronoi cells each batch so they are different
             data_processor.create_voronoi_cells()
             inputs, labels = data_processor.process_batch(batch_files)
+            
             optimizer.zero_grad()
             out = model(inputs)
             loss = criterion(out, labels)

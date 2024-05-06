@@ -62,7 +62,10 @@ def main(wandb_logger):
             )
             # create voronoi cells each batch so they are different
             data_processor.create_voronoi_cells()
-            inputs, labels = data_processor.process_batch(batch_files)
+            images, labels = data_processor.get_data_from_paths(batch_files)
+            wandb_logger.log_original(images[0], batch_files[0], i)
+            
+            inputs, labels = data_processor.process_batch(images, labels)
 
             optimizer.zero_grad()
             out = model(inputs)

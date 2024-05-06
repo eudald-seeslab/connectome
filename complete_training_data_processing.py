@@ -12,7 +12,7 @@ class CompleteModelsDataProcessor:
 
     tesselated_df = None
 
-    def __init__(self, log_transform_weights=False):
+    def __init__(self, wandb_logger, log_transform_weights=False):
         # get data
         self.right_visual_neurons_df = pd.read_csv(
             "adult_data/right_visual_neurons_positions.csv").drop(
@@ -25,6 +25,7 @@ class CompleteModelsDataProcessor:
         self.decision_making_vector = get_side_decision_making_vector(
             self.right_root_ids, "right"
         )
+        self.wandb_logger = wandb_logger
 
     @property
     def number_of_synapses(self):
@@ -40,10 +41,15 @@ class CompleteModelsDataProcessor:
         self.tesselated_df = self.tesselated_df.drop(columns=["y", "z"])
         self.voronoi_indices = voronoi_indices
 
+    @staticmethod
+    def get_data_from_paths(paths):
+        imgs = import_images(paths)
+        labels = paths_to_labels(paths)
+        return imgs, labels
+    
     # FIXME: this needs a lot of cleaning
-    def process_batch(self, batch_files):
-        labels = paths_to_labels(batch_files)
-        imgs = import_images(batch_files)
+    def process_batch(self, imgs, labels):
+
         processed_imgs = process_images(imgs, self.voronoi_indices)
         voronoi_averages = get_voronoi_averages(processed_imgs)
         neuron_activations = pd.concat(
@@ -60,8 +66,7 @@ class CompleteModelsDataProcessor:
         )
         edges = torch.tensor(
             np.array([self.synaptic_matrix.row, self.synaptic_matrix.col]),
-            # Note: the edges need to be specificaly int64
-            dtype=torch.int64,
+            dtype=torch.int64, # do not touch
         )
         weights = torch.tensor(self.synaptic_matrix.data, dtype=config.dtype)
         activation_tensor = torch.tensor(activation_df.values, dtype=config.dtype)

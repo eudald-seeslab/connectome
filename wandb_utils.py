@@ -86,14 +86,15 @@ class WandBLogger:
             }
         )
 
-    def log_original(self, vals, img_path):
-        wandb.log(
-            {
-                "Original image": wandb.Image(
-                    vals, caption=f"Original image {os.path.basename(img_path)}"
-                ),
-            }
-        )
+    def log_original(self, vals, img_path, iteration):
+        if self.enabled and iteration % self.log_images_every == 0:
+            wandb.log(
+                {
+                    "Original image": wandb.Image(
+                        vals, caption=f"Original image {os.path.basename(img_path)}"
+                    ),
+                }
+            )
 
     def log_running_stats(
         self, epoch_, iteration, running_loss_, total_correct_, total_, results_

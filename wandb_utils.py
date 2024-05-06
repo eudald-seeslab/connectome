@@ -110,17 +110,20 @@ class WandBLogger:
             )
 
     def log_validation_stats(
-        self, running_loss_, total_correct_, total_, results_, weber_plot_
+        self, running_loss_, total_correct_, total_, results_, plots
     ):
-        img = wandb.Image(weber_plot_) if weber_plot_ is not None else None
+        if len(plots) > 0:
+            plot_dict = {f"Plot {i}": wandb.Image(plot) for i, plot in enumerate(plots)}
+        else:
+            plot_dict = {}
         if self.enabled:
             wandb.log(
                 {
                     "Validation loss": running_loss_ / total_,
                     "Validation accuracy": total_correct_ / total_,
                     "Validation results": wandb.Table(dataframe=results_),
-                    "Weber Fraction Plot": img,
                 }
+                | plot_dict
             )
 
     def send_crash(self, message):

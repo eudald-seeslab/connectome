@@ -112,13 +112,14 @@ class WandBLogger:
     def log_validation_stats(
         self, running_loss_, total_correct_, total_, results_, weber_plot_
     ):
+        img = wandb.Image(weber_plot_) if weber_plot_ is not None else None
         if self.enabled:
             wandb.log(
                 {
                     "Validation loss": running_loss_ / total_,
                     "Validation accuracy": total_correct_ / total_,
                     "Validation results": wandb.Table(dataframe=results_),
-                    "Weber Fraction Plot": wandb.Image(weber_plot_),
+                    "Weber Fraction Plot": img,
                 }
             )
 

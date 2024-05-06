@@ -33,7 +33,7 @@ small = config.small
 small_length = config.small_length
 
 def main(wandb_logger):
-    # get data
+    # get data and prepare model
     training_images = get_image_paths(training_images_dir, small, small_length)
     data_processor = CompleteModelsDataProcessor(config.log_transform_weights)
 
@@ -51,13 +51,13 @@ def main(wandb_logger):
 
     criterion = BCEWithLogitsLoss()
 
+    # train
     model.train()
     results = initialize_results_df()
     running_loss, total_correct, total = 0, 0, 0
 
     iterations = get_iteration_number(len(training_images), config.batch_size)
     for ep in range(num_epochs):
-        # train
         already_selected = []
         for i in tqdm(range(iterations)):
             batch_files, already_selected = select_random_images(
@@ -88,7 +88,10 @@ def main(wandb_logger):
         )
         torch.cuda.empty_cache()
 
-    weber_plot = plot_weber_fraction(results)
+    try:
+        weber_plot = plot_weber_fraction(results)
+    except:
+        weber_plot = None
     wandb_logger.log_validation_stats(
         running_loss, total_correct, total, results, weber_plot
     )
@@ -96,7 +99,6 @@ def main(wandb_logger):
     print(
         f"Finished training with loss {running_loss / total} and accuracy {total_correct / total}"
     )
-    wandb_logger.finish()
 
 
 if __name__ == "__main__":
@@ -105,7 +107,14 @@ if __name__ == "__main__":
     wandb_logger.initialize()
     try:
         main(wandb_logger)
+
+    except KeyboardInterrupt:
+        print("Training interrupted by user.")
+
     except Exception:
         error = traceback.format_exc()
         print(error)
         wandb_logger.send_crash(f"Error during training: {error}")
+
+    finally:
+        wandb_logger.finish()

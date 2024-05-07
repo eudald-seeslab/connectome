@@ -59,11 +59,11 @@ class WandBLogger:
             except Exception as e:
                 print(f"Error logging images to wandb: {e}. Continuing...")
 
-    def log_metrics(self, iteration, running_loss, total_correct, total, results):
+    def log_metrics(self, epoch, iteration, running_loss, total_correct, total, results):
         if self.enabled:
             try:
                 self.log_running_stats(
-                    0, iteration, running_loss, total_correct, total, results
+                    epoch, iteration, running_loss, total_correct, total, results
                 )
             except Exception as e:
                 print(f"Error logging running stats to wandb: {e}. Continuing...")

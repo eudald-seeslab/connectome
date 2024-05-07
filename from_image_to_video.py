@@ -1,9 +1,9 @@
 from pathlib import Path
 
+import imageio.v3 as imageio
 import numpy as np
 import os
 import glob
-import cv2
 from tqdm import tqdm
 
 # Constants
@@ -39,7 +39,7 @@ def process_directory(directory):
     for image_path in tqdm(
         glob.glob(os.path.join(IMAGE_DIRECTORY, directory, "*.png"))
     ):
-        image = cv2.imread(image_path)
+        image = imageio.imread(image_path)
         sequence = create_sequence_from_image(image)
 
         npy_filename = os.path.join(
@@ -51,7 +51,7 @@ def process_directory(directory):
 def image_paths_to_sequences(image_path_list):
     sequences = []
     for image_path in image_path_list:
-        image = cv2.imread(image_path)
+        image = imageio.imread(image_path)
         sequences.append(create_sequence_from_image(image))
 
     return np.array([np.mean(a, axis=3) for a in sequences])

@@ -1,112 +1,88 @@
+import os
+import random
+import numpy as np
 import pandas as pd
-import torch
-import wandb
-import logging
-from random import getrandbits
-import matplotlib.pyplot as plt
-import seaborn as sns
-from model_config_manager import ModelConfigManager
+import sys
+from scipy.sparse import coo_matrix
+import config
+from plots import plot_accuracy_per_value, plot_weber_fraction
 
 
-def log_training_images(
-    images: torch.Tensor, labels: torch.Tensor, outputs: torch.Tensor
-) -> None:
-    # Don't always log, or we saturate wandb
-    # Substitute for a number smaller or equal to batch size if you want more
-    #  images
-    num_images_to_log = getrandbits(1)
-    for i in range(num_images_to_log):
-        # Convert image and label to numpy for visualization
-        image = images[i].cpu().numpy().transpose(1, 2, 0)
-        label = labels[i].cpu().numpy()
-        predicted_label = torch.argmax(outputs[i]).cpu().numpy()
+def debugger_is_active() -> bool:
+    """Return if the debugger is currently active"""
+    return hasattr(sys, "gettrace") and sys.gettrace() is not None
 
-        # There is a bug in wandb that prevents logging images
+
+def plot_results(results_, plot_types):
+    plots = []
+    try:
+        for plot_type in plot_types:
+            if plot_type == "weber":
+                plots.append([plot_weber_fraction(results_)])
+            elif plot_type == "radius":
+                plots.append(plot_accuracy_per_value(results_, "radius"))
+            elif plot_type == "distance":
+                plots.append(plot_accuracy_per_value(results_, "distance"))
+    except Exception as e:
+        print(f"Error plotting results: {e}")
+
+    return plots
+
+
+def get_files_from_directory(directory_path):
+    files = []
+    for root, dirs, filenames in os.walk(directory_path):
+        for filename in filenames:
+            if filename.endswith(".npy") or filename.endswith(".png"):
+                files.append(os.path.join(root, filename))
+    return files
+
+
+def get_image_paths(images_dir, small, small_length):
+    images = get_files_from_directory(images_dir)
+    assert len(images) > 0, f"No videos found in {images_dir}."
+
+    if small:
         try:
-            wandb.log(
-                {
-                    "Training Image": wandb.Image(
-                        image,
-                        caption=f"True Label: {label}, Predicted Label: {predicted_label}",
-                    )
-                }
+            images = random.sample(images, small_length)
+        except ValueError:
+            print(
+                f"Not enough videos in {images_dir} to sample {small_length}."
+                f"Continuing with {len(images)}."
             )
-        except FileNotFoundError:
-            logger = logging.getLogger("training_log")
-            logger.warning(f"Could not log training image")
+
+    return images
 
 
-def plot_weber_fraction(results_df: pd.DataFrame) -> plt.Figure:
-    # Calculate the percentage of correct answers for each Weber ratio
-    results_df["yellow"] = results_df["Image"].apply(lambda x: x.split("_")[2])
-    results_df["blue"] = results_df["Image"].apply(lambda x: x.split("_")[3])
-    results_df["weber_ratio"] = results_df.apply(
-        lambda row: max(int(row["yellow"]), int(row["blue"]))
-        / min(int(row["yellow"]), int(row["blue"])),
-        axis=1,
+def synapses_to_matrix_and_dict(right_synapses):
+    # Unique root_ids in synapse_df (both pre and post)
+    neurons_synapse_pre = pd.unique(right_synapses["pre_root_id"])
+    neurons_synapse_post = pd.unique(right_synapses["post_root_id"])
+    all_neurons = np.unique(np.concatenate([neurons_synapse_pre, neurons_synapse_post]))
+
+    # Map neuron root_ids to matrix indices
+    root_id_to_index = {root_id: index for index, root_id in enumerate(all_neurons)}
+
+    # Convert root_ids in filtered_synapse_df to matrix indices
+    pre_indices = right_synapses["pre_root_id"].map(root_id_to_index).values
+    post_indices = right_synapses["post_root_id"].map(root_id_to_index).values
+
+    # Use syn_count as the data for the non-zero elements of the matrix
+    data = right_synapses["syn_count"].values
+
+    # Create the sparse matrix
+    matrix = coo_matrix(
+        (data, (pre_indices, post_indices)),
+        shape=(len(all_neurons), len(all_neurons)),
+        dtype=np.int64,
     )
-    correct_percentage = results_df.groupby("weber_ratio")["Is correct"].mean() * 100
-    # Plot
-    fig = plt.figure(figsize=(10, 6))
-    sns.barplot(x=correct_percentage.index, y=correct_percentage.values)
-    plt.xlabel("Weber Ratio")
-    plt.ylabel("Percentage of Correct Answers")
-    plt.xticks(rotation=45)
-    plt.tight_layout()
 
-    return fig
+    return matrix, root_id_to_index
 
 
-def print_run_details(
-    config_manager: ModelConfigManager,
-    debug: bool,
-    images_fraction: float,
-    continue_training: bool,
-) -> None:
-    logger = logging.getLogger("training_log")
-    config_manager.output_model_details()
-    if debug:
-        logger.warning("WARNING: Running on DEBUG mode, so using 10% of the images")
-    elif images_fraction < 1:
-        logger.warning(f"WARNING: Using {images_fraction * 100}% of the images")
-    if continue_training:
-        logger.warning("Warning: I'm training and already trained model")
-
-
-def handle_log_configs(debug: bool) -> logging.Logger:
-    logging.basicConfig(
-        filename="training_log.log",
-        level=logging.DEBUG if debug else logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-    )
-    logger = logging.getLogger("raining_log")
-    # In the sweeps, this gets called multiple times
-    if not len(logger.handlers):
-        logger.addHandler(logging.FileHandler("training_log.log"))
-        logger.addHandler(logging.StreamHandler())
-
-    return logger
-
-
-def preliminary_checks(
-    debug: bool,
-    continue_training: bool,
-    plot_weber: bool,
-    wb: bool,
-    dev: torch.device,
-    logger: logging.Logger,
-) -> None:
-    if debug and continue_training:
-        raise ValueError("Can't continue training in DEBUG mode")
-    if plot_weber and not wb:
-        raise ValueError("Can't log Weber fraction plot without wandb")
-    if dev.type == "cpu":
-        logger.warning("WARNING: Running on CPU, so it might be slow")
-
-
-def flush_cuda_memory():
-    import gc
-    import torch
-
-    torch.cuda.empty_cache()
-    gc.collect()
+def get_iteration_number(im_num, batch_size):
+    if config.debugging:
+        return config.debug_length
+    if config.small:
+        return config.small_length // batch_size
+    return im_num // batch_size

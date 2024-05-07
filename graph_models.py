@@ -1,9 +1,148 @@
 import torch
 from torch.nn import functional as F
 from torch.nn import Parameter, ParameterList, Module
-from torch_geometric.nn import GATConv, global_max_pool
+from torch_geometric.nn import GATConv, global_max_pool, MessagePassing
+from torch import nn
+from torch_scatter import scatter_mean, scatter_std
 
 DROPOUT = 0.0
+
+
+class TrainableEdgeConv(MessagePassing):
+    def __init__(self, input_shape, edge_weights, num_connectome_passes, batch_size, dtype, device):
+        super(TrainableEdgeConv, self).__init__(aggr="add")
+
+        self.num_passes = num_connectome_passes
+        self.num_nodes_per_graph = input_shape
+        self.batch_size = batch_size
+        # This allows us to have negative weights, as well as synapses comprised
+        #  of many weights, where some are positive and some negative, and the result
+        #  is edge_weight * edge_weight_multiplier
+        self.edge_weight = torch.tensor(edge_weights, dtype=dtype, device=device)
+        self.edge_weight_multiplier = Parameter(torch.Tensor(edge_weights.shape[0]).to(device))
+        nn.init.uniform_(self.edge_weight_multiplier, a=-0.1, b=0.1)
+
+    def forward(self, x, edge_index):
+        # Start propagating messages.
+        size = (x.size(0), x.size(0))
+
+        for _ in range(self.num_passes):
+            x = self.propagate(edge_index, size=size, x=x, edge_weight=self.edge_weight)
+            # we might want to normalize the output
+
+        return x
+
+    def message(self, x_j, edge_weight):
+        # Message: edge_weight (learnable) multiplied by node feature of the neighbor
+        # manual reshape to make sure that the multiplication is done correctly
+        x_j = x_j.view(self.batch_size, -1)
+        # multiply by the modulated edge weight
+        x_j = x_j * edge_weight * self.edge_weight_multiplier 
+        # reshape back
+        return x_j.view(-1, 1)
+
+    def update(self, aggr_out):
+        # Each node gets its updated feature as the sum of its neighbor contributions.
+        # sigmoid tries to emulate the biological process of the neuron, 
+        # where the signal is passed if the signal is strong enough, and then it's only 1
+        # aggr_out = aggr_out / aggr_out.abs().max()
+        # return torch.sigmoid(aggr_out)
+        return aggr_out
+
+    def reshape_and_normalize(self, x):
+        x = x.view(self.batch_size, self.num_nodes_per_graph, -1)
+        x = x / x.norm(dim=1, keepdim=True)
+        x = x.view(-1, x.size(2))
+        return x
+
+
+class FullGraphModel(nn.Module):
+
+    def __init__(
+        self,
+        input_shape,
+        num_connectome_passes,
+        decision_making_vector,
+        batch_size,
+        dtype,
+        edge_weights,
+        device,
+        num_features=1,
+        cell_type_indices=None,
+        retina_connection=True,
+    ):
+        super(FullGraphModel, self).__init__()
+        self.retina_connection = retina_connection
+        if retina_connection:
+            self.retina_connection = RetinaConnectionLayer(
+                cell_type_indices, batch_size, num_features=1, dtype=dtype
+            )
+        self.register_buffer("decision_making_vector", decision_making_vector)
+
+        self.connectome = TrainableEdgeConv(input_shape, edge_weights, num_connectome_passes, batch_size, dtype, device)
+
+        self.final_fc = nn.Linear(1, 1, dtype=dtype)
+        self.num_features = num_features
+        self.batch_size = batch_size
+
+    def forward(self, data):
+        x, edge_index, batch = data.x, data.edge_index, data.batch
+
+        if self.retina_connection:
+            # find the optimal connection between retina model and connectome
+            x = self.retina_connection(x)
+            x = self.normalize_non_zero(x, batch)
+
+        # pass through the connectome
+        x = self.connectome(x, edge_index)
+        # get final decision
+        x, batch = self.decision_making_mask(x, batch)
+        # x = self.normalize_non_zero(x, batch)
+        x = x.view(self.batch_size, -1, self.num_features)
+        # get the mean for each batch
+        x = torch.mean(x, dim=1, keepdim=True)
+        # note the '[0]' to get the median and not the indices
+        # x = torch.max(x, dim=1)[0]
+        # normalize to 0-1
+        # x = self.min_max_norm(x)
+
+        # final layer to get the correct magnitude
+        x = self.final_fc(x)
+        return F.relu(x).squeeze()
+
+    def decision_making_mask(self, x, batch):
+        x = x.view(self.batch_size, -1, self.num_features)
+        x = x[:, self.decision_making_vector == 1, :]
+
+        batch = batch.view(self.batch_size, -1)
+        batch = batch[:, self.decision_making_vector == 1]
+        return x.view(-1, self.num_features), batch.view(-1)
+
+    @staticmethod
+    def normalize_non_zero(x, batch, epsilon=1e-5):
+        # x has shape [batch_size * num_neurons, num_features]
+        # batch has shape [batch_size * num_neurons]
+        batch_size = batch.max().item() + 1
+        non_zero_mask = x != 0
+
+        non_zero_entries = x[non_zero_mask]
+        non_zero_batch = batch[non_zero_mask.squeeze()]
+
+        mean_per_batch = scatter_mean(non_zero_entries, non_zero_batch, dim=0, dim_size=batch_size)
+        std_per_batch = (
+            scatter_std(non_zero_entries, non_zero_batch, dim=0, dim_size=batch_size)
+            + epsilon
+        )
+
+        x[non_zero_mask] = (
+            non_zero_entries - mean_per_batch[non_zero_batch]
+        ) / std_per_batch[non_zero_batch]
+
+        return x
+
+    @staticmethod
+    def min_max_norm(x):
+        return (x - x.min()) / (x.max() - x.min())
 
 
 class GNNModel(torch.nn.Module):
@@ -32,7 +171,7 @@ class GNNModel(torch.nn.Module):
         self.final_activation = torch.nn.ReLU()
         self.norm = torch.nn.BatchNorm1d(num_node_features)
 
-        self.permutation_layer = CustomFullyConnectedLayer(
+        self.permutation_layer = RetinaConnectionLayer(
             cell_type_indices, batch_size, num_node_features
         )
         self.final_decision_layer = torch.nn.Linear(in_features=1, out_features=1)
@@ -81,19 +220,20 @@ class GNNModel(torch.nn.Module):
         return torch.where(mask, noise, x)
 
 
-class CustomFullyConnectedLayer(Module):
-    def __init__(self, cell_type_indices, batch_size, num_features=1):
+class RetinaConnectionLayer(Module):
+    def __init__(self, cell_type_indices, batch_size, num_features=1, dtype=torch.float):
         super().__init__()
         self.cell_type_indices = cell_type_indices
         # Dictionary: cell type -> count of neurons
         self.neuron_counts = self.get_neuron_counts(cell_type_indices)
         self.num_features = num_features
         self.batch_size = batch_size
+        self.dtype = dtype
 
         # Initialize weight matrices for each cell type based on neuron_counts
         self.weights = ParameterList(
             [
-                Parameter(torch.randn(batch_size, count, count, dtype=torch.float))
+                Parameter(torch.randn(batch_size, count, count, dtype=dtype))
                 for count in self.neuron_counts.values()
             ]
         )
@@ -111,7 +251,8 @@ class CustomFullyConnectedLayer(Module):
             # [num_neurons_for_selected_type]
             mask_indices = torch.tensor(
                 self.cell_type_indices[self.cell_type_indices == type_index].index,
-                dtype=torch.long,
+                dtype=torch.int32,
+                device=x.device,
             )
 
             if len(mask_indices) > 0:
@@ -127,7 +268,7 @@ class CustomFullyConnectedLayer(Module):
                 # [batch_size, num_neurons_for_selected_type, num_features]
                 output[:, mask_indices] = torch.matmul(
                     soft_weight, torch.index_select(x, 1, mask_indices)
-                ).to(output.dtype)
+                )
 
         # We need to return output in the same shape as the input x
         # [num_neurons * batch_size, num_features]
@@ -136,37 +277,3 @@ class CustomFullyConnectedLayer(Module):
     @staticmethod
     def get_neuron_counts(cell_type_indices):
         return dict(sorted(cell_type_indices.value_counts().to_dict().items()))
-
-
-# Probably deprecated
-class PermutationLayer(torch.nn.Module):
-    def __init__(self, max_indices, num_types):
-        super(PermutationLayer, self).__init__()
-        # Assuming max_indices is the maximum number of nodes for any cell type
-        self.max_indices = max_indices
-        self.num_types = num_types
-        # Initialize permutation indices for each cell type
-        self.permutations = Parameter(
-            torch.stack(
-                [torch.randperm(max_indices) for _ in range(num_types)]
-            ).float(),
-        )
-
-    def forward(self, x, cell_type_indices):
-        # cell_type_indices should be a vector indicating the cell type for each node in x
-        permuted_x = x.clone()
-        for type_index in range(self.num_types):
-            type_mask = cell_type_indices == type_index
-
-            if type_mask.any():
-                # Adjust perm_indices to only select as many as needed for this type
-                actual_num_nodes = type_mask.sum().item()
-                perm_indices = self.permutations[type_index][:actual_num_nodes]
-
-                # We gather the nodes of this cell type, then apply the perm_indices
-                permuted_nodes = x[type_mask][perm_indices.long()]
-
-                # Reassign permuted nodes back
-                permuted_x[type_mask] = permuted_nodes
-
-        return permuted_x

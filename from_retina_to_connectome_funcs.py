@@ -1,19 +1,16 @@
 import numpy as np
 import pandas as pd
-import torch
-from scipy.sparse import coo_matrix, load_npz
-from torch_geometric.data import Data, Batch
+from scipy.sparse import coo_matrix
 
 from retina_to_connectome_funcs import (
     get_activation_tensor,
     get_batch_voronoi_averages,
     voronoi_averages_to_df,
-    get_synapse_df,
 )
 
 
 def compute_voronoi_averages(
-    activations, classification, decoding_cells, last_good_frame=8
+    activations, classification, decoding_cells, last_good_frame, normalize=True
 ):
     """
     Calculate Voronoi averages for each cell type in the classification.
@@ -31,14 +28,20 @@ def compute_voronoi_averages(
             averages_dict[cell_type] = get_batch_voronoi_averages(
                 activation_tensor, n_centers=number_of_cells
             )
-    return voronoi_averages_to_df(averages_dict)
+
+    voronoi_df = voronoi_averages_to_df(averages_dict)
+    if normalize:
+        values_cols = voronoi_df.columns != "index_name"
+        voronoi_df.loc[:, values_cols] = voronoi_df.loc[
+            :, values_cols
+        ].apply(lambda x: (x - x.min()) / (x.max() - x.min()), axis=0)
+    return voronoi_df
 
 
-def get_synaptic_matrix(activation_df):
+# synapse_df = get_synapse_df()
+def get_synaptic_matrix(activation_df, synapse_df):
 
     # not in use unless we have to recreate it, since it's now saved in an external file
-
-    synapse_df = get_synapse_df()
 
     # Step 1: Identify Common Neurons
     # Unique root_ids in merged_df
@@ -123,45 +126,6 @@ def from_retina_to_connectome(voronoi_averages_df, classification, root_id_to_in
     )
 
 
-def from_connectome_to_model(activation_df_, labels_):
-    synaptic_matrix = load_npz("adult_data/synaptic_matrix_sparse.npz")
-    edges = torch.tensor(
-        np.array([synaptic_matrix.row, synaptic_matrix.col]),
-        dtype=torch.long,
-    )
-    activation_tensor = torch.tensor(activation_df_.values, dtype=torch.float16)
-    graph_list_ = []
-    for i in range(activation_tensor.shape[1]):
-        # Shape [num_nodes, 1], one feature per node
-        node_features = activation_tensor[:, i].unsqueeze(1)
-        graph = Data(x=node_features, edge_index=edges, y=labels_[i])
-        graph_list_.append(graph)
-
-    return graph_list_
-
-
-def from_retina_to_model(
-    activations,
-    labels,
-    decoding_cells,
-    last_good_frame,
-    classification,
-    root_id_to_index,
-):
-
-    voronoi_averages_df = compute_voronoi_averages(
-        activations, classification, decoding_cells, last_good_frame=last_good_frame
-    )
-    activation_df = from_retina_to_connectome(
-        voronoi_averages_df, classification, root_id_to_index
-    )
-    graph_list = from_connectome_to_model(activation_df, labels)
-    return (
-        Batch.from_data_list(graph_list),
-        torch.Tensor(labels),
-    )
-
-
 def get_cell_type_indices(classification, root_id_to_index, decoding_cells):
     # Merge classification with root_id_to_index to associate each index_id with a cell_type
     merged_df = root_id_to_index.merge(classification, on="root_id", how="left")
@@ -179,5 +143,3 @@ def get_cell_type_indices(classification, root_id_to_index, decoding_cells):
 
     # Return a series with one column indicating the cell type index for each node
     return merged_df["cell_type_index"]
-
-

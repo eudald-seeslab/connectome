@@ -31,7 +31,7 @@ def plot_weber_fraction(results_df: pd.DataFrame) -> plt.Figure:
 def plot_accuracy_per_value(df, value):
     if value == "radius":
         split = 1
-    elif value == "dist":
+    elif value == "distance":
         split = 2
     else:
         raise ValueError("Value must be 'radius' or 'distance'")
@@ -39,9 +39,9 @@ def plot_accuracy_per_value(df, value):
     df[value] = df["Image"].apply(lambda x: os.path.basename(x).split("_")[split])
     df["per_correct"] = df.groupby(value)["Is correct"].transform("mean")
     plt.figure()
-    ax = sns.scatterplot(data=df, x="value", y="per_correct")
-    xticks = ax.axis.get_major_ticks()
-    for i in range(xticks):
+    ax = sns.scatterplot(data=df, x=value, y="per_correct")
+    xticks = ax.xaxis.get_major_ticks()
+    for i in range(len(xticks)):
         if i % 4 != 0:
             xticks[i].set_visible(False)
 

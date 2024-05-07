@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 GENERAL_CONFIG = {
     # so that we can create more images without the names clashing with the previous
-    "version_tag": None,
+    "version_tag": "",
     "colour_1": "yellow",
     "colour_2": "blue",
     "boundary_width": 5,
@@ -25,7 +25,7 @@ GENERAL_CONFIG = {
     "mode": "RGB",
     # these are per colour
     "min_point_num": 1,
-    "max_point_num": 3,
+    "max_point_num": 2,
     "attempts_limit": 200,
 }
 
@@ -150,7 +150,7 @@ def get_config():
         description="Generate images based on number point configurations."
     )
     parser.add_argument(
-        "--image_set_num",
+        "--img_set_num",
         type=int,
         default=100,
         help="Number of image sets to generate.",
@@ -168,7 +168,7 @@ def get_config():
 
     config = GENERAL_CONFIG | {
         "EASY": args.easy,
-        "IMAGE_SET_NUM": args.image_set_num,
+        "IMAGE_SET_NUM": args.img_set_num,
         "IMG_DIR": args.img_dir,
     }
     return config

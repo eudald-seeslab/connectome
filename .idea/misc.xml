@@ -6,7 +6,7 @@
     <option name="pathToExecutable" value="/usr/local/bin/black" />
     <option name="sdkName" value="Python 3.10 (connectome) (2)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10 (connectome) (2)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10 (connectome)" project-jdk-type="Python SDK" />
   <component name="PythonCompatibilityInspectionAdvertiser">
     <option name="version" value="3" />
   </component>

@@ -4,6 +4,7 @@ import torch
 from torch.nn import BCEWithLogitsLoss
 from tqdm import tqdm
 
+from adult_models_helpers import EarlyStopping, TrainingError
 import config
 from utils import get_image_paths, get_iteration_number, plot_results
 from complete_training_data_processing import CompleteModelsDataProcessor
@@ -51,11 +52,12 @@ def main(wandb_logger):
     # train
     model.train()
     results = initialize_results_df()
-    running_loss, total_correct, total = 0, 0, 0
 
     iterations = get_iteration_number(len(training_images), config.batch_size)
     for ep in range(config.num_epochs):
+        
         already_selected = []
+        running_loss, total_correct, total = 0, 0, 0
         for i in tqdm(range(iterations)):
             batch_files, already_selected = select_random_images(
                 training_images, config.batch_size, already_selected
@@ -64,14 +66,15 @@ def main(wandb_logger):
             data_processor.create_voronoi_cells()
             images, labels = data_processor.get_data_from_paths(batch_files)
             wandb_logger.log_original(images[0], batch_files[0], i)
-            
+
             inputs, labels = data_processor.process_batch(images, labels)
 
             optimizer.zero_grad()
-            out = model(inputs)
-            loss = criterion(out, labels)
-            loss.backward()
-            optimizer.step()
+            with torch.autocast(config.device_type):
+                out = model(inputs)
+                loss = criterion(out, labels)
+                loss.backward()
+                optimizer.step()
 
             # Calculate run parameters
             outputs, predictions, labels_cpu, correct = clean_model_outputs(out, labels)
@@ -82,7 +85,7 @@ def main(wandb_logger):
             total += config.batch_size
             total_correct += correct.sum()
 
-            wandb_logger.log_metrics(i, running_loss, total_correct, total, results)
+            wandb_logger.log_metrics(ep, i, running_loss, total_correct, total, results)
 
         print(
             f"""Finished epoch {ep + 1} with loss {running_loss / total} 
@@ -104,7 +107,8 @@ def main(wandb_logger):
         batch_files, already_selected_testing = select_random_images(
             testing_images, config.batch_size, already_selected_testing
         )
-        inputs, labels = data_processor.process_batch(batch_files)
+        images, labels = data_processor.get_data_from_paths(batch_files)
+        inputs, labels = data_processor.process_batch(images, labels)
         inputs = inputs.to(config.DEVICE)
 
         out = model(inputs)

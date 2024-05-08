@@ -4,7 +4,7 @@ import torch
 from torch.nn import BCEWithLogitsLoss
 from tqdm import tqdm
 
-from adult_models_helpers import EarlyStopping, TrainingError
+from adult_models_helpers import TrainingError
 import config
 from utils import get_image_paths, get_iteration_number, plot_results
 from complete_training_data_processing import CompleteModelsDataProcessor
@@ -86,7 +86,11 @@ def main(wandb_logger):
             total_correct += correct.sum()
 
             wandb_logger.log_metrics(ep, i, running_loss, total_correct, total, results)
-
+            if i == 0:
+                first_loss = running_loss
+            if i == 100 and running_loss == first_loss:
+                raise TrainingError("Loss is constant. Training will stop.")
+            
         print(
             f"""Finished epoch {ep + 1} with loss {running_loss / total} 
             and accuracy {total_correct / total}"""

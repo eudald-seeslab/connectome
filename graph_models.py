@@ -101,14 +101,9 @@ class FullGraphModel(nn.Module):
         x = x.view(self.batch_size, -1, self.num_features)
         # get the mean for each batch
         x = torch.mean(x, dim=1, keepdim=True)
-        # note the '[0]' to get the median and not the indices
-        # x = torch.max(x, dim=1)[0]
-        # normalize to 0-1
-        # x = self.min_max_norm(x)
 
         # final layer to get the correct magnitude
-        x = self.final_fc(x)
-        return F.relu(x).squeeze()
+        return self.final_fc(x).squeeze()
 
     def decision_making_mask(self, x, batch):
         x = x.view(self.batch_size, -1, self.num_features)

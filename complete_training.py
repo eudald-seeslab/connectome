@@ -92,8 +92,8 @@ def main(wandb_logger):
                 raise TrainingError("Loss is constant. Training will stop.")
             
         print(
-            f"""Finished epoch {ep + 1} with loss {running_loss / total} 
-            and accuracy {total_correct / total}"""
+            f"Finished epoch {ep + 1} with loss {running_loss / total} "
+            f"and accuracy {total_correct / total}."
         )
         torch.cuda.empty_cache()
 
@@ -107,7 +107,7 @@ def main(wandb_logger):
 
     model.eval()
     iterations = get_iteration_number(len(testing_images), config.batch_size)
-    for j in tqdm(range(iterations)):
+    for _ in tqdm(range(iterations)):
         batch_files, already_selected_testing = select_random_images(
             testing_images, config.batch_size, already_selected_testing
         )
@@ -133,8 +133,8 @@ def main(wandb_logger):
     )
 
     print(
-        f"""Finished testign with loss {running_loss / total} and 
-        accuracy {total_correct / total}"""
+        f"Finished testing with loss {running_loss / total} and "
+        f"accuracy {total_correct / total}."
     )
 
 

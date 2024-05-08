@@ -18,11 +18,11 @@ def plot_results(results_, plot_types):
     try:
         for plot_type in plot_types:
             if plot_type == "weber":
-                plots.append([plot_weber_fraction(results_)])
+                plots.append([plot_weber_fraction(results_.copy())])
             elif plot_type == "radius":
-                plots.append(plot_accuracy_per_value(results_, "radius"))
+                plots.append(plot_accuracy_per_value(results_.copy(), "radius"))
             elif plot_type == "distance":
-                plots.append(plot_accuracy_per_value(results_, "distance"))
+                plots.append(plot_accuracy_per_value(results_.copy(), "distance"))
     except Exception as e:
         print(f"Error plotting results: {e}")
 
@@ -33,14 +33,14 @@ def get_files_from_directory(directory_path):
     files = []
     for root, dirs, filenames in os.walk(directory_path):
         for filename in filenames:
-            if filename.endswith(".npy") or filename.endswith(".png"):
+            if filename.endswith((".npy", ".png", ".jpg", ".jpeg")):
                 files.append(os.path.join(root, filename))
     return files
 
 
 def get_image_paths(images_dir, small, small_length):
     images = get_files_from_directory(images_dir)
-    assert len(images) > 0, f"No videos found in {images_dir}."
+    assert len(images) > 0, f"No images found in {images_dir}."
 
     if small:
         try:

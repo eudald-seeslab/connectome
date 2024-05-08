@@ -37,6 +37,7 @@ def plot_accuracy_per_value(df, value):
         raise ValueError("Value must be 'radius' or 'distance'")
 
     df[value] = df["Image"].apply(lambda x: os.path.basename(x).split("_")[split])
+    df[value] = df[value].astype(int)
     df["per_correct"] = df.groupby(value)["Is correct"].transform("mean")
     plt.figure()
     ax = sns.scatterplot(data=df, x=value, y="per_correct")

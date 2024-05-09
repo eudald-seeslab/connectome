@@ -97,10 +97,11 @@ class FullGraphModel(nn.Module):
         x = self.connectome(x, edge_index)
         # get final decision
         x, batch = self.decision_making_mask(x, batch)
-        # x = self.normalize_non_zero(x, batch)
         x = x.view(self.batch_size, -1, self.num_features)
         # get the mean for each batch
         x = torch.mean(x, dim=1, keepdim=True)
+        # normalize per batch
+        x = x / x.norm()
 
         # final layer to get the correct magnitude
         return self.final_fc(x).squeeze()

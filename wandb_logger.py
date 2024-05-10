@@ -1,0 +1,88 @@
+import os
+import numpy as np
+import wandb
+from wandb import AlertLevel
+import config
+from deprecated.from_retina_to_connectome_utils import hex_to_square_grid
+
+
+MODEL_CONFIG = {
+    "debugging": config.debugging,
+    "num_epochs": config.num_epochs,
+    "batch_size": config.batch_size,
+    "dropout": config.dropout,
+    "base_lr": config.base_lr,
+    "weight_decay": config.weight_decay,
+    "num_connectome_passes": config.NUM_CONNECTOME_PASSES,
+}
+
+
+class WandBLogger:
+    def __init__(self, project_name):
+        self.project_name = project_name
+        self.model_config = MODEL_CONFIG
+        self.enabled = config.wandb_
+        self.log_images_every = config.wandb_images_every
+        self.initialized = False
+
+    def initialize(self):
+        if self.enabled and not self.initialized:
+            wandb.init(project=self.project_name, config=self.model_config)
+            self.initialized = True
+
+    def log_metrics(self, epoch, iteration, running_loss, total_correct, total):
+        if self.enabled:
+            try:
+                wandb.log(
+                {
+                    "epoch": epoch,
+                    "iteration": iteration + 1,
+                    "loss": running_loss / total,
+                    "accuracy": total_correct / total,
+                }
+            )
+            except Exception as e:
+                print(f"Error logging running stats to wandb: {e}. Continuing...")
+
+    def log_image(self, vals, name, title):
+        if self.enabled:
+            wandb.log(
+                {
+                    f"{title} image": wandb.Image(
+                        vals, caption=f"{title} image {name}"
+                    ),
+                }
+            )
+
+    def log_dataframe(self, df, title):
+        if self.enabled:
+            wandb.log({title: wandb.Table(dataframe=df)})
+
+    def log_validation_stats(
+        self, running_loss_, total_correct_, total_, results_, plots
+    ):
+        if len(plots) > 0:
+            plot_dict = {f"Plot {i}": wandb.Image(plot) for i, plot in enumerate(plots)}
+        else:
+            plot_dict = {}
+        if self.enabled:
+            wandb.log(
+                {
+                    "Validation loss": running_loss_ / total_,
+                    "Validation accuracy": total_correct_ / total_,
+                    "Validation results": wandb.Table(dataframe=results_),
+                }
+                | plot_dict
+            )
+
+    def send_crash(self, message):
+        if self.enabled:
+            wandb.alert(
+                title=f"Error in run at {self.project_name}", 
+                text=message,
+                level=AlertLevel.ERROR
+                )
+
+    def finish(self):
+        if self.enabled:
+            wandb.finish()

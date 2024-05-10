@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import sys
 from scipy.sparse import coo_matrix
+import torch
 import config
 from plots import plot_accuracy_per_value, plot_weber_fraction
 

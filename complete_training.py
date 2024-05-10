@@ -1,3 +1,4 @@
+from os.path import basename
 import traceback
 import warnings
 import torch
@@ -21,7 +22,7 @@ from utils import (
     clean_model_outputs,
 )
 
-from wandb_utils import WandBLogger
+from wandb_logger import WandBLogger
 
 warnings.filterwarnings(
     "ignore",
@@ -69,7 +70,11 @@ def main(wandb_logger):
             # create voronoi cells each batch so they are different
             data_processor.create_voronoi_cells()
             images, labels = data_processor.get_data_from_paths(batch_files)
-            wandb_logger.log_original(images[0], batch_files[0], i)
+            if i % config.wandb_images_every == 0:
+                p1 = data_processor.plot_voronoi_cells_with_image(images[0])
+                wandb_logger.log_image(p1, basename(batch_files[0]), "Original")
+                p2 = data_processor.plot_voronoi_cells_with_neurons()
+                wandb_logger.log_image(p2, "Voronoi cells", "Voronoi")
 
             inputs, labels = data_processor.process_batch(images, labels)
 
@@ -89,12 +94,13 @@ def main(wandb_logger):
             total += config.batch_size
             total_correct += correct.sum()
 
-            wandb_logger.log_metrics(ep, i, running_loss, total_correct, total, results)
+            wandb_logger.log_metrics(ep, i, running_loss, total_correct, total)
             if i == 0:
                 first_loss = running_loss
             if i == 100 and running_loss == first_loss:
                 raise TrainingError("Loss is constant. Training will stop.")
 
+        wandb_logger.log_dataframe(results, "Training results")
         print(
             f"Finished epoch {ep + 1} with loss {running_loss / total} "
             f"and accuracy {total_correct / total}."

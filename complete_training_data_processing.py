@@ -2,11 +2,10 @@ import numpy as np
 import pandas as pd
 import torch
 from complete_training_funcs import (
-    assign_cell_type,
+    VoronoiCells,
     get_neuron_activations,
     get_side_decision_making_vector,
     get_voronoi_averages,
-    get_voronoi_cells,
     import_images,
     process_images,
 )
@@ -20,11 +19,8 @@ class CompleteModelsDataProcessor:
 
     tesselated_df = None
 
-    def __init__(self, wandb_logger, log_transform_weights=False):
+    def __init__(self, log_transform_weights=False):
         # get data
-        self.right_visual_neurons_df = pd.read_csv(
-            "adult_data/right_visual_neurons_positions.csv"
-        ).drop(columns=["x"])
         self.right_root_ids = pd.read_csv("adult_data/root_id_to_index.csv")
         self.synaptic_matrix = load_npz("adult_data/good_synaptic_matrix.npz")
         if log_transform_weights:
@@ -32,23 +28,15 @@ class CompleteModelsDataProcessor:
         self.decision_making_vector = get_side_decision_making_vector(
             self.right_root_ids, "right"
         )
-        self.wandb_logger = wandb_logger
 
     @property
     def number_of_synapses(self):
         return self.synaptic_matrix.shape[0]
 
     def create_voronoi_cells(self):
-        neuron_indices, voronoi_indices = get_voronoi_cells(
-            self.right_visual_neurons_df
-        )
-        self.tesselated_df = self.right_visual_neurons_df.copy()
-        self.tesselated_df["voronoi_indices"] = neuron_indices
-        self.tesselated_df["cell_type"] = self.tesselated_df.apply(
-            assign_cell_type, axis=1
-        )
-        self.tesselated_df = self.tesselated_df.drop(columns=["y", "z"])
-        self.voronoi_indices = voronoi_indices
+        self.voronoi_cells = VoronoiCells(voronoi_criteria=config.voronoi_criteria)
+        self.tesselated_df = self.voronoi_cells.get_tesselated_neurons()
+        self.voronoi_indices = self.voronoi_cells.get_image_indices()
 
     @staticmethod
     def get_data_from_paths(paths):
@@ -56,8 +44,8 @@ class CompleteModelsDataProcessor:
         labels = paths_to_labels(paths)
         return imgs, labels
 
-    # FIXME: this needs a lot of cleaning
     def process_batch(self, imgs, labels):
+        # FIXME: this needs a lot of cleaning
 
         processed_imgs = process_images(imgs, self.voronoi_indices)
         voronoi_averages = get_voronoi_averages(processed_imgs)
@@ -73,6 +61,8 @@ class CompleteModelsDataProcessor:
             .set_index("index_id")
             .drop(columns=["root_id"])
         )
+        # Check that all neurons have been activated
+        assert activation_df[activation_df.iloc[:, 0] > 0].shape[0] == self.tesselated_df.shape[0]
         edges = torch.tensor(
             np.array([self.synaptic_matrix.row, self.synaptic_matrix.col]),
             dtype=torch.int64,  # do not touch
@@ -96,3 +86,9 @@ class CompleteModelsDataProcessor:
         labels = torch.tensor(labels, dtype=config.dtype).to(config.DEVICE)
 
         return inputs, labels
+
+    def plot_voronoi_cells_with_neurons(self):
+        return self.voronoi_cells.plot_voronoi_cells_with_neurons(self.tesselated_df)
+
+    def plot_voronoi_cells_with_image(self, img):
+        return self.voronoi_cells.plot_voronoi_cells_with_image(img)

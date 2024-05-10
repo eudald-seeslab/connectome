@@ -86,3 +86,78 @@ def get_iteration_number(im_num, batch_size):
     if config.small:
         return config.small_length // batch_size
     return im_num // batch_size
+
+
+def get_label(name):
+    x = os.path.basename(os.path.dirname(name))
+    if x == "yellow":
+        return 1
+    if x == "blue":
+        return 0
+    raise ValueError(f"Unexpected directory label {x}")
+
+
+def paths_to_labels(paths):
+    return [get_label(a) for a in paths]
+
+
+def select_random_images(all_files, batch_size, already_selected):
+    # Filter out files that have already been selected
+    remaining_files = [f for f in all_files if f not in already_selected]
+
+    # Select batch_size random videos from the remaining files
+    selected_files = random.sample(
+        remaining_files, min(batch_size, len(remaining_files))
+    )
+
+    # Update the already_selected list
+    already_selected.extend(selected_files)
+
+    return selected_files, already_selected
+
+
+def compute_accuracy(probabilities, labels):
+
+    # Convert probabilities to binary predictions
+    predictions = (probabilities > 0.5).float()
+
+    # Calculate accuracy
+    return np.where(predictions == labels, 1, 0).float().mean()
+
+
+def update_running_loss(loss_, inputs_):
+    return loss_.item() * inputs_.size(0)
+
+
+def update_results_df(
+    results_, batch_files_, outputs_, predictions_, batch_labels_, correct_
+):
+    return pd.concat(
+        [
+            results_,
+            pd.DataFrame(
+                {
+                    "Image": batch_files_,
+                    "Model outputs": outputs_,
+                    "Prediction": predictions_,
+                    "True label": batch_labels_,
+                    "Is correct": correct_,
+                }
+            ),
+        ]
+    )
+
+
+def initialize_results_df():
+    return pd.DataFrame(
+        columns=["Image", "Model outputs", "Prediction", "True label", "Is correct"]
+    )
+
+
+def clean_model_outputs(outputs_, batch_labels_):
+    outputs_ = torch.sigmoid(outputs_.squeeze().detach().cpu().float())
+    predictions_ = torch.round(outputs_).numpy()
+    batch_labels_cpu = batch_labels_.detach().cpu().float().numpy()
+    correct_ = np.where(predictions_ == batch_labels_cpu, 1, 0)
+
+    return outputs_.numpy(), predictions_, batch_labels_cpu, correct_

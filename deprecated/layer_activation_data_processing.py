@@ -1,10 +1,10 @@
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 from flyvision.utils.activity_utils import LayerActivity
-from flyvision_ans import DECODING_CELLS
-from from_image_to_video import image_paths_to_sequences
-from from_retina_to_connectome_utils import layer_activations_to_decoding_images
-from from_video_to_training_batched_funcs import paths_to_labels, select_random_videos
+from deprecated.flyvision_ans import DECODING_CELLS
+from deprecated.from_image_to_video import image_paths_to_sequences
+from deprecated.from_retina_to_connectome_utils import layer_activations_to_decoding_images
+from deprecated.from_video_to_training_batched_funcs import paths_to_labels, select_random_videos
 
 
 LAST_GOOD_FRAME = 2

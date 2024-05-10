@@ -5,17 +5,19 @@ from torch.nn import BCEWithLogitsLoss
 from tqdm import tqdm
 
 import config
-from from_retina_to_connectome_utils import (
+from deprecated.from_retina_to_connectome_utils import (
     get_decision_making_neurons,
-    initialize_results_df,
-    clean_model_outputs,
-    select_random_images,
-    update_results_df,
-    update_running_loss,
 )
 from full_training_data_processing import FullModelsDataProcessor
 from graph_models import FullGraphModel
 from plots import plot_weber_fraction
+from utils import (
+    clean_model_outputs,
+    initialize_results_df,
+    select_random_images,
+    update_results_df,
+    update_running_loss,
+)
 from wandb_utils import WandBLogger
 
 warnings.filterwarnings(

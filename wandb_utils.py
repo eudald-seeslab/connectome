@@ -3,7 +3,7 @@ import numpy as np
 import wandb
 from wandb import AlertLevel
 import config
-from from_retina_to_connectome_utils import hex_to_square_grid
+from deprecated.from_retina_to_connectome_utils import hex_to_square_grid
 
 
 MODEL_CONFIG = {

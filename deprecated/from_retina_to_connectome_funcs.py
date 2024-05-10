@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import coo_matrix
 
-from retina_to_connectome_funcs import (
+from deprecated.retina_to_connectome_funcs import (
     get_activation_tensor,
     get_batch_voronoi_averages,
     voronoi_averages_to_df,

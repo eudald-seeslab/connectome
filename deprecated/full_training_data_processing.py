@@ -9,16 +9,15 @@ from torch_geometric.data import Data, Batch
 import config
 import flyvision
 from flyvision.utils.activity_utils import LayerActivity
-from from_image_to_video import image_paths_to_sequences
-from from_retina_to_connectome_funcs import (
+from deprecated.from_image_to_video import image_paths_to_sequences
+from deprecated.from_retina_to_connectome_funcs import (
     compute_voronoi_averages,
     from_retina_to_connectome,
 )
-from from_retina_to_connectome_utils import (
-    paths_to_labels,
+from deprecated.from_retina_to_connectome_utils import (
     vector_to_one_hot,
 )
-from utils import get_image_paths
+from utils import get_image_paths, paths_to_labels
 
 
 class FullModelsDataProcessor:

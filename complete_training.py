@@ -6,15 +6,19 @@ from tqdm import tqdm
 
 from adult_models_helpers import TrainingError
 import config
-from utils import get_image_paths, get_iteration_number, plot_results
-from complete_training_data_processing import CompleteModelsDataProcessor
-from graph_models import FullGraphModel
-from from_retina_to_connectome_utils import (
-    select_random_images,
+from utils import (
+    get_image_paths,
+    get_iteration_number,
     initialize_results_df,
-    clean_model_outputs,
+    plot_results,
+    select_random_images,
     update_results_df,
     update_running_loss,
+)
+from complete_training_data_processing import CompleteModelsDataProcessor
+from graph_models import FullGraphModel
+from utils import (
+    clean_model_outputs,
 )
 
 from wandb_utils import WandBLogger
@@ -33,7 +37,7 @@ def main(wandb_logger):
     # get data and prepare model
     training_images = get_image_paths(
         config.TRAINING_DATA_DIR, config.small, config.small_length
-        )
+    )
     data_processor = CompleteModelsDataProcessor(config.log_transform_weights)
 
     model = FullGraphModel(
@@ -55,7 +59,7 @@ def main(wandb_logger):
 
     iterations = get_iteration_number(len(training_images), config.batch_size)
     for ep in range(config.num_epochs):
-        
+
         already_selected = []
         running_loss, total_correct, total = 0, 0, 0
         for i in tqdm(range(iterations)):
@@ -90,7 +94,7 @@ def main(wandb_logger):
                 first_loss = running_loss
             if i == 100 and running_loss == first_loss:
                 raise TrainingError("Loss is constant. Training will stop.")
-            
+
         print(
             f"Finished epoch {ep + 1} with loss {running_loss / total} "
             f"and accuracy {total_correct / total}."

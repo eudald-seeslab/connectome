@@ -1,8 +1,16 @@
 import numpy as np
 import pandas as pd
 import torch
-from complete_training_funcs import assign_cell_type, get_neuron_activations, get_side_decision_making_vector, get_voronoi_averages, get_voronoi_cells, import_images, process_images
-from from_retina_to_connectome_utils import paths_to_labels
+from complete_training_funcs import (
+    assign_cell_type,
+    get_neuron_activations,
+    get_side_decision_making_vector,
+    get_voronoi_averages,
+    get_voronoi_cells,
+    import_images,
+    process_images,
+)
+from utils import paths_to_labels
 import config
 from scipy.sparse import load_npz
 from torch_geometric.data import Data, Batch
@@ -15,9 +23,8 @@ class CompleteModelsDataProcessor:
     def __init__(self, wandb_logger, log_transform_weights=False):
         # get data
         self.right_visual_neurons_df = pd.read_csv(
-            "adult_data/right_visual_neurons_positions.csv").drop(
-            columns=["x"]
-        )
+            "adult_data/right_visual_neurons_positions.csv"
+        ).drop(columns=["x"])
         self.right_root_ids = pd.read_csv("adult_data/root_id_to_index.csv")
         self.synaptic_matrix = load_npz("adult_data/good_synaptic_matrix.npz")
         if log_transform_weights:
@@ -32,7 +39,9 @@ class CompleteModelsDataProcessor:
         return self.synaptic_matrix.shape[0]
 
     def create_voronoi_cells(self):
-        neuron_indices, voronoi_indices = get_voronoi_cells(self.right_visual_neurons_df)
+        neuron_indices, voronoi_indices = get_voronoi_cells(
+            self.right_visual_neurons_df
+        )
         self.tesselated_df = self.right_visual_neurons_df.copy()
         self.tesselated_df["voronoi_indices"] = neuron_indices
         self.tesselated_df["cell_type"] = self.tesselated_df.apply(
@@ -46,7 +55,7 @@ class CompleteModelsDataProcessor:
         imgs = import_images(paths)
         labels = paths_to_labels(paths)
         return imgs, labels
-    
+
     # FIXME: this needs a lot of cleaning
     def process_batch(self, imgs, labels):
 
@@ -66,7 +75,7 @@ class CompleteModelsDataProcessor:
         )
         edges = torch.tensor(
             np.array([self.synaptic_matrix.row, self.synaptic_matrix.col]),
-            dtype=torch.int64, # do not touch
+            dtype=torch.int64,  # do not touch
         )
         weights = torch.tensor(self.synaptic_matrix.data, dtype=config.dtype)
         activation_tensor = torch.tensor(activation_df.values, dtype=config.dtype)

@@ -5,7 +5,7 @@ import cv2
 import torch
 from tqdm import tqdm
 
-from flyvision_ans import (
+from deprecated.flyvision_ans import (
     DECODING_CELLS,
     SerializedResponseProcessor,
 )

@@ -6,14 +6,16 @@ from torch.nn import BCEWithLogitsLoss
 from tqdm import tqdm
 
 import config
-from from_retina_to_connectome_utils import select_random_images
-from from_retina_to_connectome_utils import (
+from utils import (
     initialize_results_df,
-    clean_model_outputs,
+    select_random_images,
     update_results_df,
     update_running_loss,
 )
-from adult_models import FullAdultModel
+from utils import (
+    clean_model_outputs,
+)
+from deprecated.adult_models import FullAdultModel
 from wandb_utils import WandBLogger
 from full_training_data_processing import FullModelsDataProcessor
 

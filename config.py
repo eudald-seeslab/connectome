@@ -14,8 +14,9 @@ TESTING_DATA_DIR = "images/arthropods/test"
 VALIDATION_DATA_DIR = "images/big_pointsval"
 
 # Neural data
-neurons = "all" # or "selected"
+neurons = "selected" # or "selected"
 voronoi_criteria = "all" # or R7
+random_synapses = False
 
 # Data
 SHAPE = "square"
@@ -41,7 +42,6 @@ dropout = 0.1
 base_lr = 0.00005
 weight_decay = 0.0001
 NUM_CONNECTOME_PASSES = 5
-normalize_voronoi_cells = True
 log_transform_weights = False
 plot_types = []  # "radius", "distance" or "weber"
 
@@ -51,5 +51,5 @@ sparse_layout = torch.sparse_coo
 
 # small checks so that i don't screw up
 wandb_ = False if debugger_is_active() else wandb_
-# wandb_ = False if debugging else wandb_
+wandb_ = False if debugging else wandb_
 validation_length = validation_length if small else None

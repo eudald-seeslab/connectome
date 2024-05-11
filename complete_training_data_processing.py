@@ -11,7 +11,7 @@ from complete_training_funcs import (
 )
 from utils import paths_to_labels
 import config
-from scipy.sparse import load_npz
+from scipy.sparse import coo_matrix, load_npz
 from torch_geometric.data import Data, Batch
 
 
@@ -25,6 +25,9 @@ class CompleteModelsDataProcessor:
         self.synaptic_matrix = load_npz("adult_data/good_synaptic_matrix.npz")
         if log_transform_weights:
             self.synaptic_matrix.data = np.log1p(self.synaptic_matrix.data)
+        if config.random_synapses:
+            self.synaptic_matrix = self.shuffle_synaptic_matrix(self.synaptic_matrix)
+        
         self.decision_making_vector = get_side_decision_making_vector(
             self.right_root_ids, "right"
         )
@@ -92,3 +95,12 @@ class CompleteModelsDataProcessor:
 
     def plot_voronoi_cells_with_image(self, img):
         return self.voronoi_cells.plot_voronoi_cells_with_image(img)
+
+    @staticmethod
+    def shuffle_synaptic_matrix(synaptic_matrix):
+        shuffled_col = np.random.permutation(synaptic_matrix.col)
+        return coo_matrix(
+            (synaptic_matrix.data, 
+            (synaptic_matrix.row, shuffled_col)), 
+            shape=synaptic_matrix.shape
+        ).coalesce()

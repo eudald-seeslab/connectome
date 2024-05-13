@@ -68,15 +68,8 @@ class FullGraphModel(nn.Module):
         edge_weights,
         device,
         num_features=1,
-        cell_type_indices=None,
-        retina_connection=True,
     ):
         super(FullGraphModel, self).__init__()
-        self.retina_connection = retina_connection
-        if retina_connection:
-            self.retina_connection = RetinaConnectionLayer(
-                cell_type_indices, batch_size, num_features=1, dtype=dtype
-            )
         self.register_buffer("decision_making_vector", decision_making_vector)
 
         self.connectome = TrainableEdgeConv(input_shape, edge_weights, num_connectome_passes, batch_size, dtype, device)
@@ -87,11 +80,6 @@ class FullGraphModel(nn.Module):
 
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
-
-        if self.retina_connection:
-            # find the optimal connection between retina model and connectome
-            x = self.retina_connection(x)
-            x = self.normalize_non_zero(x, batch)
 
         # pass through the connectome
         x = self.connectome(x, edge_index)

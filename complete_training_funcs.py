@@ -22,7 +22,8 @@ class VoronoiCells:
     data_cols = ["x_axis", "y_axis"]
     centers = None
 
-    def __init__(self, voronoi_criteria="all"):
+    def __init__(self, neurons="all", voronoi_criteria="all"):
+        self.neurons = neurons
         self.voronoi_criteria = voronoi_criteria
         self.img_coords = self.create_image_coords(self.pixel_num)
 
@@ -44,9 +45,9 @@ class VoronoiCells:
         return img_indices
 
     def _get_neuronal_data(self):
-        if self.voronoi_criteria == "all":
+        if self.neurons == "all":
             neuron_file = "right_visual_positions_all_neurons.csv"
-        elif self.voronoi_criteria == "selected":
+        elif self.neurons == "selected":
             neuron_file = "right_visual_positions_selected_neurons.csv"
         data_path = os.path.join("adult_data", neuron_file)
 

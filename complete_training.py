@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from adult_models_helpers import TrainingError
 import config
+from sweep_config import sweep_config
 from utils import (
     get_image_paths,
     get_iteration_number,
@@ -34,24 +35,42 @@ warnings.filterwarnings(
 torch.manual_seed(1234)
 
 
-def main(wandb_logger):
+def main(wandb_logger, sweep_config=None):
+
+    if sweep_config is None:
+        neurons = config.neurons
+        voronoi_criteria = config.voronoi_criteria
+        random_synapses = config.random_synapses
+        base_lr = config.base_lr
+        NUM_CONNECTOME_PASSES = config.NUM_CONNECTOME_PASSES
+    else:
+        neurons = sweep_config.neurons
+        voronoi_criteria = sweep_config.voronoi_criteria
+        random_synapses = sweep_config.random_synapses
+        base_lr = sweep_config.base_lr
+        NUM_CONNECTOME_PASSES = sweep_config.NUM_CONNECTOME_PASSES
+
     # get data and prepare model
     training_images = get_image_paths(
         config.TRAINING_DATA_DIR, config.small, config.small_length
     )
-    data_processor = CompleteModelsDataProcessor(config.log_transform_weights)
+    data_processor = CompleteModelsDataProcessor(
+        neurons=neurons,
+        voronoi_criteria=voronoi_criteria,
+        random_synapses=random_synapses,
+        log_transform_weights=config.log_transform_weights
+        )
 
     model = FullGraphModel(
         input_shape=data_processor.number_of_synapses,
-        num_connectome_passes=config.NUM_CONNECTOME_PASSES,
+        num_connectome_passes=NUM_CONNECTOME_PASSES,
         decision_making_vector=data_processor.decision_making_vector,
         batch_size=config.batch_size,
         dtype=config.dtype,
         edge_weights=data_processor.synaptic_matrix.data,
         device=config.DEVICE,
-        retina_connection=False,
     ).to(config.DEVICE)
-    optimizer = torch.optim.Adam(model.parameters(), lr=config.base_lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=base_lr)
     criterion = BCEWithLogitsLoss()
 
     # train
@@ -151,7 +170,7 @@ def main(wandb_logger):
 if __name__ == "__main__":
 
     wandb_logger = WandBLogger("adult_complete")
-    wandb_logger.initialize()
+    wandb_logger.initialize_run()
     try:
         main(wandb_logger)
 

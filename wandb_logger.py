@@ -1,9 +1,6 @@
-import os
-import numpy as np
 import wandb
 from wandb import AlertLevel
 import config
-from deprecated.from_retina_to_connectome_utils import hex_to_square_grid
 
 
 MODEL_CONFIG = {
@@ -25,22 +22,34 @@ class WandBLogger:
         self.log_images_every = config.wandb_images_every
         self.initialized = False
 
-    def initialize(self):
+    def initialize_run(self):
         if self.enabled and not self.initialized:
-            wandb.init(project=self.project_name, config=self.model_config)
             self.initialized = True
+            return wandb.init(project=self.project_name, reinit=True)
+    
+    def initialize_sweep(self, sweep_config):
+        if self.enabled:
+            return wandb.sweep(sweep_config, project=self.project_name)
+        
+    def start_agent(self, sweep_id, func):
+        if self.enabled:
+            wandb.agent(sweep_id, function=func)
+    
+    @property
+    def sweep_config(self):
+        return wandb.config
 
     def log_metrics(self, epoch, iteration, running_loss, total_correct, total):
         if self.enabled:
             try:
                 wandb.log(
-                {
-                    "epoch": epoch,
-                    "iteration": iteration + 1,
-                    "loss": running_loss / total,
-                    "accuracy": total_correct / total,
-                }
-            )
+                    {
+                        "epoch": epoch,
+                        "iteration": iteration + 1,
+                        "loss": running_loss / total,
+                        "accuracy": total_correct / total,
+                    }
+                )
             except Exception as e:
                 print(f"Error logging running stats to wandb: {e}. Continuing...")
 
@@ -78,10 +87,10 @@ class WandBLogger:
     def send_crash(self, message):
         if self.enabled:
             wandb.alert(
-                title=f"Error in run at {self.project_name}", 
+                title=f"Error in run at {self.project_name}",
                 text=message,
-                level=AlertLevel.ERROR
-                )
+                level=AlertLevel.ERROR,
+            )
 
     def finish(self):
         if self.enabled:

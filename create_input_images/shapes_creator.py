@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
-import config
+import data_config as config
 
 random.seed(1714)
 

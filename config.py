@@ -18,16 +18,6 @@ neurons = "selected" # or "all"
 voronoi_criteria = "all" # or R7
 random_synapses = False
 
-# Data
-SHAPE = "star"
-TRAIN_NUM = 200
-TEST_NUM = 50
-MIN_RADIUS = 80
-MAX_RADIUS = 110
-JITTER = True
-
-# Classes
-CLASSES = ["circle", "square", "triangle", "star"]
 
 # Debugging and logging
 debugging = False
@@ -46,7 +36,7 @@ base_lr = 0.00005
 weight_decay = 0.0001
 NUM_CONNECTOME_PASSES = 5
 log_transform_weights = False
-plot_types = ["radius", "distance"]  # "radius", "distance" or "weber"
+plot_types = []  # "radius", "distance" or "weber"
 
 # sparse stuff is generaly not implemented in half...
 dtype = torch.float32

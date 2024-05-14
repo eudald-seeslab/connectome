@@ -4,6 +4,8 @@ from complete_training import main
 from wandb_logger import WandBLogger
 
 
+project_name = "Complete_v2"
+
 sweep_config = {
     "method": "bayes",
     "metric": {"name": "accuracy", "goal": "maximize"},
@@ -16,14 +18,11 @@ sweep_config = {
     },
 }
 
-project_name = "Complete_v1"
-sweep_id = wandb.sweep(sweep_config, project=project_name)
-
-
 def train(config=None):
     wandb_logger = WandBLogger(project_name)
     with wandb.init(config=config):
         main(wandb_logger, wandb.config)
 
 
-wandb.agent(sweep_id, train, count=20)
+sweep_id = wandb.sweep(sweep_config, project=project_name)
+wandb.agent(sweep_id=sweep_id, function=train, project=project_name, count=20)

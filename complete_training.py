@@ -1,13 +1,13 @@
 from os.path import basename
 import traceback
 import warnings
+from matplotlib import pyplot as plt
 import torch
-from torch.nn import BCEWithLogitsLoss
+from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
 
 from adult_models_helpers import TrainingError
 import config
-from sweep_config import sweep_config
 from utils import (
     get_image_paths,
     get_iteration_number,
@@ -50,6 +50,11 @@ def main(wandb_logger, sweep_config=None):
         base_lr = sweep_config.base_lr
         NUM_CONNECTOME_PASSES = sweep_config.NUM_CONNECTOME_PASSES
 
+    # update batch size number of connectome passes (otherwise we run out of memory)
+    batch_size = (
+        config.batch_size // 2 if NUM_CONNECTOME_PASSES > 5 else config.batch_size
+    )
+
     # get data and prepare model
     training_images = get_image_paths(
         config.TRAINING_DATA_DIR, config.small, config.small_length
@@ -65,26 +70,27 @@ def main(wandb_logger, sweep_config=None):
         input_shape=data_processor.number_of_synapses,
         num_connectome_passes=NUM_CONNECTOME_PASSES,
         decision_making_vector=data_processor.decision_making_vector,
-        batch_size=config.batch_size,
+        batch_size=batch_size,
         dtype=config.dtype,
         edge_weights=data_processor.synaptic_matrix.data,
         device=config.DEVICE,
+        num_classes=len(config.CLASSES),
     ).to(config.DEVICE)
     optimizer = torch.optim.Adam(model.parameters(), lr=base_lr)
-    criterion = BCEWithLogitsLoss()
+    criterion = CrossEntropyLoss()
 
     # train
     model.train()
     results = initialize_results_df()
 
-    iterations = get_iteration_number(len(training_images), config.batch_size)
+    iterations = get_iteration_number(len(training_images), batch_size)
     for ep in range(config.num_epochs):
 
         already_selected = []
         running_loss, total_correct, total = 0, 0, 0
         for i in tqdm(range(iterations)):
             batch_files, already_selected = select_random_images(
-                training_images, config.batch_size, already_selected
+                training_images, batch_size, already_selected
             )
             # create voronoi cells each batch so they are different
             data_processor.create_voronoi_cells()
@@ -94,6 +100,7 @@ def main(wandb_logger, sweep_config=None):
                 wandb_logger.log_image(p1, basename(batch_files[0]), "Original")
                 p2 = data_processor.plot_voronoi_cells_with_neurons()
                 wandb_logger.log_image(p2, "Voronoi cells", "Voronoi")
+                plt.close("all")
 
             inputs, labels = data_processor.process_batch(images, labels)
 
@@ -110,7 +117,7 @@ def main(wandb_logger, sweep_config=None):
                 results, batch_files, outputs, predictions, labels_cpu, correct
             )
             running_loss += update_running_loss(loss, inputs)
-            total += config.batch_size
+            total += batch_size
             total_correct += correct.sum()
 
             wandb_logger.log_metrics(ep, i, running_loss, total_correct, total)
@@ -135,10 +142,10 @@ def main(wandb_logger, sweep_config=None):
     test_results = initialize_results_df()
 
     model.eval()
-    iterations = get_iteration_number(len(testing_images), config.batch_size)
+    iterations = get_iteration_number(len(testing_images), batch_size)
     for _ in tqdm(range(iterations)):
         batch_files, already_selected_testing = select_random_images(
-            testing_images, config.batch_size, already_selected_testing
+            testing_images, batch_size, already_selected_testing
         )
         images, labels = data_processor.get_data_from_paths(batch_files)
         inputs, labels = data_processor.process_batch(images, labels)
@@ -153,7 +160,7 @@ def main(wandb_logger, sweep_config=None):
             test_results, batch_files, outputs, predictions, labels_cpu, correct
         )
         running_loss += update_running_loss(loss, inputs)
-        total += config.batch_size
+        total += batch_size
         total_correct += correct.sum()
 
     final_plots = plot_results(test_results, plot_types=config.plot_types)

@@ -94,7 +94,7 @@ class CompleteModelsDataProcessor:
             graph_list_.append(graph)
 
         inputs = Batch.from_data_list(graph_list_).to(config.DEVICE)
-        labels = torch.tensor(labels, dtype=config.dtype).to(config.DEVICE)
+        labels = torch.tensor(labels, dtype=torch.long).to(config.DEVICE)
 
         return inputs, labels
 

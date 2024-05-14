@@ -67,6 +67,7 @@ class FullGraphModel(nn.Module):
         dtype,
         edge_weights,
         device,
+        num_classes=2,
         num_features=1,
     ):
         super(FullGraphModel, self).__init__()
@@ -74,7 +75,7 @@ class FullGraphModel(nn.Module):
 
         self.connectome = TrainableEdgeConv(input_shape, edge_weights, num_connectome_passes, batch_size, dtype, device)
 
-        self.final_fc = nn.Linear(1, 1, dtype=dtype)
+        self.final_fc = nn.Linear(1, num_classes, dtype=dtype)
         self.num_features = num_features
         self.batch_size = batch_size
 
@@ -130,6 +131,9 @@ class FullGraphModel(nn.Module):
 
 
 class GNNModel(torch.nn.Module):
+
+    # DEPRECATED
+
     def __init__(
         self,
         num_node_features,

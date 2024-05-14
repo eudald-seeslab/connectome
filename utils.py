@@ -91,11 +91,10 @@ def get_iteration_number(im_num, batch_size):
 
 def get_label(name):
     x = os.path.basename(os.path.dirname(name))
-    if x == "yellow":
-        return 1
-    if x == "blue":
-        return 0
-    raise ValueError(f"Unexpected directory label {x}")
+    try:
+        return config.CLASSES.index(x)
+    except ValueError:
+        raise ValueError(f"Unexpected directory label {x}")
 
 
 def paths_to_labels(paths):
@@ -139,7 +138,7 @@ def update_results_df(
             pd.DataFrame(
                 {
                     "Image": batch_files_,
-                    "Model outputs": outputs_,
+                    "Model outputs": list(outputs_),
                     "Prediction": predictions_,
                     "True label": batch_labels_,
                     "Is correct": correct_,
@@ -156,9 +155,9 @@ def initialize_results_df():
 
 
 def clean_model_outputs(outputs_, batch_labels_):
-    outputs_ = torch.sigmoid(outputs_.squeeze().detach().cpu().float())
-    predictions_ = torch.round(outputs_).numpy()
-    batch_labels_cpu = batch_labels_.detach().cpu().float().numpy()
+    probabilities_ = torch.softmax(outputs_.detach().cpu().float(), dim=1).numpy()
+    predictions_ = np.argmax(probabilities_, axis=1)
+    batch_labels_cpu = batch_labels_.detach().cpu().numpy()
     correct_ = np.where(predictions_ == batch_labels_cpu, 1, 0)
 
-    return outputs_.numpy(), predictions_, batch_labels_cpu, correct_
+    return probabilities_, predictions_, batch_labels_cpu, correct_

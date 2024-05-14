@@ -128,9 +128,9 @@ tenacity==8.2.2
 terminado==0.17.1
 threadpoolctl==3.1.0
 tinycss2==1.2.1
-torch==2.3.0
-torchaudio==2.3.0
-torchvision==2.3.0
+torch
+torchaudio
+torchvision
 tornado==6.3.2
 tqdm==4.65.0
 traitlets==5.9.0

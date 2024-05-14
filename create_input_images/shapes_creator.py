@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 import math
@@ -26,11 +27,11 @@ class ShapesGenerator:
         jitter (bool): Whether to add jitter to the shapes.
     """
 
-    colour_1: str = "yellow"
-    colour_2: str = "blue"
+    colour_1: str = "blue"
+    colour_2: str = "yellow"
     background_colour = "#808080"
     boundary_width = 5
-    colours = {colour_1: "#fffe04", colour_2: "#0003f9"}
+    colours = {colour_1: "#0003f9", colour_2: "#fffe04"}
     img_paths = {}
 
     def __init__(self, shape, train_num, test_num, min_radius, max_radius, jitter):
@@ -149,8 +150,52 @@ class ShapesGenerator:
                 image, dist = self.draw_shape(shape, r, self.colour_2, jitter)
                 self.save_image(image, r, dist, i, self.img_paths["test_2"])
 
+    def create_dirs_all_classes(self):
+        """Create directories for all classes of shapes."""
+        for t in ["train", "test"]:
+            for i, cl in enumerate(config.CLASSES):
+                self.img_paths[f"{t}_{i}"] = os.path.join(self.img_dir, t, cl)
+        [os.makedirs(p, exist_ok=True) for p in self.img_paths.values()]
+
+    def generate_all_classes(self):
+        """Generate all classes of shapes."""
+        jitter = self.jitter
+        min_radius, max_radius = self.min_radius, self.max_radius
+        shapes = config.CLASSES
+
+        self.create_dirs_all_classes()
+
+        radius_range = max_radius - min_radius
+        print(
+            f"Creating images for {', '.join(shapes)} with {len(shapes) * radius_range * self.train_num} "
+            f"training images and {len(shapes) * radius_range * self.test_num} test images."
+        )
+        for i in tqdm(range(self.train_num)):
+            for j, shape in enumerate(shapes):
+                for r in range(min_radius, max_radius):
+                    image, dist = self.draw_shape(shape, r, self.colour_1, jitter)
+                    self.save_image(image, r, dist, i, self.img_paths[f"train_{j}"])
+
+        for i in tqdm(range(self.test_num)):
+            for j, shape in enumerate(shapes):
+                for r in range(min_radius, max_radius):
+                    image, dist = self.draw_shape(shape, r, self.colour_1, jitter)
+                    self.save_image(image, r, dist, i, self.img_paths[f"test_{j}"])
+
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(
+        description="Generate shapes."
+    )
+    parser.add_argument(
+        "--all_shapes",
+        type=bool,
+        default=False,
+        help="Are we trying to differentiate among several shapes?",
+    )
+    args = parser.parse_args()
+
     img_gen = ShapesGenerator(
         shape=config.SHAPE,
         train_num=config.TRAIN_NUM,
@@ -159,4 +204,7 @@ if __name__ == "__main__":
         max_radius=config.MAX_RADIUS,
         jitter=config.JITTER,
     )
-    img_gen.generate_images()
+    if args.all_shapes:
+        img_gen.generate_all_classes()
+    else:
+        img_gen.generate_images()

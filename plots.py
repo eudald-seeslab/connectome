@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
-
+import data_config
 
 pd.options.mode.chained_assignment = None
 
@@ -47,3 +47,10 @@ def plot_accuracy_per_value(df, value):
             xticks[i].set_visible(False)
 
     return ax
+
+def plot_contingency_table(df):
+    label_map = dict(enumerate(data_config.CLASSES))
+    df["Prediction"] = df["Prediction"].map(label_map)
+    df["True label"] = df["True label"].map(label_map)
+
+    return df.value_counts(["Prediction", "True label"]).unstack().plot(kind="bar", stacked=True)

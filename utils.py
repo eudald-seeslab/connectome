@@ -7,7 +7,7 @@ from scipy.sparse import coo_matrix
 import torch
 import config
 import data_config
-from plots import plot_accuracy_per_value, plot_weber_fraction
+from plots import plot_accuracy_per_value, plot_contingency_table, plot_weber_fraction
 
 
 def debugger_is_active() -> bool:
@@ -25,6 +25,8 @@ def plot_results(results_, plot_types):
                 plots.append(plot_accuracy_per_value(results_.copy(), "radius"))
             elif plot_type == "distance":
                 plots.append(plot_accuracy_per_value(results_.copy(), "distance"))
+            elif plot_type == "contingency":
+                plots.append(plot_contingency_table(results_.copy()))
     except Exception as e:
         print(f"Error plotting results: {e}")
 

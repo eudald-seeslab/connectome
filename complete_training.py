@@ -1,3 +1,5 @@
+import datetime
+import os
 from os.path import basename
 import traceback
 import warnings
@@ -8,6 +10,7 @@ from tqdm import tqdm
 
 from adult_models_helpers import TrainingError
 import config
+import data_config
 from utils import (
     get_image_paths,
     get_iteration_number,
@@ -74,7 +77,7 @@ def main(wandb_logger, sweep_config=None):
         dtype=config.dtype,
         edge_weights=data_processor.synaptic_matrix.data,
         device=config.DEVICE,
-        num_classes=len(config.CLASSES),
+        num_classes=len(data_config.CLASSES),
     ).to(config.DEVICE)
     optimizer = torch.optim.Adam(model.parameters(), lr=base_lr)
     criterion = CrossEntropyLoss()
@@ -172,6 +175,10 @@ def main(wandb_logger, sweep_config=None):
         f"Finished testing with loss {running_loss / total} and "
         f"accuracy {total_correct / total}."
     )
+
+    # save model
+    str_datetime = datetime.datetime.now().isoformat(sep=" ", timespec="seconds")
+    torch.save(model.state_dict(), os.path.join("models", f"model_{str_datetime}.pth"))
 
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import datetime
 import os
 import random
 import numpy as np
@@ -164,3 +165,14 @@ def clean_model_outputs(outputs_, batch_labels_):
     correct_ = np.where(predictions_ == batch_labels_cpu, 1, 0)
 
     return probabilities_, predictions_, batch_labels_cpu, correct_
+
+
+def save_model(model_, optimizer_):
+    # create 'models' directory if it doesn't exist
+    os.makedirs("models", exist_ok=True)
+    str_datetime = datetime.datetime.now().isoformat(sep=" ", timespec="seconds")
+    torch.save(
+        {"model": model_.state_dict(), "optimizer": optimizer_.state_dict()},
+        os.path.join("models", f"model_{str_datetime}.pth"),
+    )
+    

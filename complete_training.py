@@ -1,5 +1,3 @@
-import datetime
-import os
 from os.path import basename
 import traceback
 import warnings
@@ -16,6 +14,7 @@ from utils import (
     get_iteration_number,
     initialize_results_df,
     plot_results,
+    save_model,
     select_random_images,
     update_results_df,
     update_running_loss,
@@ -176,9 +175,7 @@ def main(wandb_logger, sweep_config=None):
         f"accuracy {total_correct / total}."
     )
 
-    # save model
-    str_datetime = datetime.datetime.now().isoformat(sep=" ", timespec="seconds")
-    torch.save(model.state_dict(), os.path.join("models", f"model_{str_datetime}.pth"))
+    save_model(model, optimizer)
 
 
 if __name__ == "__main__":

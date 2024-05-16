@@ -4,13 +4,18 @@ import config
 
 
 MODEL_CONFIG = {
-    "debugging": config.debugging,
     "num_epochs": config.num_epochs,
     "batch_size": config.batch_size,
-    "dropout": config.dropout,
     "base_lr": config.base_lr,
-    "weight_decay": config.weight_decay,
     "num_connectome_passes": config.NUM_CONNECTOME_PASSES,
+    "log_transform_weights": config.log_transform_weights,
+    "training_data": config.TRAINING_DATA_DIR,
+    "testing_data": config.TESTING_DATA_DIR,
+    "neurons": config.neurons,
+    "voronoi_criteria": config.voronoi_criteria,
+    "random_synapses": config.random_synapses,
+    "small": config.small,
+    "small_length": config.small_length,
 }
 
 
@@ -24,8 +29,8 @@ class WandBLogger:
 
     def initialize_run(self):
         if self.enabled and not self.initialized:
+            wandb.init(project=self.project_name, config=self.model_config)
             self.initialized = True
-            return wandb.init(project=self.project_name, reinit=True)
     
     def initialize_sweep(self, sweep_config):
         if self.enabled:

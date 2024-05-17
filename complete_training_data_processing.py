@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import torch
 from complete_training_funcs import (
-    VoronoiCells,
+    get_activation_from_cell_type,
     get_neuron_activations,
     get_side_decision_making_vector,
     get_voronoi_averages,
@@ -14,13 +14,19 @@ import config
 from scipy.sparse import coo_matrix, load_npz
 from torch_geometric.data import Data, Batch
 
+from voronoi_cells import VoronoiCells
+
 
 class CompleteModelsDataProcessor:
 
     tesselated_df = None
 
     def __init__(
-        self, neurons="all", voronoi_criteria="all", random_synapses=False, log_transform_weights=False
+        self,
+        neurons="all",
+        voronoi_criteria="all",
+        random_synapses=False,
+        log_transform_weights=False,
     ):
         # get data
         self.right_root_ids = pd.read_csv("adult_data/root_id_to_index.csv")
@@ -34,17 +40,19 @@ class CompleteModelsDataProcessor:
             self.right_root_ids, "right"
         )
         self.neurons = neurons
-        self.voronoi_criteria = voronoi_criteria
+        self.voronoi_cells = VoronoiCells(
+            neurons=self.neurons, voronoi_criteria=voronoi_criteria
+        )
+        if voronoi_criteria == "R7":
+            self.tesselated_df = self.voronoi_cells.get_tesselated_neurons()
+            self.voronoi_indices = self.voronoi_cells.get_image_indices()
 
     @property
     def number_of_synapses(self):
         return self.synaptic_matrix.shape[0]
 
-    def create_voronoi_cells(self):
-        self.voronoi_cells = VoronoiCells(
-            neurons=self.neurons,
-            voronoi_criteria=self.voronoi_criteria
-            )
+    def recreate_voronoi_cells(self):
+        self.voronoi_cells.regenerate_random_centers()
         self.tesselated_df = self.voronoi_cells.get_tesselated_neurons()
         self.voronoi_indices = self.voronoi_cells.get_image_indices()
 
@@ -104,13 +112,28 @@ class CompleteModelsDataProcessor:
     def plot_voronoi_cells_with_image(self, img):
         return self.voronoi_cells.plot_voronoi_cells_with_image(img)
 
+    def plot_neuron_activations(self, img):
+        # This is repeated in process_batch, but it's the cleanest way to get the plots
+        processed_img = process_images(np.expand_dims(img, 0), self.voronoi_indices)
+        voronoi_average = get_voronoi_averages(processed_img)[0]
+        # we need to put everything in terms of the voronoi point regions
+        voronoi_average.index = [self.voronoi_cells.voronoi.point_region[int(i)] for i in voronoi_average.index]
+        corr_tess = self.tesselated_df.copy()
+        corr_tess["voronoi_indices"] = [self.voronoi_cells.voronoi.point_region[int(i)] for i in corr_tess["voronoi_indices"]]
+        neuron_activations = corr_tess.merge(
+            voronoi_average, left_on="voronoi_indices", right_index=True
+        )
+        neuron_activations["activation"] = neuron_activations.apply(
+            get_activation_from_cell_type, axis=1
+        )
+        return self.voronoi_cells.plot_neuron_activations(neuron_activations)
+
     @staticmethod
     def shuffle_synaptic_matrix(synaptic_matrix):
         shuffled_col = np.random.permutation(synaptic_matrix.col)
         synaptic_matrix = coo_matrix(
-            (synaptic_matrix.data, 
-            (synaptic_matrix.row, shuffled_col)), 
-            shape=synaptic_matrix.shape
+            (synaptic_matrix.data, (synaptic_matrix.row, shuffled_col)),
+            shape=synaptic_matrix.shape,
         )
         synaptic_matrix.sum_duplicates()
         return synaptic_matrix

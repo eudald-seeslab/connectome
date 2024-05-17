@@ -65,8 +65,8 @@ def main(wandb_logger, sweep_config=None):
         neurons=neurons,
         voronoi_criteria=voronoi_criteria,
         random_synapses=random_synapses,
-        log_transform_weights=config.log_transform_weights
-        )
+        log_transform_weights=config.log_transform_weights,
+    )
 
     model = FullGraphModel(
         input_shape=data_processor.number_of_synapses,
@@ -94,14 +94,17 @@ def main(wandb_logger, sweep_config=None):
             batch_files, already_selected = select_random_images(
                 training_images, batch_size, already_selected
             )
-            # create voronoi cells each batch so they are different
-            data_processor.create_voronoi_cells()
+            if voronoi_criteria == "all":
+                # create voronoi cells each batch so they are different
+                data_processor.recreate_voronoi_cells()
             images, labels = data_processor.get_data_from_paths(batch_files)
             if i % config.wandb_images_every == 0:
                 p1 = data_processor.plot_voronoi_cells_with_image(images[0])
                 wandb_logger.log_image(p1, basename(batch_files[0]), "Original")
                 p2 = data_processor.plot_voronoi_cells_with_neurons()
                 wandb_logger.log_image(p2, "Voronoi cells", "Voronoi")
+                p3 = data_processor.plot_neuron_activations(images[0])
+                wandb_logger.log_image(p3, "Neuron activations", "Activations")
                 plt.close("all")
 
             inputs, labels = data_processor.process_batch(images, labels)

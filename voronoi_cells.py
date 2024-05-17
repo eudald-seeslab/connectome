@@ -1,14 +1,9 @@
-from complete_training_funcs import assign_cell_type
-
-import matplotlib.pyplot as plt
-import matplotlib
-
-matplotlib.use("Agg")
+import os
 import numpy as np
 import pandas as pd
 from scipy.spatial import Voronoi, cKDTree, voronoi_plot_2d
 
-import os
+from complete_training_funcs import assign_cell_type
 
 class VoronoiCells:
     pixel_num = 512

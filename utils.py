@@ -88,7 +88,7 @@ def synapses_to_matrix_and_dict(right_synapses):
 def get_iteration_number(im_num, batch_size):
     if config.debugging:
         return config.debug_length
-    if config.small:
+    if config.small and im_num > config.small_length:
         return config.small_length // batch_size
     return im_num // batch_size
 

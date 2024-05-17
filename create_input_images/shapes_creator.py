@@ -29,7 +29,7 @@ class ShapesGenerator:
 
     colour_1: str = "blue"
     colour_2: str = "yellow"
-    background_colour = "#808080"
+    background_colour = "#000000"  # #808080 for gray
     boundary_width = 5
     colours = {colour_1: "#0003f9", colour_2: "#fffe04"}
     img_paths = {}
@@ -173,13 +173,13 @@ class ShapesGenerator:
         for i in tqdm(range(self.train_num)):
             for j, shape in enumerate(shapes):
                 for r in range(min_radius, max_radius):
-                    image, dist = self.draw_shape(shape, r, self.colour_1, jitter)
+                    image, dist = self.draw_shape(shape, r, self.colour_2, jitter)
                     self.save_image(image, r, dist, i, self.img_paths[f"train_{j}"])
 
         for i in tqdm(range(self.test_num)):
             for j, shape in enumerate(shapes):
                 for r in range(min_radius, max_radius):
-                    image, dist = self.draw_shape(shape, r, self.colour_1, jitter)
+                    image, dist = self.draw_shape(shape, r, self.colour_2, jitter)
                     self.save_image(image, r, dist, i, self.img_paths[f"test_{j}"])
 
 

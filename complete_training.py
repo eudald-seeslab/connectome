@@ -99,12 +99,9 @@ def main(wandb_logger, sweep_config=None):
                 data_processor.recreate_voronoi_cells()
             images, labels = data_processor.get_data_from_paths(batch_files)
             if i % config.wandb_images_every == 0:
-                p1 = data_processor.plot_voronoi_cells_with_image(images[0])
-                wandb_logger.log_image(p1, basename(batch_files[0]), "Original")
-                p2 = data_processor.plot_voronoi_cells_with_neurons()
-                wandb_logger.log_image(p2, "Voronoi cells", "Voronoi")
-                p3 = data_processor.plot_neuron_activations(images[0])
-                wandb_logger.log_image(p3, "Neuron activations", "Activations")
+                p = data_processor.plot_input_images(images[0])
+                wandb_logger.log_image(p, basename(batch_files[0]), "Voronoi - Original - Activations")
+
                 plt.close("all")
 
             inputs, labels = data_processor.process_batch(images, labels)

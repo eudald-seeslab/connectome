@@ -1,3 +1,4 @@
+from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
@@ -106,13 +107,15 @@ class CompleteModelsDataProcessor:
 
         return inputs, labels
 
-    def plot_voronoi_cells_with_neurons(self):
-        return self.voronoi_cells.plot_voronoi_cells_with_neurons(self.tesselated_df)
+    def plot_input_images(self, img):
+        fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+        self.voronoi_cells.plot_voronoi_cells_with_neurons(self.tesselated_df, axes[0])
+        self.voronoi_cells.plot_voronoi_cells_with_image(img, axes[1])
+        self.plot_neuron_activations(img, axes[2])
+        plt.tight_layout()
+        return fig
 
-    def plot_voronoi_cells_with_image(self, img):
-        return self.voronoi_cells.plot_voronoi_cells_with_image(img)
-
-    def plot_neuron_activations(self, img):
+    def plot_neuron_activations(self, img, ax):
         # This is repeated in process_batch, but it's the cleanest way to get the plots
         processed_img = process_images(np.expand_dims(img, 0), self.voronoi_indices)
         voronoi_average = get_voronoi_averages(processed_img)[0]
@@ -126,7 +129,7 @@ class CompleteModelsDataProcessor:
         neuron_activations["activation"] = neuron_activations.apply(
             get_activation_from_cell_type, axis=1
         )
-        return self.voronoi_cells.plot_neuron_activations(neuron_activations)
+        return self.voronoi_cells.plot_neuron_activations(neuron_activations, ax)
 
     @staticmethod
     def shuffle_synaptic_matrix(synaptic_matrix):

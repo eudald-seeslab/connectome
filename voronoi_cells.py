@@ -18,6 +18,7 @@ class VoronoiCells:
     voronoi = None
     tree = None
     index_map = None
+    color_map = {"R1-6": "gray", "R7": "red", "R8p": "green", "R8y": "blue"}
 
     def __init__(self, neurons="all", voronoi_criteria="all"):
         self.img_coords = self.get_image_coords(self.pixel_num)
@@ -89,35 +90,25 @@ class VoronoiCells:
             line_alpha=0.6,
             point_size=2,
         )
-        # for point_idx, region_idx in enumerate(self.voronoi.point_region):
-        #     region = self.voronoi.regions[region_idx]
-        #     polygon = [self.voronoi.vertices[i] for i in region]
-        #     centroid = np.mean(polygon, axis=0)
-        #     ax.text(centroid[0], centroid[1], str(point_idx), color='red', fontsize=10)
 
-    def plot_voronoi_cells_with_neurons(self, neuron_data):
+    def plot_voronoi_cells_with_neurons(self, neuron_data, ax):
 
-        color_map = {"R1-6": "gray", "R7": "red", "R8p": "green", "R8y": "blue"}
-        neuron_data["color"] = neuron_data["cell_type"].apply(lambda x: color_map[x])
+        neuron_data["color"] = neuron_data["cell_type"].apply(lambda x: self.color_map[x])
 
-        fig, ax = plt.subplots(figsize=(8, 8))
         self._plot_voronoi_cells(ax)
 
         # reverse the y-axis
         neuron_data["y_axis"] = self.pixel_num - 1 - neuron_data["y_axis"]
 
         # Visual neurons (complicated because we want the legend and matplotlib is stupid)
-        for cell_type, color in color_map.items():
+        for cell_type, color in self.color_map.items():
             points = neuron_data[neuron_data["cell_type"] == cell_type]
             ax.scatter(
                 points["x_axis"], points["y_axis"], color=color, s=5, label=cell_type
             )
         ax.legend(title="", loc="lower left")
 
-        return fig
-
-    def plot_voronoi_cells_with_image(self, image):
-        fig, ax = plt.subplots(figsize=(8, 8))
+    def plot_voronoi_cells_with_image(self, image, ax):
 
         # Display the image
         ax.imshow(image, extent=[0, 512, 0, 512])
@@ -125,10 +116,7 @@ class VoronoiCells:
         # Plot Voronoi diagram
         self._plot_voronoi_cells(ax)
 
-        return fig
-
-    def plot_neuron_activations(self, n_acts):
-        fig, ax = plt.subplots(figsize=(8, 8))
+    def plot_neuron_activations(self, n_acts, ax):
         self._plot_voronoi_cells(ax)
 
         # n_acts["voronoi_indices"] = n_acts["voronoi_indices"].map(self.index_map).astype(int)
@@ -155,8 +143,6 @@ class VoronoiCells:
                 polygon = [self.voronoi.vertices[i] for i in region]
                 color = rgb_values.loc[region_index, ["r", "g", "b"]]
                 ax.fill(*zip(*polygon), color=color)
-
-        return fig
 
     @staticmethod
     def get_colour_average(values, colour):

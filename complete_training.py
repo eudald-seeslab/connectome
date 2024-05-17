@@ -101,7 +101,6 @@ def main(wandb_logger, sweep_config=None):
             if i % config.wandb_images_every == 0:
                 p = data_processor.plot_input_images(images[0])
                 wandb_logger.log_image(p, basename(batch_files[0]), "Voronoi - Original - Activations")
-
                 plt.close("all")
 
             inputs, labels = data_processor.process_batch(images, labels)

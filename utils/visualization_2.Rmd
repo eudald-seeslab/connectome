@@ -11,6 +11,9 @@ library(tidyr)
 library(readr)
 library(glue)
 library(stringr)
+library(plotly)
+library(ggplot2)
+theme_set(theme_bw())
 ```
 
 ```{r}
@@ -53,8 +56,8 @@ coords <- read_csv(
   ) |>
   separate_wider_delim(position, " ", names = c("x", "y", "z")) |>
   mutate(across(c(x, y, z), as.numeric)) |> 
-  group_by(root_id) |> 
-  summarise(x = mean(x), y = mean(y), z = mean(z))
+ group_by(root_id) |>
+ summarise(x = mean(x), y = mean(y), z = mean(z))
 ```
 
 ```{r}
@@ -62,29 +65,93 @@ cla_coords <- clean_cla |>
   inner_join(coords)
 ```
 
-
 ```{r}
 vis_coords <- cla_coords |> 
-  filter(cell_type %in% c("R1-6", "R7", "R8")) |> 
+  filter(cell_type %in% c("R1-6", "R7", "R8")) 
+```
+
+```{r}
+fig <- plot_ly(vis_coords, x = ~x, y = ~y, z = ~z, color = ~cell_type)
+fig <- fig |> add_markers(size=.5)
+fig
+```
+
+```{r}
+pc <- vis_coords |> 
+  filter(cell_type != "R1-6") |> 
+  select(x, y, z) |> 
+  prcomp()
+
+vis_coords <- vis_coords |> 
+  mutate(
+    PC1 = x * pc$rotation["x", "PC1"] + 
+      y * pc$rotation["y", "PC1"] + 
+      z * pc$rotation["z", "PC1"],
+    PC2 = x * pc$rotation["x", "PC2"] + 
+      y * pc$rotation["y", "PC2"] + 
+      z * pc$rotation["z", "PC2"]
+    ) 
+
+vis_coords |> 
+  ggplot(aes(x = PC1, y = PC2, colour = cell_type)) +
+  geom_point()
+```
+
+```{r}
+vis_coords |> 
+  ggplot(aes(x = y, y = z, colour = cell_type)) +
+  geom_point()
+```
+
+```{r}
+vis_coords <- vis_coords |> 
+  mutate(
+    x_axis = (PC1 - min(PC1)) / (max(PC1) - min(PC1)) * 512,
+    y_axis = (PC2 - min(PC2)) / (max(PC2) - min(PC2)) * 512,
+    )
+```
+
+```{r}
+vis_coords |> 
+  ggplot(aes(x = x_axis, y = y_axis, colour = cell_type)) + 
+  geom_point()
+```
+
+
+
+```{r}
+filtered_vis_coords <- vis_coords |> 
   filter(
-    y >= 225000 & y < 327400,
-    z >= 75000 & z < 177400
+    PC1 >= 150000 & PC1 < 300000,
+    PC2 >= -740000 & PC2 < -640000
   ) |> 
   mutate(
-    y = (y - 225000) / 102400 * 512,
-    z = (z - 75000) / 102400 * 512
+    x_axis = (PC1 - 150000) / 150000 * 512,
+    y_axis = (PC2 + 740000) / 100000 * 512
   )
 ```
 
 ```{r}
-clean_conns |> write_csv("adult_data/right_connections.csv")
-clean_cla |> write_csv("adult_data/right_classification.csv")
-vis_coords |> write_csv("adult_data/right_visual_neurons_positions.csv")
+filtered_vis_coords |> 
+  ggplot(aes(x = x_axis, y = y_axis, colour = cell_type)) + 
+  geom_point()
+```
+
+```{r}
+table(filtered_vis_coords$cell_type)
 ```
 
 
 ```{r}
-vis_coords |> 
-  inner_join(clean_conns |> distinct(pre_root_id), by=c("root_id" = "pre_root_id")) |> nrow()
+clean_conns |> write_csv("adult_data/right_connections.csv")
+clean_cla |> write_csv("adult_data/right_classification.csv")
+vis_coords |> write_csv("adult_data/right_visual_positions_all_neurons.csv")
+filtered_vis_coords |> write_csv("adult_data/right_visual_positions_selected_neurons.csv")
+
+```
+
+
+```{r}
+vis_coords |> nrow()
 ```
 

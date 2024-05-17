@@ -1,7 +1,7 @@
 # Shape details
-SHAPE = "test" # "all" if you are doing all shapes
-TRAIN_NUM = 20
-TEST_NUM = 5
+SHAPE = "black" # "all" if you are doing all shapes
+TRAIN_NUM = 100
+TEST_NUM = 20
 MIN_RADIUS = 80
 MAX_RADIUS = 110
 JITTER = True

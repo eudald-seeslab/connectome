@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from adult_models_helpers import TrainingError
 import config
-import data_config
+import create_input_images.data_config as data_config
 from utils import (
     get_image_paths,
     get_iteration_number,

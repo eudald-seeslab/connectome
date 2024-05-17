@@ -1,14 +1,10 @@
 import argparse
 import os
-import sys
 import math
 import random
 from PIL import Image, ImageDraw
 import numpy as np
 from tqdm import tqdm
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
 import data_config as config
 
 random.seed(1714)

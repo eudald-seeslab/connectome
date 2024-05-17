@@ -7,7 +7,7 @@ import sys
 from scipy.sparse import coo_matrix
 import torch
 import config
-import data_config
+import create_input_images.data_config as data_config
 from plots import plot_accuracy_per_value, plot_contingency_table, plot_weber_fraction
 
 

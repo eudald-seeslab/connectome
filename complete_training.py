@@ -86,53 +86,56 @@ def main(wandb_logger, sweep_config=None):
     results = initialize_results_df()
 
     iterations = get_iteration_number(len(training_images), batch_size)
-    for ep in range(config.num_epochs):
+    try:
+        for ep in range(config.num_epochs):
 
-        already_selected = []
-        running_loss, total_correct, total = 0, 0, 0
-        for i in tqdm(range(iterations)):
-            batch_files, already_selected = select_random_images(
-                training_images, batch_size, already_selected
+            already_selected = []
+            running_loss, total_correct, total = 0, 0, 0
+            for i in tqdm(range(iterations)):
+                batch_files, already_selected = select_random_images(
+                    training_images, batch_size, already_selected
+                )
+                if voronoi_criteria == "all":
+                    # create voronoi cells each batch so they are different
+                    data_processor.recreate_voronoi_cells()
+                images, labels = data_processor.get_data_from_paths(batch_files)
+                if i % config.wandb_images_every == 0:
+                    p = data_processor.plot_input_images(images[0])
+                    wandb_logger.log_image(p, basename(batch_files[0]), "Voronoi - Original - Activations")
+                    plt.close("all")
+
+                inputs, labels = data_processor.process_batch(images, labels)
+
+                optimizer.zero_grad()
+                with torch.autocast(config.device_type):
+                    out = model(inputs)
+                    loss = criterion(out, labels)
+                    loss.backward()
+                    optimizer.step()
+
+                # Calculate run parameters
+                outputs, predictions, labels_cpu, correct = clean_model_outputs(out, labels)
+                results = update_results_df(
+                    results, batch_files, outputs, predictions, labels_cpu, correct
+                )
+                running_loss += update_running_loss(loss, inputs)
+                total += batch_size
+                total_correct += correct.sum()
+
+                wandb_logger.log_metrics(ep, i, running_loss, total_correct, total)
+                if i == 0:
+                    first_loss = running_loss
+                if i == 100 and running_loss == first_loss:
+                    raise TrainingError("Loss is constant. Training will stop.")
+
+            wandb_logger.log_dataframe(results, "Training results")
+            print(
+                f"Finished epoch {ep + 1} with loss {running_loss / total} "
+                f"and accuracy {total_correct / total}."
             )
-            if voronoi_criteria == "all":
-                # create voronoi cells each batch so they are different
-                data_processor.recreate_voronoi_cells()
-            images, labels = data_processor.get_data_from_paths(batch_files)
-            if i % config.wandb_images_every == 0:
-                p = data_processor.plot_input_images(images[0])
-                wandb_logger.log_image(p, basename(batch_files[0]), "Voronoi - Original - Activations")
-                plt.close("all")
-
-            inputs, labels = data_processor.process_batch(images, labels)
-
-            optimizer.zero_grad()
-            with torch.autocast(config.device_type):
-                out = model(inputs)
-                loss = criterion(out, labels)
-                loss.backward()
-                optimizer.step()
-
-            # Calculate run parameters
-            outputs, predictions, labels_cpu, correct = clean_model_outputs(out, labels)
-            results = update_results_df(
-                results, batch_files, outputs, predictions, labels_cpu, correct
-            )
-            running_loss += update_running_loss(loss, inputs)
-            total += batch_size
-            total_correct += correct.sum()
-
-            wandb_logger.log_metrics(ep, i, running_loss, total_correct, total)
-            if i == 0:
-                first_loss = running_loss
-            if i == 100 and running_loss == first_loss:
-                raise TrainingError("Loss is constant. Training will stop.")
-
-        wandb_logger.log_dataframe(results, "Training results")
-        print(
-            f"Finished epoch {ep + 1} with loss {running_loss / total} "
-            f"and accuracy {total_correct / total}."
-        )
-        torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
+    except KeyboardInterrupt:
+        print("Training interrupted. Continuing to testing.")
 
     # test
     testing_images = get_image_paths(

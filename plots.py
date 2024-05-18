@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
-import data_config
+import create_input_images.data_config as data_config
 
 pd.options.mode.chained_assignment = None
 

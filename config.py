@@ -4,18 +4,18 @@ from utils import debugger_is_active
 
 # Check for CUDA availability and set device
 device_type = "cuda" if cuda.is_available() else "cpu"
-device_type = "cpu"
+# device_type = "cpu"
 DEVICE = device(device_type)
 
 # Directory paths relative to the project root
-TRAINING_DATA_DIR = "images/shapes/train"
-TESTING_DATA_DIR = "images/shapes/test"
+TRAINING_DATA_DIR = "images/black_80_110_jitter/train"
+TESTING_DATA_DIR = "images/black_80_110_jitter/test"
 # not used
 VALIDATION_DATA_DIR = "images/big_pointsval"
 
 # Neural data
-neurons = "selected" # or "all"
-voronoi_criteria = "all" # or R7
+neurons = "selected" # "selected" or "all"
+voronoi_criteria = "R7" #  "R7" or "all"
 random_synapses = False
 
 
@@ -29,14 +29,14 @@ small = False
 small_length = 4000
 
 # Training configuration
-num_epochs = 1
+num_epochs = 30
 batch_size = 32
 dropout = 0.1
-base_lr = 0.00005
+base_lr = 0.01
 weight_decay = 0.0001
-NUM_CONNECTOME_PASSES = 5
+NUM_CONNECTOME_PASSES = 4
 log_transform_weights = False
-plot_types = []  # "radius", "distance" or "weber"
+plot_types = ["radius", "distance", "contingency"]  # "radius", "distance" or "weber"
 
 # sparse stuff is generaly not implemented in half...
 dtype = torch.float32
@@ -46,4 +46,3 @@ sparse_layout = torch.sparse_coo
 wandb_ = False if debugger_is_active() else wandb_
 wandb_ = False if debugging else wandb_
 validation_length = validation_length if small else None
-

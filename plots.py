@@ -9,8 +9,12 @@ pd.options.mode.chained_assignment = None
 
 def plot_weber_fraction(results_df: pd.DataFrame) -> plt.Figure:
     # Calculate the percentage of correct answers for each Weber ratio
-    results_df["yellow"] = results_df["Image"].apply(lambda x: x.split("_")[2])
-    results_df["blue"] = results_df["Image"].apply(lambda x: x.split("_")[3])
+    results_df["yellow"] = results_df["Image"].apply(
+        lambda x: os.path.basename(x).split("_")[1]
+    )
+    results_df["blue"] = results_df["Image"].apply(
+        lambda x: os.path.basename(x).split("_")[2]
+    )
     results_df["weber_ratio"] = results_df.apply(
         lambda row: max(int(row["yellow"]), int(row["blue"]))
         / min(int(row["yellow"]), int(row["blue"])),

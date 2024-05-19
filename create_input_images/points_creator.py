@@ -25,12 +25,12 @@ GENERAL_CONFIG = {
     "mode": "RGB",
     # these are per colour
     "min_point_num": 5,
-    "max_point_num": 12,
+    "max_point_num": 15,
     "attempts_limit": 200,
 }
 
 
-EASY_RATIOS = [2 / 5, 1 / 2, 2 / 3, 3 / 4]
+EASY_RATIOS = [1 / 3, 2 / 5, 1 / 2, 2 / 3, 3 / 4]
 HARD_RATIOS = [
     4 / 5,
     5 / 6,

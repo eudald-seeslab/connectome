@@ -20,7 +20,7 @@ def plot_results(results_, plot_types):
     try:
         for plot_type in plot_types:
             if plot_type == "weber":
-                plots.append([plot_weber_fraction(results_.copy())])
+                plots.append(plot_weber_fraction(results_.copy()))
             elif plot_type == "radius":
                 plots.append(plot_accuracy_per_value(results_.copy(), "radius"))
             elif plot_type == "distance":

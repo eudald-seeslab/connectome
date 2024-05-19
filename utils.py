@@ -7,7 +7,6 @@ import sys
 from scipy.sparse import coo_matrix
 import torch
 import config
-import create_input_images.data_config as data_config
 from plots import plot_accuracy_per_value, plot_contingency_table, plot_weber_fraction
 
 
@@ -96,7 +95,7 @@ def get_iteration_number(im_num, batch_size):
 def get_label(name):
     x = os.path.basename(os.path.dirname(name))
     try:
-        return data_config.CLASSES.index(x)
+        return config.CLASSES.index(x)
     except ValueError:
         raise ValueError(f"Unexpected directory label {x}")
 

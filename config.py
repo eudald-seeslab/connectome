@@ -1,3 +1,4 @@
+import os
 import torch
 from torch import cuda, device
 from utils import debugger_is_active
@@ -8,13 +9,15 @@ device_type = "cuda" if cuda.is_available() else "cpu"
 DEVICE = device(device_type)
 
 # Directory paths relative to the project root
-TRAINING_DATA_DIR = "images/black_80_110_jitter/train"
-TESTING_DATA_DIR = "images/black_80_110_jitter/test"
+TRAINING_DATA_DIR = "images/arthropods/train"
+TESTING_DATA_DIR = "images/arthropods/test"
 # not used
 VALIDATION_DATA_DIR = "images/big_pointsval"
+# get directory names from the training data directory
+CLASSES = os.listdir(TRAINING_DATA_DIR)
 
 # Neural data
-neurons = "selected" # "selected" or "all"
+neurons = "all" # "selected" or "all"
 voronoi_criteria = "R7" #  "R7" or "all"
 random_synapses = False
 
@@ -29,7 +32,7 @@ small = False
 small_length = 4000
 
 # Training configuration
-num_epochs = 30
+num_epochs = 20
 batch_size = 32
 dropout = 0.1
 base_lr = 0.01

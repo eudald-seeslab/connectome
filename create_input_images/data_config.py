@@ -6,5 +6,5 @@ MIN_RADIUS = 80
 MAX_RADIUS = 110
 JITTER = True
 
-# Classes
-CLASSES = ["circle", "square", "triangle", "star"]
+# Classes (only for creating the classes)
+CLASSES = ["araneae", "diptera", "lepidoptera", "odonata"]

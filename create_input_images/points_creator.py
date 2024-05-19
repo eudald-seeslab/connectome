@@ -24,8 +24,8 @@ GENERAL_CONFIG = {
     "init_size": 512,
     "mode": "RGB",
     # these are per colour
-    "min_point_num": 1,
-    "max_point_num": 2,
+    "min_point_num": 5,
+    "max_point_num": 12,
     "attempts_limit": 200,
 }
 
@@ -162,7 +162,7 @@ def get_config():
         help="Directory to save images.",
     )
     parser.add_argument(
-        "--easy", type=bool, default=True, help="Use easy mode for image generation."
+        "--easy", action='store_true', help="Use easier ratios between colours."
     )
     args = parser.parse_args()
 

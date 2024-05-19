@@ -8,7 +8,6 @@ from tqdm import tqdm
 
 from adult_models_helpers import TrainingError
 import config
-import create_input_images.data_config as data_config
 from utils import (
     get_image_paths,
     get_iteration_number,
@@ -76,7 +75,7 @@ def main(wandb_logger, sweep_config=None):
         dtype=config.dtype,
         edge_weights=data_processor.synaptic_matrix.data,
         device=config.DEVICE,
-        num_classes=len(data_config.CLASSES),
+        num_classes=len(config.CLASSES),
     ).to(config.DEVICE)
     optimizer = torch.optim.Adam(model.parameters(), lr=base_lr)
     criterion = CrossEntropyLoss()

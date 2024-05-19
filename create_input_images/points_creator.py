@@ -15,7 +15,7 @@ GENERAL_CONFIG = {
     "colour_1": "yellow",
     "colour_2": "blue",
     "boundary_width": 5,
-    "background_colour": "#000000", # for gray: "#808080"
+    "background_colour": "#000000", # for gray: #808080
     "yellow": "#fffe04",
     "blue": "#0003f9",
     "point_sep": 20,
@@ -25,20 +25,20 @@ GENERAL_CONFIG = {
     "mode": "RGB",
     # these are per colour
     "min_point_num": 5,
-    "max_point_num": 12,
+    "max_point_num": 15,
     "attempts_limit": 500,
 }
 
 
-EASY_RATIOS = [2 / 5, 1 / 2, 2 / 3, 3 / 4]
+EASY_RATIOS = [1 / 3, 2 / 5, 1 / 2, 2 / 3, 3 / 4]
 HARD_RATIOS = [
     4 / 5,
     5 / 6,
     7 / 8,
     8 / 9,
     9 / 10,
-    10 / 11,
-    11 / 12,
+#    10 / 11,
+#    11 / 12,
 ]
 
 

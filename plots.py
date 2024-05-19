@@ -28,6 +28,8 @@ def plot_weber_fraction(results_df: pd.DataFrame) -> plt.Figure:
         results_df.groupby(["weber_ratio", "equalized"])["Is correct"].mean() * 100
     )
     correct_percentage = correct_percentage.reset_index()
+    # because matplotlib is very stupid:
+    correct_percentage["weber_ratio"] = correct_percentage["weber_ratio"].round(3)
 
     # Plot
     fig = plt.figure(figsize=(10, 6))
@@ -37,7 +39,6 @@ def plot_weber_fraction(results_df: pd.DataFrame) -> plt.Figure:
     plt.xlabel("Weber Ratio")
     plt.ylabel("Percentage of Correct Answers")
     plt.title("Correct Classification by Weber Ratio and Image Equalization")
-    plt.xticks(rotation=45)
     plt.tight_layout()
 
     return fig

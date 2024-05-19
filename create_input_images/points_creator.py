@@ -18,7 +18,6 @@ GENERAL_CONFIG = {
     "background_colour": "#000000", # for gray: #808080
     "yellow": "#fffe04",
     "blue": "#0003f9",
-    "point_sep": 20,
     "min_point_radius": 15,
     "max_point_radius": 30,
     "init_size": 512,

@@ -15,7 +15,7 @@ GENERAL_CONFIG = {
     "colour_1": "yellow",
     "colour_2": "blue",
     "boundary_width": 5,
-    "background_colour": "#808080",
+    "background_colour": "#000000", # for gray: #808080
     "yellow": "#fffe04",
     "blue": "#0003f9",
     "point_sep": 20,

@@ -15,18 +15,18 @@ GENERAL_CONFIG = {
     "colour_1": "yellow",
     "colour_2": "blue",
     "boundary_width": 5,
-    "background_colour": "#808080",
+    "background_colour": "#000000", # for gray: "#808080"
     "yellow": "#fffe04",
     "blue": "#0003f9",
     "point_sep": 20,
-    "min_point_radius": 40,
-    "max_point_radius": 80,
+    "min_point_radius": 15,
+    "max_point_radius": 30,
     "init_size": 512,
     "mode": "RGB",
     # these are per colour
     "min_point_num": 5,
     "max_point_num": 12,
-    "attempts_limit": 200,
+    "attempts_limit": 500,
 }
 
 

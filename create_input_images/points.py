@@ -14,7 +14,7 @@ class NumberPoints:
 
     boundary_width = 5
     point_sep = 10
-    # We consider equal areas if they differ by less than this number:
+    # We consider equal areas if their radius ratio differs by less than this number:
     area_tolerance = 0.01
 
     def __init__(self, img, init_size, yellow, blue, min_point_radius=8, max_point_radius=16, attempts_limit=10):

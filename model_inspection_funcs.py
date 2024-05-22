@@ -198,3 +198,25 @@ def process_and_plot_data(neuron_data, connections, voronoi, num_passes):
 
     plt.tight_layout()
     plt.show()
+
+
+def normalize_non_zero(x, min_val=None, max_val=None):
+    non_zero_mask = x != 0
+    non_zero_entries = x[non_zero_mask]
+    if min_val is not None:
+        x[non_zero_mask] = (non_zero_entries - min_val) / (max_val - min_val)
+    else:
+        x[non_zero_mask] = (non_zero_entries - non_zero_entries.min()) / (
+            non_zero_entries.max() - non_zero_entries.min()
+        )
+    return x
+
+
+def get_neuron_type(x, activation_cols):
+    # The logic here is:
+    # - If decision_making is active, return this, since it's the most interesting
+    # - If not, return the first active activation
+    for col in [activation_cols[-1]] + activation_cols[:-1]:
+        if x[col] != 0:
+            return col
+    return "no_activation"

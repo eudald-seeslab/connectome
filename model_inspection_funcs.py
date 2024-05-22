@@ -18,6 +18,17 @@ def propagate_data_once(input_data, connections):
     return df[["root_id", "voronoi_indices", "activation"]]
 
 
+def propagate_data_with_steps(input_data, connections, step):
+    input_cols = input_data.columns
+    df = input_data.merge(
+        connections, left_on="root_id", right_on="pre_root_id", how="left"
+    )
+    new_name = f"activation_{step + 1}"
+    df[new_name] = df[input_cols[-1]] * (df["syn_count"] * df["weight"] - 1)
+    df = df.drop(columns=["root_id"]).rename(columns={"post_root_id": "root_id"})
+    return df[["root_id", new_name]].groupby("root_id").sum().reset_index()
+
+
 def compute_voronoi_cells(neuron_data, voronoi):
     post_synapse_cells = (
         neuron_data[["voronoi_indices", "activation"]]
@@ -153,3 +164,37 @@ def plot_voronoi_activations(df, voronoi, ax=None, cmap=plt.cm.binary):
     cbar = plt.colorbar(sm, ax=ax)
 
     return fig
+
+
+def process_and_plot_data(neuron_data, connections, voronoi, num_passes):
+    current_data = neuron_data.copy()
+
+    num_columns = 2
+    num_rows = (num_passes + 2 + num_columns - 1) // num_columns
+
+    # Create a figure with subplots
+    fig, axes = plt.subplots(
+        num_rows, num_columns, figsize=(num_columns * 5, num_rows * 5)
+    )
+    axes = axes.flatten()
+
+    # Initial plot for the input image
+    plot_input_image(img, voronoi, axes[0])
+    axes[0].set_title("Input Image")
+
+    plot_first_activations(neuron_data.copy(), voronoi, axes[1])
+    axes[1].set_title("First activations")
+
+    # Process data and plot activations
+    for i in range(num_passes):
+        current_data = propagate_data_once(current_data, connections)
+        post_synapse_cells = compute_voronoi_cells(current_data, voronoi)
+        plot_voronoi_activations(post_synapse_cells, voronoi, ax=axes[i + 2])
+        axes[i + 2].set_title(f"Pass {i + 1}")
+
+    # Hide any unused axes if there are any
+    for j in range(num_passes + 2, num_rows * num_columns):
+        axes[j].axis("off")
+
+    plt.tight_layout()
+    plt.show()

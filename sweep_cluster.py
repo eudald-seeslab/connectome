@@ -37,7 +37,7 @@ if __name__ == "__main__":
     parser.add_argument("NUM_CONNECTOME_PASSES", type=int, help="Number of connectome passes")
     parser.add_argument("base_lr", type=float, help="Base learning rate")
     parser.add_argument("neurons", type=str, help="Type of neurons (selected or all)")
-    parser.add_argument("random_synapses", type=bool, help="Use random synapses (True or False)")
+    parser.add_argument("random_synapses", type=str, help="Use random synapses (True or False)")
     parser.add_argument("voronoi_criteria", type=str, help="Voronoi criteria (R7 or all)")
 
     # Parse the arguments
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     sweep_config = SweepConfig(
         neurons=args.neurons,
         voronoi_criteria=args.voronoi_criteria,
-        random_synapses=args.random_synapses,
+        random_synapses=args.random_synapses == "True",
         base_lr=args.base_lr,
         NUM_CONNECTOME_PASSES=args.NUM_CONNECTOME_PASSES
     )

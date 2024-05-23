@@ -1,3 +1,4 @@
+import datetime
 from os.path import basename
 import traceback
 import warnings
@@ -50,6 +51,10 @@ def main(wandb_logger, sweep_config=None):
         random_synapses = sweep_config.random_synapses
         base_lr = sweep_config.base_lr
         NUM_CONNECTOME_PASSES = sweep_config.NUM_CONNECTOME_PASSES
+
+    # for saving later
+    start_datetime = datetime.datetime.now().isoformat(sep=" ", timespec="minutes")
+    model_name = f"n_{neurons}_v_{voronoi_criteria}_r_{random_synapses}_lr_{base_lr}_p_{NUM_CONNECTOME_PASSES}_{start_datetime}.pth"
 
     # update batch size number of connectome passes (otherwise we run out of memory)
     batch_size = (
@@ -136,7 +141,7 @@ def main(wandb_logger, sweep_config=None):
     except KeyboardInterrupt:
         print("Training interrupted. Continuing to testing.")
 
-    save_model(model, optimizer)
+    save_model(model, optimizer, model_name)
 
     # test
     testing_images = get_image_paths(

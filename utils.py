@@ -168,10 +168,10 @@ def clean_model_outputs(outputs_, batch_labels_):
 
 def save_model(model_, optimizer_):
     # create 'models' directory if it doesn't exist
-    os.makedirs("models", exist_ok=True)
+    path_ = os.path.join(os.getcwd(), "models")
+    os.makedirs(path_, exist_ok=True)
     str_datetime = datetime.datetime.now().isoformat(sep=" ", timespec="seconds")
     torch.save(
         {"model": model_.state_dict(), "optimizer": optimizer_.state_dict()},
-        os.path.join("models", f"model_{str_datetime}.pth"),
+        os.path.join(path_, f"model_{str_datetime}.pth"),
     )
-    

@@ -9,8 +9,8 @@ device_type = "cuda" if cuda.is_available() else "cpu"
 DEVICE = device(device_type)
 
 # Directory paths relative to the project root
-TRAINING_DATA_DIR = "images/five_to_twelve/train"
-TESTING_DATA_DIR = "images/five_to_twelve/test"
+TRAINING_DATA_DIR = "images/five_to_fifteen/train"
+TESTING_DATA_DIR = "images/five_to_fifteen/test"
 # not used
 VALIDATION_DATA_DIR = "images/big_pointsval"
 # get directory names from the training data directory

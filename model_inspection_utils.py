@@ -166,10 +166,10 @@ def plot_voronoi_activations(df, voronoi, ax=None, cmap=plt.cm.binary):
     return fig
 
 
-def process_and_plot_data(neuron_data, connections, voronoi, num_passes):
+def process_and_plot_data(img, neuron_data, connections, voronoi, num_passes):
     current_data = neuron_data.copy()
 
-    num_columns = 2
+    num_columns = 3
     num_rows = (num_passes + 2 + num_columns - 1) // num_columns
 
     # Create a figure with subplots

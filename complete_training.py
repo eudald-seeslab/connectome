@@ -136,6 +136,8 @@ def main(wandb_logger, sweep_config=None):
     except KeyboardInterrupt:
         print("Training interrupted. Continuing to testing.")
 
+    save_model(model, optimizer)
+
     # test
     testing_images = get_image_paths(
         config.TESTING_DATA_DIR, config.small, config.small_length
@@ -175,8 +177,6 @@ def main(wandb_logger, sweep_config=None):
         f"Finished testing with loss {running_loss / total} and "
         f"accuracy {total_correct / total}."
     )
-
-    save_model(model, optimizer)
 
 
 if __name__ == "__main__":

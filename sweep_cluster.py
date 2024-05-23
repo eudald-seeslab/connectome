@@ -19,7 +19,7 @@ params = {
 param_names = sorted(params.keys())
 combinations = list(itertools.product(*(params[name] for name in param_names)))
 
-
+# %%
 class SweepConfig:
     def __init__(
         self, neurons, voronoi_criteria, random_synapses, base_lr, NUM_CONNECTOME_PASSES
@@ -37,8 +37,8 @@ if __name__ == "__main__":
     parser.add_argument("NUM_CONNECTOME_PASSES", type=int, help="Number of connectome passes")
     parser.add_argument("base_lr", type=float, help="Base learning rate")
     parser.add_argument("neurons", type=str, help="Type of neurons (selected or all)")
-    parser.add_argument("voronoi_criteria", type=str, help="Voronoi criteria (R7 or all)")
     parser.add_argument("random_synapses", type=bool, help="Use random synapses (True or False)")
+    parser.add_argument("voronoi_criteria", type=str, help="Voronoi criteria (R7 or all)")
 
     # Parse the arguments
     args = parser.parse_args()
@@ -51,6 +51,12 @@ if __name__ == "__main__":
         base_lr=args.base_lr,
         NUM_CONNECTOME_PASSES=args.NUM_CONNECTOME_PASSES
     )
+    print("Running with configuration:")
+    print(f"Neurons: {sweep_config.neurons}")
+    print(f"Voronoi Criteria: {sweep_config.voronoi_criteria}")
+    print(f"Random Synapses: {sweep_config.random_synapses}")
+    print(f"Base Learning Rate: {sweep_config.base_lr}")
+    print(f"Number of Connectome Passes: {sweep_config.NUM_CONNECTOME_PASSES}")
 
     wandb_logger = WandBLogger("adult_complete")
     wandb_logger.initialize_run(group="cluster_sweep")

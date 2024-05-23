@@ -27,9 +27,9 @@ class WandBLogger:
         self.log_images_every = config.wandb_images_every
         self.initialized = False
 
-    def initialize_run(self):
+    def initialize_run(self, group=None):
         if self.enabled and not self.initialized:
-            wandb.init(project=self.project_name, config=self.model_config)
+            wandb.init(project=self.project_name, config=self.model_config, group=group)
             self.initialized = True
     
     def initialize_sweep(self, sweep_config):

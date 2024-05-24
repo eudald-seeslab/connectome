@@ -169,13 +169,13 @@ class ShapesGenerator:
         for i in tqdm(range(self.train_num)):
             for j, shape in enumerate(shapes):
                 for r in range(min_radius, max_radius):
-                    image, dist = self.draw_shape(shape, r, self.colour_2, jitter)
+                    image, dist = self.draw_shape(shape, r, self.colour_1, jitter)
                     self.save_image(image, r, dist, i, self.img_paths[f"train_{j}"])
 
         for i in tqdm(range(self.test_num)):
             for j, shape in enumerate(shapes):
                 for r in range(min_radius, max_radius):
-                    image, dist = self.draw_shape(shape, r, self.colour_2, jitter)
+                    image, dist = self.draw_shape(shape, r, self.colour_1, jitter)
                     self.save_image(image, r, dist, i, self.img_paths[f"test_{j}"])
 
 
@@ -186,8 +186,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--all_shapes",
-        type=bool,
-        default=False,
+        action='store_true',
         help="Are we trying to differentiate among several shapes?",
     )
     args = parser.parse_args()

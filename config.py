@@ -14,7 +14,7 @@ TESTING_DATA_DIR = "images/five_to_fifteen/test"
 # not used
 VALIDATION_DATA_DIR = "images/big_pointsval"
 # get directory names from the training data directory
-CLASSES = os.listdir(TRAINING_DATA_DIR)
+CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 
 # Neural data
 neurons = "all" # "selected" or "all"

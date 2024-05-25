@@ -1,9 +1,8 @@
-# %%
 import os
 import torch
 import pandas as pd
 import numpy as np
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 import wandb
 
 tqdm.pandas()  # for progress_apply

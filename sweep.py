@@ -1,6 +1,7 @@
 import wandb
+import multiprocessing
+import config
 from complete_training import main
-
 from wandb_logger import WandBLogger
 
 
@@ -24,5 +25,23 @@ def train(config=None):
         main(wandb_logger, wandb.config)
 
 
+def run_agent(sweep_id):
+    wandb.agent(sweep_id=sweep_id, function=train, project=project_name, count=20)
+
+
 sweep_id = wandb.sweep(sweep_config, project=project_name)
+
+
+if __name__ == "__main__":
+    num_agents = 4 if config.device_type == "cpu" else 1
+    processes = []
+
+    for _ in range(num_agents):
+        p = multiprocessing.Process(target=run_agent, args=(sweep_id,))
+        p.start()
+        processes.append(p)
+
+    for p in processes:
+        p.join()
+
 wandb.agent(sweep_id=sweep_id, function=train, project=project_name, count=20)

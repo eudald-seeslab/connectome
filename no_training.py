@@ -51,7 +51,7 @@ def predict_images(
     ]
 
     # Use process_map with the adjusted process_image function
-    results = process_map(process_image, tasks, max_workers=cpu_count(), chunksize=1)
+    results = process_map(process_image, tasks, max_workers=cpu_count() - 3, chunksize=1)
 
     # Convert list of tuples into a DataFrame
     dms = {name: dm for name, dm in results}

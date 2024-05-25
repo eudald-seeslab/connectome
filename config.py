@@ -9,8 +9,8 @@ device_type = "cuda" if cuda.is_available() else "cpu"
 DEVICE = device(device_type)
 
 # Directory paths relative to the project root
-TRAINING_DATA_DIR = "images/five_to_fifteen/train"
-TESTING_DATA_DIR = "images/five_to_fifteen/test"
+TRAINING_DATA_DIR = "images/red_80_110_jitter/train"
+TESTING_DATA_DIR = "images/red_80_110_jitter/test"
 # not used
 VALIDATION_DATA_DIR = "images/big_pointsval"
 # get directory names from the training data directory
@@ -39,7 +39,11 @@ base_lr = 0.01
 weight_decay = 0.0001
 NUM_CONNECTOME_PASSES = 4
 log_transform_weights = False
-plot_types = ["weber"]  # "radius", "contingency", "distance" or "weber"
+plot_types = [
+    "radius",
+    "contingency",
+    "distance",
+]  # "radius", "contingency", "distance" or "weber"
 
 # sparse stuff is generaly not implemented in half...
 dtype = torch.float32

@@ -197,12 +197,6 @@ def main():
     results = process_shapes_results(predictions, sampled_images)
     log_results(results, "shapes")
 
-    # Reshuffled
-    shuffled_connections = connections.copy()
-    shuffled_connections["post_root_id"] = np.random.permutation(
-        connections["post_root_id"]
-    )
-
     predictions = predict_images(
         sampled_images,
         neuron_data,

@@ -10,6 +10,15 @@ import data_config as config
 random.seed(1714)
 
 
+COLOUR_MAP = {
+    "black": "#000000",
+    "blue": "#0003f9",
+    "yellow": "#fffe04",
+    "red": "#ff0000",
+    "green": "#00ff00",
+}
+
+
 class ShapesGenerator:
     """
     A class for generating images with geometric shapes for machine learning tasks.
@@ -21,20 +30,22 @@ class ShapesGenerator:
         min_radius (int): The minimum radius of the shapes.
         max_radius (int): The maximum radius of the shapes.
         jitter (bool): Whether to add jitter to the shapes.
+        colours (list): The colours of the shapes.
     """
 
-    colour_1: str = "blue"
-    colour_2: str = "yellow"
     background_colour = "#000000"  # #808080 for gray
     boundary_width = 5
-    colours = {colour_1: "#0003f9", colour_2: "#fffe04"}
     img_paths = {}
 
-    def __init__(self, shape, train_num, test_num, min_radius, max_radius, jitter):
+    def __init__(self, shape, train_num, test_num, min_radius, max_radius, jitter, colours=["blue", "yellow"]):
         self.img_dir = (
             f"images/{shape}_{min_radius}_{max_radius}{'_jitter' if jitter else ''}"
         )
-
+        try:
+            self.colours = {col: COLOUR_MAP[col] for col in colours}
+        except KeyError:
+            raise ValueError(f"One or more of your colours are not implemented. Choices are {', '.join(COLOUR_MAP.keys())}.")
+        
         self.shape = shape
         self.train_num = train_num
         self.test_num = test_num
@@ -45,8 +56,9 @@ class ShapesGenerator:
     def create_dirs(self):
         """Creates necessary directories to store generated images."""
         for t in ["train", "test"]:
-            self.img_paths[f"{t}_1"] = os.path.join(self.img_dir, t, self.colour_1)
-            self.img_paths[f"{t}_2"] = os.path.join(self.img_dir, t, self.colour_2)
+            for i, col in enumerate(self.colours.keys()):
+                self.img_paths[f"{t}_{i + 1}"] = os.path.join(self.img_dir, t, col)
+
         [os.makedirs(p, exist_ok=True) for p in self.img_paths.values()]
 
     def get_vertices(self, shape: str, center: tuple, radius: int) -> list:
@@ -106,9 +118,9 @@ class ShapesGenerator:
 
         vertices = self.get_vertices(shape, center, radius)
         if shape == "circle":
-            draw.ellipse(vertices, fill=self.colours[colour])
+            draw.ellipse(vertices, fill=colour)
         else:
-            draw.polygon(vertices, fill=self.colours[colour])
+            draw.polygon(vertices, fill=colour)
 
         return image, int(np.sqrt(dist_x**2 + dist_y**2))
 
@@ -134,17 +146,15 @@ class ShapesGenerator:
 
         for i in tqdm(range(self.train_num)):
             for r in range(min_radius, max_radius):
-                image, dist = self.draw_shape(shape, r, self.colour_1, jitter)
-                self.save_image(image, r, dist, i, self.img_paths["train_1"])
-                image, dist = self.draw_shape(shape, r, self.colour_2, jitter)
-                self.save_image(image, r, dist, i, self.img_paths["train_2"])
+                for i, col in enumerate(self.colours.values()):
+                    image, dist = self.draw_shape(shape, r, col, jitter)
+                    self.save_image(image, r, dist, i, self.img_paths[f"train_{i + 1}"])
 
         for i in tqdm(range(self.test_num)):
             for r in range(min_radius, max_radius):
-                image, dist = self.draw_shape(shape, r, self.colour_1, jitter)
-                self.save_image(image, r, dist, i, self.img_paths["test_1"])
-                image, dist = self.draw_shape(shape, r, self.colour_2, jitter)
-                self.save_image(image, r, dist, i, self.img_paths["test_2"])
+                for i, col in enumerate(self.colours.values()):
+                    image, dist = self.draw_shape(shape, r, col, jitter)
+                    self.save_image(image, r, dist, i, self.img_paths[f"test_{i + 1}"])
 
     def create_dirs_all_classes(self):
         """Create directories for all classes of shapes."""
@@ -158,6 +168,7 @@ class ShapesGenerator:
         jitter = self.jitter
         min_radius, max_radius = self.min_radius, self.max_radius
         shapes = config.CLASSES
+        colour = self.colours[list(self.colours.keys())[0]]
 
         self.create_dirs_all_classes()
 
@@ -169,13 +180,13 @@ class ShapesGenerator:
         for i in tqdm(range(self.train_num)):
             for j, shape in enumerate(shapes):
                 for r in range(min_radius, max_radius):
-                    image, dist = self.draw_shape(shape, r, self.colour_1, jitter)
+                    image, dist = self.draw_shape(shape, r, colour, jitter)
                     self.save_image(image, r, dist, i, self.img_paths[f"train_{j}"])
 
         for i in tqdm(range(self.test_num)):
             for j, shape in enumerate(shapes):
                 for r in range(min_radius, max_radius):
-                    image, dist = self.draw_shape(shape, r, self.colour_1, jitter)
+                    image, dist = self.draw_shape(shape, r, colour, jitter)
                     self.save_image(image, r, dist, i, self.img_paths[f"test_{j}"])
 
 
@@ -198,6 +209,7 @@ if __name__ == "__main__":
         min_radius=config.MIN_RADIUS,
         max_radius=config.MAX_RADIUS,
         jitter=config.JITTER,
+        colours=config.COLOURS,
     )
     if args.all_shapes:
         img_gen.generate_all_classes()

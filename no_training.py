@@ -1,4 +1,5 @@
 import os
+from matplotlib import pyplot as plt
 import torch
 import pandas as pd
 import numpy as np
@@ -16,15 +17,13 @@ from model_inspection_funcs import (
     propagate_neuron_data,
     sample_images,
 )
-
-import matplotlib.pyplot as plt
 import seaborn as sns
 
 device = torch.device("cpu")
 dtype = torch.float32
 
 num_passes = 4
-pairs_num = 1000
+pairs_num = 500
 
 
 def process_image(args):
@@ -50,7 +49,7 @@ def predict_images(
     ]
 
     # Use process_map with the adjusted process_image function
-    results = process_map(process_image, tasks, max_workers=cpu_count() - 3, chunksize=1)
+    results = process_map(process_image, tasks, max_workers=cpu_count() - 2, chunksize=1)
 
     # Convert list of tuples into a DataFrame
     dms = {name: dm for name, dm in results}
@@ -85,16 +84,18 @@ def process_shapes_results(predictions, sampled_images):
 
 def log_results(results, type, shuffled=False):
     s_char = "_shuffled" if shuffled else ""
-    # update table to wandb
-    wandb.log({f"{type}{s_char}": wandb.Table(dataframe=results)})
 
-    # histogram of the mean decision making values per colour
-    sns.histplot(data=results, x="mean", hue="color", bins=50, kde=True, alpha=0.5)
-    wandb.log({f"{type}{s_char}_hist": plt})
+    wandb.log({f"{type}{s_char}_table": wandb.Table(dataframe=results)})
 
-    # boxplot of the mean decision making values per colour
-    sns.boxplot(data=results, x="color", y="mean", palette=blue_yellow)
-    wandb.log({f"{type}{s_char}_box": plt})
+    x_axis = "color" if type == "points" else "real"
+    fig, axes = plt.subplots(1, 2, figsize=(10, 6))
+    sns.histplot(data=results, x="mean", hue=x_axis, bins=50, kde=True, alpha=0.5, ax=axes[0])
+    axes[0].set_title(f"{type.capitalize()} {s_char.replace('_', '').capitalize()} histogram")
+    sns.boxplot(data=results, x=x_axis, y="mean", ax=axes[1])
+    axes[1].set_title(f"{type.capitalize()} {s_char.replace('_', '').capitalize()} boxplot")
+    plt.tight_layout()
+    wandb.log({f"{type}{s_char}_img": wandb.Image(fig)})
+    plt.close("all")
 
     acc = np.mean(results["correct"])
     acc = 1 - acc if acc < 0.5 else acc
@@ -184,7 +185,7 @@ def main():
     log_results(results, "points", shuffled=True)
 
     # Shapes
-    base_dir = "images/black_blue_80_110_jitter/train/two_shapes"
+    base_dir = "images/red_80_110_jitter/train"
     sub_dirs = ["circle", "triangle"]
 
     # Normal

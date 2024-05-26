@@ -85,3 +85,19 @@ def propagate_neuron_data(neuron_data, connections, coords, neurons, num_passes)
         propagation["decision_making"] * propagation[cols[-1]]
     )
     return propagation.drop(columns=[cols[-1]])
+
+
+def propagate_data_without_deciding(neuron_data, connections, coords, num_passes):
+    propagation = (
+        coords.merge(neuron_data[["root_id", "activation"]], on="root_id", how="left")
+        .fillna(0)
+        .rename(columns={"activation": "input"})
+    )
+    activation = neuron_data[["root_id", "activation"]]
+
+    for i in range(num_passes):
+        activation = propagate_data_with_steps(activation.copy(), connections, i)
+        propagation = propagation.merge(activation, on="root_id", how="left").fillna(0)
+
+    # return last column of propagation
+    return propagation.iloc[:, -1]

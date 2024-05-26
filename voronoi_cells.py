@@ -81,7 +81,7 @@ class VoronoiCells:
             ax=ax,
             show_vertices=False,
             line_colors="orange",
-            line_width=2,
+            line_width=1,
             line_alpha=0.6,
             point_size=2,
         )

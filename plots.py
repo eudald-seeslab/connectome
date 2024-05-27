@@ -57,7 +57,7 @@ def plot_accuracy_per_value(df, value):
     df["per_correct"] = df.groupby(value)["Is correct"].transform("mean")
     plt.figure()
     ax = sns.scatterplot(data=df, x=value, y="per_correct")
-    if value not in ["radius", "distance"]:
+    if value != ["point_num"]:
         xticks = ax.xaxis.get_major_ticks()
         for i in range(len(xticks)):
             if i % 4 != 0:

@@ -4,15 +4,10 @@ from matplotlib import pyplot as plt
 import torch
 import pandas as pd
 import numpy as np
-from tqdm import tqdm
 import wandb
-
-tqdm.pandas()  # for progress_apply
 from tqdm.contrib.concurrent import process_map
 from multiprocessing import cpu_count
 
-import config
-from complete_training_data_processing import CompleteModelsDataProcessor
 from model_inspection_funcs import (
     neuron_data_from_image,
     propagate_neuron_data,
@@ -102,20 +97,7 @@ def log_results(results, type, shuffled=False):
     acc = 1 - acc if acc < 0.5 else acc
     wandb.log({f"{type}{s_char}_acc": acc})
 
-
-def main(points, shapes):
-
-    if not points and not shapes:
-        print("Please select at least one of the two options.")
-        return
-
-    data_processor = CompleteModelsDataProcessor(
-        neurons=config.neurons,
-        voronoi_criteria=config.voronoi_criteria,
-        random_synapses=config.random_synapses,
-        log_transform_weights=config.log_transform_weights,
-    )
-
+def get_data():
     # horrible data stuff
     connections = (
         pd.read_csv(
@@ -137,7 +119,7 @@ def main(points, shapes):
     shuffled_connections["post_root_id"] = np.random.permutation(
         connections["post_root_id"]
     )
-    right_root_ids = data_processor.right_root_ids
+    right_root_ids = pd.read_csv("adult_data/root_id_to_index.csv")
     all_neurons = (
         pd.read_csv("adult_data/classification_clean.csv")
         .merge(right_root_ids, on="root_id")
@@ -152,11 +134,24 @@ def main(points, shapes):
     )
     rational_cell_types = pd.read_csv("adult_data/rational_cell_types.csv")
     all_neurons["decision_making"] = np.where(
-        all_neurons["cell_type"].isin(rational_cell_types["cell_type"].values.tolist()),
+        all_neurons["cell_type"].isin(
+            rational_cell_types["cell_type"].values.tolist()
+        ),
         1,
         0,
     )
     all_neurons["root_id"] = all_neurons["root_id"].astype("string")
+
+    return connections, shuffled_connections, all_neurons, neuron_data, all_coords
+
+
+def main(points, shapes):
+
+    if not points and not shapes:
+        print("Please select at least one of the two options.")
+        return
+    
+    connections, shuffled_connections, all_neurons, neuron_data, all_coords = get_data()
 
     blue_yellow = ["#FFD700", "#0000FF"]
     sns.set_palette(blue_yellow)

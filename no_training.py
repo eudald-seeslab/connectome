@@ -1,3 +1,4 @@
+import argparse
 import os
 from matplotlib import pyplot as plt
 import torch
@@ -23,7 +24,7 @@ device = torch.device("cpu")
 dtype = torch.float32
 
 num_passes = 4
-pairs_num = 500
+pairs_num = 1000
 
 
 def process_image(args):
@@ -102,7 +103,12 @@ def log_results(results, type, shuffled=False):
     wandb.log({f"{type}{s_char}_acc": acc})
 
 
-def main():
+def main(points, shapes):
+
+    if not points and not shapes:
+        print("Please select at least one of the two options.")
+        return
+
     data_processor = CompleteModelsDataProcessor(
         neurons=config.neurons,
         voronoi_criteria=config.voronoi_criteria,
@@ -159,58 +165,74 @@ def main():
     wandb.init(project="no_training", config={"num_pairs": pairs_num})
 
     # Points
-    base_dir = "images/five_to_fifteen/train"
-    sub_dirs = ["yellow", "blue"]
+    if points:
+        base_dir = "images/five_to_fifteen/train"
+        sub_dirs = ["yellow", "blue"]
 
-    sampled_images = sample_images(base_dir, sub_dirs, pairs_num)
+        sampled_images = sample_images(base_dir, sub_dirs, pairs_num)
 
-    # Normal
-    predictions = predict_images(
-        sampled_images, neuron_data, connections, all_coords, all_neurons, num_passes
-    )
-    results = process_points_results(predictions)
-    log_results(results, "points")
+        # Normal
+        predictions = predict_images(
+            sampled_images, neuron_data, connections, all_coords, all_neurons, num_passes
+        )
+        results = process_points_results(predictions)
+        log_results(results, "points")
 
-    # Reshuffled
-    predictions = predict_images(
-        sampled_images,
-        neuron_data,
-        shuffled_connections,
-        all_coords,
-        all_neurons,
-        num_passes,
-    )
+        # Reshuffled
+        predictions = predict_images(
+            sampled_images,
+            neuron_data,
+            shuffled_connections,
+            all_coords,
+            all_neurons,
+            num_passes,
+        )
 
-    results = process_points_results(predictions)
-    log_results(results, "points", shuffled=True)
+        results = process_points_results(predictions)
+        log_results(results, "points", shuffled=True)
 
     # Shapes
-    base_dir = "images/red_80_110_jitter/train"
-    sub_dirs = ["circle", "triangle"]
+    if shapes:
+        base_dir = "images/blue_80_110_jitter/train"
+        sub_dirs = ["circle", "triangle"]
 
-    # Normal
-    sampled_images = sample_images(base_dir, sub_dirs, pairs_num)
-    predictions = predict_images(
-        sampled_images, neuron_data, connections, all_coords, all_neurons, num_passes
-    )
+        # Normal
+        sampled_images = sample_images(base_dir, sub_dirs, pairs_num)
+        predictions = predict_images(
+            sampled_images, neuron_data, connections, all_coords, all_neurons, num_passes
+        )
 
-    results = process_shapes_results(predictions, sampled_images)
-    log_results(results, "shapes")
+        results = process_shapes_results(predictions, sampled_images)
+        log_results(results, "shapes")
 
-    predictions = predict_images(
-        sampled_images,
-        neuron_data,
-        shuffled_connections,
-        all_coords,
-        all_neurons,
-        num_passes,
-    )
+        predictions = predict_images(
+            sampled_images,
+            neuron_data,
+            shuffled_connections,
+            all_coords,
+            all_neurons,
+            num_passes,
+        )
 
-    results = process_shapes_results(predictions, sampled_images)
-    log_results(results, "shapes", shuffled=True)
+        results = process_shapes_results(predictions, sampled_images)
+        log_results(results, "shapes", shuffled=True)
 
     wandb.finish()
 
 
 if __name__ == "__main__":
-    main()
+
+    parser = argparse.ArgumentParser(description="No training analysis.")
+    parser.add_argument(
+        "--points",
+        action="store_true",
+        help="Are we checking the ANS?",
+    )
+    parser.add_argument(
+    "--shapes",
+    action="store_true",
+    help="Are we trying to differentiate among two shapes?",
+)
+    args = parser.parse_args()
+
+    main(args.points, args.shapes)

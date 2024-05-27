@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 GENERAL_CONFIG = {
     # so that we can create more images without the names clashing with the previous
-    "version_tag": "",
+    "version_tag": "v2",
     "colour_1": "yellow",
     "colour_2": "blue",
     "boundary_width": 5,
@@ -23,8 +23,8 @@ GENERAL_CONFIG = {
     "init_size": 512,
     "mode": "RGB",
     # these are per colour
-    "min_point_num": 5,
-    "max_point_num": 15,
+    "min_point_num": 0,
+    "max_point_num": 5,
     "attempts_limit": 500,
 }
 
@@ -79,7 +79,7 @@ class ImageGenerator:
         point_array = number_points.design_n_points(
             n2, self.config["colour_2"], point_array=point_array
         )
-        if equalized:
+        if equalized and not self.config["ONE_COLOUR"]:
             point_array = number_points.equalize_areas(point_array)
         return number_points.draw_points(point_array)
 
@@ -118,6 +118,9 @@ class ImageGenerator:
         min_p = self.config["min_point_num"]
         max_p = self.config["max_point_num"]
 
+        if self.config["ONE_COLOUR"]:
+            return [(0, a) for a in range(1, max_p + 1)]
+
         positions = []
         # Note that we don't need the last value of 'a', since 'b' will always be greater.
         for a in range(min_p, max_p):
@@ -138,10 +141,11 @@ class ImageGenerator:
         )
         for i in tqdm(range(self.config["IMAGE_SET_NUM"])):
             for pair in positions:
-                self.create_and_save(pair[0], pair[1], equalized=True, tag=i)
-                self.create_and_save(pair[1], pair[0], equalized=True, tag=i)
                 self.create_and_save(pair[0], pair[1], equalized=False, tag=i)
                 self.create_and_save(pair[1], pair[0], equalized=False, tag=i)
+                if not self.config["ONE_COLOUR"]:
+                    self.create_and_save(pair[0], pair[1], equalized=True, tag=i)
+                    self.create_and_save(pair[1], pair[0], equalized=True, tag=i)
 
 
 def get_config():
@@ -163,12 +167,16 @@ def get_config():
     parser.add_argument(
         "--easy", action='store_true', help="Use easier ratios between colours."
     )
+    parser.add_argument(
+        "--one_colour", action='store_true', help="Use only one colour."
+    )
     args = parser.parse_args()
 
     config = GENERAL_CONFIG | {
         "EASY": args.easy,
         "IMAGE_SET_NUM": args.img_set_num,
         "IMG_DIR": args.img_dir,
+        "ONE_COLOUR": args.one_colour,
     }
     return config
 

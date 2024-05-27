@@ -25,6 +25,8 @@ def plot_results(results_, plot_types):
                 plots.append(plot_accuracy_per_value(results_.copy(), "radius"))
             elif plot_type == "distance":
                 plots.append(plot_accuracy_per_value(results_.copy(), "distance"))
+            elif plot_type == "point_num":
+                plots.append(plot_accuracy_per_value(results_.copy(), "point_num"))
             elif plot_type == "contingency":
                 plots.append(plot_contingency_table(results_.copy()))
     except Exception:

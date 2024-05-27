@@ -24,7 +24,7 @@ GENERAL_CONFIG = {
     "mode": "RGB",
     # these are per colour
     "min_point_num": 0,
-    "max_point_num": 5,
+    "max_point_num": 10,
     "attempts_limit": 500,
 }
 

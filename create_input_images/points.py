@@ -28,7 +28,7 @@ class NumberPoints:
         self.attempts_limit = attempts_limit
 
     def _create_random_point(self):
-        radius = randint(self.min_point_radius, self.max_point_radius + 1)
+        radius = randint(self.min_point_radius, self.max_point_radius)
         limit = self.boundary_width + radius + self.point_sep
 
         # Change mental coordinate system to the center of the square
@@ -57,7 +57,7 @@ class NumberPoints:
         if point_array is None:
             point_array = []
 
-        for i in range(n):
+        for _ in range(n):
             new_point = self._create_random_point()
 
             attempts = 0
@@ -71,8 +71,6 @@ class NumberPoints:
         return point_array
 
     def _draw_point(self, point, colour):
-        # pos: position of the center: a tuple of x and y in pixels
-        # size: radius of the circle (in pixels)
         x1 = point[0] - point[2]
         x2 = point[0] + point[2]
         y1 = point[1] - point[2]
@@ -101,8 +99,8 @@ class NumberPoints:
         return small, big_area, small_area
 
     @staticmethod
-    def _increase_radius(point):
-        return (point[0][0], point[0][1], point[0][2] + 1), point[1]
+    def _increase_radius(point, increase=1):
+        return (point[0][0], point[0][1], point[0][2] + increase), point[1]
 
     def equalize_areas(self, point_array):
 
@@ -123,4 +121,39 @@ class NumberPoints:
             if not self._check_points_not_overlapping(pair[0][0], pair[1][0]):
                 raise PointLayoutError("Overlapping points created")
 
+        return point_array
+
+    
+    def _check_within_boundaries(self, point):
+        return (all([point[i] - point[2] > 0 for i in range(2)]) and 
+                all([point[i] + point[2] < self.init_size for i in range(2)]))
+
+    
+    def fix_total_area(self, point_array, target_area):
+        current_area = self.compute_area(point_array, "yellow")
+        if current_area > target_area:
+            raise PointLayoutError("Current area is already bigger than target area")
+
+        # Here we can compute analytically the increase in area for all points; 
+        # we can then increase the radius of all points by the same amount
+        area_diff = target_area - current_area
+        num_points = len(point_array)
+        # We give the same area increase to all points
+        area_increase = int(area_diff / num_points)
+        # get current radii
+        radii = [a[0][2] for a in point_array]
+        # increase radii
+        increases = [2 * np.sqrt(r**2 + area_increase) - r for r in radii]
+        point_array = [self._increase_radius(a, i) for a, i in zip(point_array, increases)]
+
+        # Check that we are still within the boundaries
+        for point in point_array:
+            if not self._check_within_boundaries(point[0]):
+                raise PointLayoutError("Point is outside boundaries")
+        
+        # Recheck that we haven't created any overlap
+        for pair in itertools.combinations(point_array, 2):
+            if not self._check_points_not_overlapping(pair[0][0], pair[1][0]):
+                raise PointLayoutError("Overlapping points created")
+            
         return point_array

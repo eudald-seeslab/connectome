@@ -10,6 +10,7 @@ from multiprocessing import cpu_count
 
 from model_inspection_funcs import (
     neuron_data_from_image,
+    propagate_data_without_deciding,
     propagate_neuron_data,
     sample_images,
 )
@@ -46,6 +47,35 @@ def predict_images(
 
     # Use process_map with the adjusted process_image function
     results = process_map(process_image, tasks, max_workers=cpu_count() - 2, chunksize=1)
+
+    # Convert list of tuples into a DataFrame
+    dms = {name: dm for name, dm in results}
+    return pd.DataFrame(dms)
+
+
+def process_image_without_deciding(args):
+    # Unpack all arguments
+    img, neuron_data, connections, all_coords, num_passes = args
+    activated_data = neuron_data_from_image(img, neuron_data)
+    propagation = propagate_data_without_deciding(
+        activated_data, connections, all_coords, num_passes
+    )
+    return os.path.basename(img), propagation
+
+
+def predict_images_without_deciding(
+    sampled_images, neuron_data, connections, all_coords, num_passes
+):
+    # Prepare the list of arguments for each image processing task
+    tasks = [
+        (img, neuron_data, connections, all_coords, num_passes)
+        for img in sampled_images
+    ]
+
+    # Use process_map with the adjusted process_image function
+    results = process_map(
+        process_image_without_deciding, tasks, max_workers=cpu_count() - 2, chunksize=1
+    )
 
     # Convert list of tuples into a DataFrame
     dms = {name: dm for name, dm in results}
@@ -112,7 +142,7 @@ def get_data():
         .sum("syn_count")
         .reset_index()
     )
-    # set weights to 1 because we are not training
+    # set weights to 1 because we are not training 
     connections["weight"] = 1
     # reshuffle column post_rood_id of the dataframe connections
     shuffled_connections = connections.copy()

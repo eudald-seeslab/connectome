@@ -9,11 +9,11 @@ from tqdm import tqdm
 
 from adult_models_helpers import TrainingError
 import config
+from plots import plot_results
 from utils import (
     get_image_paths,
     get_iteration_number,
     initialize_results_df,
-    plot_results,
     save_model,
     select_random_images,
     update_results_df,
@@ -105,7 +105,9 @@ def main(wandb_logger, sweep_config=None):
                 images, labels = data_processor.get_data_from_paths(batch_files)
                 if i % config.wandb_images_every == 0:
                     p = data_processor.plot_input_images(images[0])
-                    wandb_logger.log_image(p, basename(batch_files[0]), "Voronoi - Original - Activations")
+                    wandb_logger.log_image(
+                        p, basename(batch_files[0]), "Voronoi - Original - Activations"
+                    )
                     plt.close("all")
 
                 inputs, labels = data_processor.process_batch(images, labels)
@@ -118,7 +120,9 @@ def main(wandb_logger, sweep_config=None):
                     optimizer.step()
 
                 # Calculate run parameters
-                outputs, predictions, labels_cpu, correct = clean_model_outputs(out, labels)
+                outputs, predictions, labels_cpu, correct = clean_model_outputs(
+                    out, labels
+                )
                 results = update_results_df(
                     results, batch_files, outputs, predictions, labels_cpu, correct
                 )

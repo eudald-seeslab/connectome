@@ -1,8 +1,9 @@
 import os
+import traceback
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
-import create_input_images.data_config as data_config
+import config
 
 pd.options.mode.chained_assignment = None
 
@@ -65,9 +66,35 @@ def plot_accuracy_per_value(df, value):
 
     return ax
 
+
 def plot_contingency_table(df):
-    label_map = dict(enumerate(data_config.CLASSES))
+    label_map = dict(enumerate(config.CLASSES))
     df["Prediction"] = df["Prediction"].map(label_map)
     df["True label"] = df["True label"].map(label_map)
 
-    return df.value_counts(["Prediction", "True label"]).unstack().plot(kind="bar", stacked=True)
+    return (
+        df.value_counts(["Prediction", "True label"])
+        .unstack()
+        .plot(kind="bar", stacked=True)
+    )
+
+
+def plot_results(results_, plot_types):
+    plots = []
+    try:
+        for plot_type in plot_types:
+            if plot_type == "weber":
+                plots.append(plot_weber_fraction(results_.copy()))
+            elif plot_type == "radius":
+                plots.append(plot_accuracy_per_value(results_.copy(), "radius"))
+            elif plot_type == "distance":
+                plots.append(plot_accuracy_per_value(results_.copy(), "distance"))
+            elif plot_type == "point_num":
+                plots.append(plot_accuracy_per_value(results_.copy(), "point_num"))
+            elif plot_type == "contingency":
+                plots.append(plot_contingency_table(results_.copy()))
+    except Exception:
+        error = traceback.format_exc()
+        print(f"Error plotting results: {error}")
+
+    return plots

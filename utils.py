@@ -1,39 +1,16 @@
 import os
 import random
-import traceback
 import numpy as np
 import pandas as pd
 import sys
 from scipy.sparse import coo_matrix
 import torch
 import config
-from plots import plot_accuracy_per_value, plot_contingency_table, plot_weber_fraction
 
 
 def debugger_is_active() -> bool:
     """Return if the debugger is currently active"""
     return hasattr(sys, "gettrace") and sys.gettrace() is not None
-
-
-def plot_results(results_, plot_types):
-    plots = []
-    try:
-        for plot_type in plot_types:
-            if plot_type == "weber":
-                plots.append(plot_weber_fraction(results_.copy()))
-            elif plot_type == "radius":
-                plots.append(plot_accuracy_per_value(results_.copy(), "radius"))
-            elif plot_type == "distance":
-                plots.append(plot_accuracy_per_value(results_.copy(), "distance"))
-            elif plot_type == "point_num":
-                plots.append(plot_accuracy_per_value(results_.copy(), "point_num"))
-            elif plot_type == "contingency":
-                plots.append(plot_contingency_table(results_.copy()))
-    except Exception:
-        error = traceback.format_exc()
-        print(f"Error plotting results: {error}")
-
-    return plots
 
 
 def get_files_from_directory(directory_path):

@@ -84,21 +84,19 @@ def get_neuron_activations(right_visual, voronoi_average):
     return neuron_activations.set_index("root_id")[["activation"]]
 
 
-def get_side_decision_making_vector(right_root_ids, side):
-    cell_type_rational = pd.read_csv("data/cell_type_rational_short.csv")
-    # get the cell types with rational = 1
-    rational_cell_types = cell_type_rational[cell_type_rational["rational"] == 1][
-        "cell_type"
+def get_side_decision_making_vector(root_ids, rational_cell_types, neurons, side=None):
+
+
+    if side is not None:
+        neurons = neurons[neurons["side"] == side]
+    # we might have the classification of neurons not in root_ids
+    # neurons = neurons[
+    #     neurons["root_id"].isin(root_ids["root_id"])
+    # ]
+    rational_neurons = neurons[
+        neurons["cell_type"].isin(rational_cell_types)
     ]
-    right_neurons = pd.read_csv("adult_data/classification.csv")
-    right_neurons = right_neurons[right_neurons["side"] == side]
-    right_neurons = right_neurons[
-        right_neurons["root_id"].isin(right_root_ids["root_id"])
-    ]
-    rational_neurons = right_neurons[
-        right_neurons["cell_type"].isin(rational_cell_types)
-    ]
-    temp = right_root_ids.merge(rational_neurons, on="root_id", how="left")
+    temp = root_ids.merge(rational_neurons, on="root_id", how="left")
     return torch.tensor(
         temp.assign(rational=np.where(temp["side"].isna(), 0, 1))["rational"].values
     )

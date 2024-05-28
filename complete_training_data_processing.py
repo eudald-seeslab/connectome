@@ -33,15 +33,18 @@ class CompleteModelsDataProcessor:
         log_transform_weights=False,
     ):
         # get data
-        self.right_root_ids = pd.read_csv("adult_data/root_id_to_index.csv")
+        self.root_ids = pd.read_csv("adult_data/root_id_to_index.csv")
         self.synaptic_matrix = load_npz("adult_data/good_synaptic_matrix.npz")
+        neuron_classification = pd.read_csv("adult_data/classification.csv")
+        rational_cell_types = pd.read_csv("adult_data/rational_cell_types.csv", index_col=0).index.tolist()
+
         if log_transform_weights:
             self.synaptic_matrix.data = np.log1p(self.synaptic_matrix.data)
         if random_synapses:
             self.synaptic_matrix = self.shuffle_synaptic_matrix(self.synaptic_matrix)
 
         self.decision_making_vector = get_side_decision_making_vector(
-            self.right_root_ids, "right"
+            self.root_ids, rational_cell_types, neuron_classification
         )
         self.neurons = neurons
         self.voronoi_cells = VoronoiCells(
@@ -76,7 +79,7 @@ class CompleteModelsDataProcessor:
             axis=1,
         )
         activation_df = (
-            self.right_root_ids.merge(
+            self.root_ids.merge(
                 neuron_activations, left_on="root_id", right_index=True, how="left"
             )
             .fillna(0)

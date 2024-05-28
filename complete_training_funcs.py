@@ -1,13 +1,9 @@
 from concurrent.futures import ThreadPoolExecutor
-import os
 from imageio.v3 import imread
 import pandas as pd
 import numpy as np
 
 import torch
-
-
-num_workers = os.cpu_count() - 2
 
 
 def import_images(img_paths):
@@ -86,13 +82,9 @@ def get_neuron_activations(right_visual, voronoi_average):
 
 def get_side_decision_making_vector(root_ids, rational_cell_types, neurons, side=None):
 
-
     if side is not None:
         neurons = neurons[neurons["side"] == side]
-    # we might have the classification of neurons not in root_ids
-    # neurons = neurons[
-    #     neurons["root_id"].isin(root_ids["root_id"])
-    # ]
+
     rational_neurons = neurons[
         neurons["cell_type"].isin(rational_cell_types)
     ]

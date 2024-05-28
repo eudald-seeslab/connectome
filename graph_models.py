@@ -8,19 +8,27 @@ from torch_scatter import scatter_mean, scatter_std
 DROPOUT = 0.0
 
 
-class TrainableEdgeConv(MessagePassing):
-    def __init__(self, input_shape, edge_weights, num_connectome_passes, batch_size, dtype, device):
-        super(TrainableEdgeConv, self).__init__(aggr="add")
+class Connectome(MessagePassing):
+    def __init__(self, input_shape, edge_weights, num_connectome_passes, batch_size, dtype, device, train_edges, train_neurons, lambda_func=None):
+        super(Connectome, self).__init__(aggr="add")
 
         self.num_passes = num_connectome_passes
         self.num_nodes_per_graph = input_shape
         self.batch_size = batch_size
-        # This allows us to have negative weights, as well as synapses comprised
-        #  of many weights, where some are positive and some negative, and the result
-        #  is edge_weight * edge_weight_multiplier
         self.edge_weight = torch.tensor(edge_weights, dtype=dtype, device=device)
-        self.edge_weight_multiplier = Parameter(torch.Tensor(edge_weights.shape[0]).to(device))
-        nn.init.uniform_(self.edge_weight_multiplier, a=-0.1, b=0.1)
+        self.train_edges = train_edges
+        self.train_neurons = train_neurons
+        self.lambda_func = lambda_func
+
+        if train_edges:    
+            # This allows us to have negative weights, as well as synapses comprised
+            #  of many weights, where some are positive and some negative, and the result
+            #  is edge_weight * edge_weight_multiplier
+            self.edge_weight_multiplier = Parameter(torch.Tensor(edge_weights.shape[0]).to(device))
+            nn.init.uniform_(self.edge_weight_multiplier, a=-0.1, b=0.1)
+        if train_neurons:
+            self.neuron_activation_threshold = Parameter(torch.Tensor(input_shape).to(device))
+            nn.init.uniform_(self.neuron_activation_threshold, a=0, b=0.1)
 
     def forward(self, x, edge_index):
         # Start propagating messages.
@@ -36,24 +44,30 @@ class TrainableEdgeConv(MessagePassing):
         # Message: edge_weight (learnable) multiplied by node feature of the neighbor
         # manual reshape to make sure that the multiplication is done correctly
         x_j = x_j.view(self.batch_size, -1)
-        # multiply by the modulated edge weight
-        x_j = x_j * edge_weight * self.edge_weight_multiplier 
+        if self.train_edges:
+            # multiply by the modulated edge weight
+            x_j = x_j * edge_weight * self.edge_weight_multiplier
+        else:
+            # multiply only by the edge weight
+            x_j = x_j * edge_weight
         # reshape back
         return x_j.view(-1, 1)
 
     def update(self, aggr_out):
-        # Each node gets its updated feature as the sum of its neighbor contributions.
-        # sigmoid tries to emulate the biological process of the neuron, 
-        # where the signal is passed if the signal is strong enough, and then it's only 1
-        # aggr_out = aggr_out / aggr_out.abs().max()
-        # return torch.sigmoid(aggr_out)
-        return aggr_out
 
-    def reshape_and_normalize(self, x):
-        x = x.view(self.batch_size, self.num_nodes_per_graph, -1)
-        x = x / x.norm(dim=1, keepdim=True)
-        x = x.view(-1, x.size(2))
-        return x
+        if self.train_neurons:
+            # Each node gets its updated feature as the sum of its neighbor contributions.
+            # Then, we apply the lambda function with a threshold, to emulate the biological
+            temp = aggr_out.view(self.batch_size, -1)
+            # Min-max normalization per graph so that the thresholds are not too high
+            temp = (temp - temp.min(dim=1, keepdim=True).values) / (
+                temp.max(dim=1, keepdim=True).values - temp.min(dim=1, keepdim=True).values
+            )
+            # Apply the threshold. Note the "abs" to make sure that the threshold is always positive
+            sig_out = self.lambda_func(temp - abs(self.neuron_activation_threshold))
+            return sig_out.view(-1, 1)
+        
+        return aggr_out
 
 
 class FullGraphModel(nn.Module):
@@ -67,14 +81,26 @@ class FullGraphModel(nn.Module):
         dtype,
         edge_weights,
         device,
+        train_edges,
+        train_neurons,
+        lambda_func,
         num_classes=2,
         num_features=1,
     ):
         super(FullGraphModel, self).__init__()
         self.register_buffer("decision_making_vector", decision_making_vector)
 
-        self.connectome = TrainableEdgeConv(input_shape, edge_weights, num_connectome_passes, batch_size, dtype, device)
-
+        self.connectome = Connectome(
+            input_shape=input_shape,
+            edge_weights=edge_weights,
+            num_connectome_passes=num_connectome_passes,
+            batch_size=batch_size,
+            dtype=dtype,
+            device=device,
+            train_edges=train_edges,
+            train_neurons=train_neurons,
+            lambda_func=lambda_func,
+        )
         self.final_fc = nn.Linear(1, num_classes, dtype=dtype)
         self.num_features = num_features
         self.batch_size = batch_size

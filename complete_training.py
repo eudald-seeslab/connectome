@@ -83,6 +83,9 @@ def main(wandb_logger, sweep_config=None):
         dtype=config.dtype,
         edge_weights=data_processor.synaptic_matrix.data,
         device=config.DEVICE,
+        train_edges=config.train_edges,
+        train_neurons=config.train_neurons,
+        lambda_func=config.lambda_func,
         num_classes=len(config.CLASSES),
     ).to(config.DEVICE)
     optimizer = torch.optim.Adam(model.parameters(), lr=base_lr)
@@ -136,6 +139,9 @@ def main(wandb_logger, sweep_config=None):
                 wandb_logger.log_metrics(ep, i, running_loss, total_correct, total)
                 if i == 0:
                     first_loss = running_loss
+                    # if loss is missing, stop
+                    if torch.isnan(loss).any():
+                        raise TrainingError("Loss is NaN. Training will stop.")
                 if i == 100 and running_loss == first_loss:
                     raise TrainingError("Loss is constant. Training will stop.")
 

@@ -16,6 +16,10 @@ MODEL_CONFIG = {
     "random_synapses": config.random_synapses,
     "small": config.small,
     "small_length": config.small_length,
+    "eye": config.eye,
+    "train_edges": config.train_edges,
+    "train_neurons": config.train_neurons,
+    "lambda_func": config.lambda_func.__name__,
 }
 
 

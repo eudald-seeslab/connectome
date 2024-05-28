@@ -9,8 +9,8 @@ device_type = "cuda" if cuda.is_available() else "cpu"
 DEVICE = device(device_type)
 
 # Directory paths relative to the project root
-TRAINING_DATA_DIR = "images/red_80_110_jitter/train"
-TESTING_DATA_DIR = "images/red_80_110_jitter/test"
+TRAINING_DATA_DIR = "images/five_to_fifteen/train"
+TESTING_DATA_DIR = "images/five_to_fifteen/test"
 # not used
 VALIDATION_DATA_DIR = "images/big_pointsval"
 # get directory names from the training data directory
@@ -20,6 +20,12 @@ CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 neurons = "all" # "selected" or "all"
 voronoi_criteria = "R7" #  "R7" or "all"
 random_synapses = False
+train_edges = False
+train_neurons = True
+# node embedding activation function, as in
+# https://pytorch-geometric.readthedocs.io/en/latest/tutorial/create_gnn.html
+# only for training neurons
+lambda_func = torch.relu # torch.sigmoid or torch.relu
 
 
 # Debugging and logging
@@ -27,7 +33,7 @@ debugging = False
 debug_length = 2
 validation_length = 400
 wandb_ = True
-wandb_images_every = 20
+wandb_images_every = 100
 small = False
 small_length = 4000
 
@@ -35,15 +41,13 @@ small_length = 4000
 num_epochs = 20
 batch_size = 32
 dropout = 0.1
-base_lr = 0.01
+base_lr = 0.003
 weight_decay = 0.0001
-NUM_CONNECTOME_PASSES = 4
+NUM_CONNECTOME_PASSES = 5
 log_transform_weights = False
-plot_types = [
-    "radius",
-    "contingency",
-    "distance",
-]  # "radius", "contingency", "distance" or "weber"
+eye = "right"  # "left" or "right"
+# "radius", "contingency", "distance", "num_points", "stripes", "weber"
+plot_types = ["weber"]  
 
 # sparse stuff is generaly not implemented in half...
 dtype = torch.float32
@@ -53,3 +57,4 @@ sparse_layout = torch.sparse_coo
 wandb_ = False if debugger_is_active() else wandb_
 wandb_ = False if debugging else wandb_
 validation_length = validation_length if small else None
+num_epochs = 1 if debugging else num_epochs

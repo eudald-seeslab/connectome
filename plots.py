@@ -46,19 +46,19 @@ def plot_weber_fraction(results_df: pd.DataFrame) -> plt.Figure:
 
 
 def plot_accuracy_per_value(df, value):
-    if value in ["radius", "point_num"]:
+    if value in ["radius", "point_num", "stripes"]:
         split = 1
     elif value == "distance":
         split = 2
     else:
-        raise ValueError("Value must be 'radius', 'distance', or 'point_num'")
+        raise ValueError("Value must be 'radius', 'distance', 'point_num', or 'stripes'")
 
     df[value] = df["Image"].apply(lambda x: os.path.basename(x).split("_")[split])
     df[value] = df[value].astype(int)
     df["per_correct"] = df.groupby(value)["Is correct"].transform("mean")
     plt.figure()
     ax = sns.scatterplot(data=df, x=value, y="per_correct")
-    if value not in ["radius", "distance"]:
+    if value in ["radius", "distance"]:
         xticks = ax.xaxis.get_major_ticks()
         for i in range(len(xticks)):
             if i % 4 != 0:
@@ -91,6 +91,8 @@ def plot_results(results_, plot_types):
                 plots.append(plot_accuracy_per_value(results_.copy(), "distance"))
             elif plot_type == "point_num":
                 plots.append(plot_accuracy_per_value(results_.copy(), "point_num"))
+            elif plot_type == "stripes":
+                plots.append(plot_accuracy_per_value(results_.copy(), "stripes"))
             elif plot_type == "contingency":
                 plots.append(plot_contingency_table(results_.copy()))
     except Exception:

@@ -40,12 +40,14 @@ torch.manual_seed(1234)
 def main(wandb_logger, sweep_config=None):
 
     if sweep_config is None:
+        eye = config.eye
         neurons = config.neurons
         voronoi_criteria = config.voronoi_criteria
         random_synapses = config.random_synapses
         base_lr = config.base_lr
         NUM_CONNECTOME_PASSES = config.NUM_CONNECTOME_PASSES
     else:
+        eye = sweep_config.eye
         neurons = sweep_config.neurons
         voronoi_criteria = sweep_config.voronoi_criteria
         random_synapses = sweep_config.random_synapses
@@ -66,6 +68,7 @@ def main(wandb_logger, sweep_config=None):
         config.TRAINING_DATA_DIR, config.small, config.small_length
     )
     data_processor = CompleteModelsDataProcessor(
+        eye=eye,
         neurons=neurons,
         voronoi_criteria=voronoi_criteria,
         random_synapses=random_synapses,

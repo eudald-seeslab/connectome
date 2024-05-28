@@ -15,9 +15,9 @@ class VoronoiCells:
     index_map = None
     color_map = {"R1-6": "gray", "R7": "red", "R8p": "green", "R8y": "blue"}
 
-    def __init__(self, neurons="all", voronoi_criteria="all"):
+    def __init__(self, eye="right", neurons="all", voronoi_criteria="all"):
         self.img_coords = self.get_image_coords(self.pixel_num)
-        self.neuron_data = self._get_neuronal_data(neurons)
+        self.neuron_data = self._get_visual_neurons_data(neurons, eye)
         # if we use the R7 neurons as centers, we can create them already,
         # since they are fixed
         if voronoi_criteria == "R7":
@@ -44,12 +44,9 @@ class VoronoiCells:
         return self.query_points(self.img_coords)
 
     @staticmethod
-    def _get_neuronal_data(neurons):
-        if neurons == "all":
-            neuron_file = "right_visual_positions_all_neurons.csv"
-        elif neurons == "selected":
-            neuron_file = "right_visual_positions_selected_neurons.csv"
-        data_path = os.path.join("adult_data", neuron_file)
+    def _get_visual_neurons_data(neurons, side="right"):
+        file = f"{side}_visual_positions_{neurons}_neurons.csv"
+        data_path = os.path.join("adult_data", file)
 
         return pd.read_csv(data_path).drop(columns=["x", "y", "z", "PC1", "PC2"])
 

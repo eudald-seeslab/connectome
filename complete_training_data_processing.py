@@ -27,6 +27,7 @@ class CompleteModelsDataProcessor:
 
     def __init__(
         self,
+        eye="right",
         neurons="all",
         voronoi_criteria="all",
         random_synapses=False,
@@ -48,7 +49,7 @@ class CompleteModelsDataProcessor:
         )
         self.neurons = neurons
         self.voronoi_cells = VoronoiCells(
-            neurons=self.neurons, voronoi_criteria=voronoi_criteria
+            eye=eye, neurons=self.neurons, voronoi_criteria=voronoi_criteria
         )
         if voronoi_criteria == "R7":
             self.tesselated_df = self.voronoi_cells.get_tesselated_neurons()

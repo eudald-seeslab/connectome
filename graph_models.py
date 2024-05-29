@@ -28,7 +28,7 @@ class Connectome(MessagePassing):
         self.lambda_func = lambda_func
 
         self.register_buffer(
-            "edge_weights", torch.tensor(edge_weights, dtype=dtype, device=device)
+            "edge_weight", torch.tensor(edge_weights, dtype=dtype, device=device)
         )
 
         if train_edges:

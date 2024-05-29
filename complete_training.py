@@ -8,7 +8,7 @@ from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
 
 from debug_utils import get_logger, model_summary
-from graph_models_helpers import TrainingError
+from graph_models_helpers import EarlyStopping, TrainingError
 import config
 from plots import plot_results
 from utils import (
@@ -98,6 +98,7 @@ def main(wandb_logger, sweep_config=None):
     ).to(config.DEVICE)
     optimizer = torch.optim.Adam(model.parameters(), lr=base_lr)
     criterion = CrossEntropyLoss()
+    early_stopping = EarlyStopping(patience=2, min_delta=0)
 
     # Print model details
     model_summary(model)
@@ -160,6 +161,11 @@ def main(wandb_logger, sweep_config=None):
                 f"Finished epoch {ep + 1} with loss {running_loss / total} "
                 f"and accuracy {total_correct / total}."
             )
+
+            if early_stopping.should_stop(running_loss):
+                logger.info("Early stopping activated. Continuing to testing.")
+                break
+
             torch.cuda.empty_cache()
     except KeyboardInterrupt:
         logger.error("Training interrupted. Continuing to testing.")

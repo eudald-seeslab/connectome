@@ -56,30 +56,3 @@ def scipy_coo_to_torch_compressed_sparse(
         dtype=dtype,
         device=device,
     )
-
-
-class EarlyStopping:
-    def __init__(self, patience=10, min_delta=0):
-        """
-        Args:
-            patience (int): How many epochs to wait after last time validation loss improved.
-                            Default: 10
-            min_delta (float): Minimum change in the monitored quantity to qualify as an improvement.
-                               Default: 0
-        """
-        self.patience = patience
-        self.min_delta = min_delta
-        self.counter = 0
-        self.best_loss = None
-        self.early_stop = False
-
-    def __call__(self, loss):
-        if self.best_loss is None:
-            self.best_loss = loss
-        elif self.best_loss - loss > self.min_delta:
-            self.best_loss = loss
-            self.counter = 0
-        else:
-            self.counter += 1
-            if self.counter >= self.patience:
-                self.early_stop = True

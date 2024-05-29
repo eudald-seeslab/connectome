@@ -10,8 +10,8 @@ device_type = "cuda" if cuda.is_available() else "cpu"
 DEVICE = device(device_type)
 
 # Directory paths relative to the project root
-TRAINING_DATA_DIR = "images/five_to_fifteen/train"
-TESTING_DATA_DIR = "images/five_to_fifteen/test"
+TRAINING_DATA_DIR = "images/one_to_five_single_colour/train"
+TESTING_DATA_DIR = "images/one_to_five_single_colour/test"
 # not used
 VALIDATION_DATA_DIR = "images/big_pointsval"
 # get directory names from the training data directory
@@ -27,10 +27,10 @@ train_neurons = True
 # https://pytorch-geometric.readthedocs.io/en/latest/tutorial/create_gnn.html
 # only for training neurons
 lambda_func = leaky_relu  # torch activation function
-
+final_layer = "nn" # "mean" or "nn"
 
 # Debugging and logging
-debugging = False
+debugging = True
 debug_length = 2
 validation_length = 400
 wandb_ = True
@@ -39,7 +39,7 @@ small = False
 small_length = 4000
 
 # Training configuration
-num_epochs = 20
+num_epochs = 50
 batch_size = 32
 dropout = 0.1
 base_lr = 0.003
@@ -47,8 +47,8 @@ weight_decay = 0.0001
 NUM_CONNECTOME_PASSES = 4
 log_transform_weights = False
 eye = "right"  # "left" or "right"
-# "radius", "contingency", "distance", "num_points", "stripes", "weber"
-plot_types = ["weber"]  
+# "radius", "contingency", "distance", "point_num", "stripes", "weber"
+plot_types = ["point_num"]
 
 # sparse stuff is generaly not implemented in half...
 dtype = torch.float32

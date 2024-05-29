@@ -86,6 +86,7 @@ def main(wandb_logger, sweep_config=None):
         train_edges=config.train_edges,
         train_neurons=config.train_neurons,
         lambda_func=config.lambda_func,
+        final_layer=config.final_layer,
         num_classes=len(config.CLASSES),
     ).to(config.DEVICE)
     optimizer = torch.optim.Adam(model.parameters(), lr=base_lr)

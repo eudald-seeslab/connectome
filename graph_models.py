@@ -96,6 +96,7 @@ class FullGraphModel(nn.Module):
         train_edges,
         train_neurons,
         lambda_func,
+        final_layer="mean",
         num_classes=2,
         num_features=1,
     ):
@@ -113,9 +114,11 @@ class FullGraphModel(nn.Module):
             train_neurons=train_neurons,
             lambda_func=lambda_func,
         )
-        self.final_fc = nn.Linear(1, num_classes, dtype=dtype)
+        final_layer_input_size = int(decision_making_vector.sum()) if final_layer == "nn" else 1
+        self.final_fc = nn.Linear(final_layer_input_size, num_classes, dtype=dtype)
         self.num_features = num_features
         self.batch_size = batch_size
+        self.final_layer = final_layer
 
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
@@ -123,23 +126,24 @@ class FullGraphModel(nn.Module):
         # pass through the connectome
         x = self.connectome(x, edge_index)
         # get final decision
-        x, batch = self.decision_making_mask(x, batch)
         x = x.view(self.batch_size, -1, self.num_features)
-        # get the mean for each batch
-        x = torch.mean(x, dim=1, keepdim=True)
-        # normalize per batch
-        # x = x / x.norm()
+        x, batch = self.decision_making_mask(x, batch)
+        if self.final_layer == "mean":
+            # get the mean for each batch
+            x = torch.mean(x, dim=1, keepdim=True)
+            # normalize per batch
+            # x = x / x.norm()
 
         # final layer to get the correct magnitude
-        return self.final_fc(x).squeeze()
+        # Squeeze the num_features. If at some point is not 1, then we have to change this
+        return self.final_fc(x.squeeze(2)).squeeze()
 
     def decision_making_mask(self, x, batch):
-        x = x.view(self.batch_size, -1, self.num_features)
         x = x[:, self.decision_making_vector == 1, :]
 
         batch = batch.view(self.batch_size, -1)
         batch = batch[:, self.decision_making_vector == 1]
-        return x.view(-1, self.num_features), batch.view(-1)
+        return x, batch
 
     @staticmethod
     def min_max_norm(x):

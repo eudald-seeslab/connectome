@@ -20,6 +20,7 @@ MODEL_CONFIG = {
     "train_edges": config.train_edges,
     "train_neurons": config.train_neurons,
     "lambda_func": config.lambda_func.__name__,
+    "final_layer": config.final_layer,
 }
 
 

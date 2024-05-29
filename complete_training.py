@@ -45,7 +45,6 @@ def main(wandb_logger, sweep_config=None):
         neurons = config.neurons
         voronoi_criteria = config.voronoi_criteria
         random_synapses = config.random_synapses
-        base_lr = config.base_lr
         NUM_CONNECTOME_PASSES = config.NUM_CONNECTOME_PASSES
         train_edges = config.train_edges
         train_neurons = config.train_neurons
@@ -55,7 +54,6 @@ def main(wandb_logger, sweep_config=None):
         neurons = sweep_config.neurons
         voronoi_criteria = sweep_config.voronoi_criteria
         random_synapses = sweep_config.random_synapses
-        base_lr = sweep_config.base_lr
         NUM_CONNECTOME_PASSES = sweep_config.NUM_CONNECTOME_PASSES
         train_edges = sweep_config.train_edges
         train_neurons = sweep_config.train_neurons
@@ -63,7 +61,7 @@ def main(wandb_logger, sweep_config=None):
 
     # for saving later
     start_datetime = datetime.datetime.now().isoformat(sep=" ", timespec="minutes")
-    model_name = f"n_{neurons}_v_{voronoi_criteria}_r_{random_synapses}_lr_{base_lr}_p_{NUM_CONNECTOME_PASSES}_{start_datetime}.pth"
+    model_name = f"{wandb_logger.get_run_id()}_{start_datetime}.pth"
 
     # update batch size number of connectome passes (otherwise we run out of memory)
     batch_size = (
@@ -96,7 +94,7 @@ def main(wandb_logger, sweep_config=None):
         final_layer=final_layer,
         num_classes=len(config.CLASSES),
     ).to(config.DEVICE)
-    optimizer = torch.optim.Adam(model.parameters(), lr=base_lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.base_lr)
     criterion = CrossEntropyLoss()
     early_stopping = EarlyStopping(patience=2, min_delta=0)
 
@@ -215,7 +213,7 @@ def main(wandb_logger, sweep_config=None):
 
 if __name__ == "__main__":
 
-    logger = get_logger("ct")
+    logger = get_logger("ct", config.debugging)
 
     wandb_logger = WandBLogger("adult_complete")
     wandb_logger.initialize_run()

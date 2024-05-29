@@ -5,7 +5,7 @@ from complete_training import main
 from wandb_logger import WandBLogger
 
 
-project_name = "Complete_v2"
+project_name = "Complete_v3"
 
 sweep_config = {
     "method": "bayes",
@@ -36,15 +36,16 @@ sweep_id = wandb.sweep(sweep_config, project=project_name)
 
 
 if __name__ == "__main__":
-    num_agents = 4 if config.device_type == "cpu" else 1
-    processes = []
 
-    for _ in range(num_agents):
-        p = multiprocessing.Process(target=run_agent, args=(sweep_id,))
-        p.start()
-        processes.append(p)
+    if config.device_type == "cpu":
+        num_agents = 4
+        processes = []
+        for _ in range(num_agents):
+            p = multiprocessing.Process(target=run_agent, args=(sweep_id,))
+            p.start()
+            processes.append(p)
 
-    for p in processes:
-        p.join()
-
-    wandb.agent(sweep_id=sweep_id, function=train, project=project_name, count=20)
+        for p in processes:
+            p.join()
+    else:
+        run_agent(sweep_id)

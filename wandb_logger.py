@@ -31,6 +31,12 @@ class WandBLogger:
         self.enabled = config.wandb_
         self.log_images_every = config.wandb_images_every
         self.initialized = False
+    
+    def get_run_id(self):
+        if self.enabled and self.initialized:
+            return wandb.run.id
+        else:
+            raise ValueError("WandB not initialized.")
 
     def initialize_run(self, group=None):
         if self.enabled and not self.initialized:

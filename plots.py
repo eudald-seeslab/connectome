@@ -85,14 +85,8 @@ def plot_results(results_, plot_types):
         for plot_type in plot_types:
             if plot_type == "weber":
                 plots.append(plot_weber_fraction(results_.copy()))
-            elif plot_type == "radius":
-                plots.append(plot_accuracy_per_value(results_.copy(), "radius"))
-            elif plot_type == "distance":
-                plots.append(plot_accuracy_per_value(results_.copy(), "distance"))
-            elif plot_type == "point_num":
-                plots.append(plot_accuracy_per_value(results_.copy(), "point_num"))
-            elif plot_type == "stripes":
-                plots.append(plot_accuracy_per_value(results_.copy(), "stripes"))
+            elif plot_type in ["radius", "distance", "point_num", "stripes"]:
+                plots.append(plot_accuracy_per_value(results_.copy(), plot_type))
             elif plot_type == "contingency":
                 plots.append(plot_contingency_table(results_.copy()))
     except Exception:

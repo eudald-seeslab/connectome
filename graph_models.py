@@ -1,33 +1,48 @@
 import torch
-from torch.nn import functional as F
-from torch.nn import Parameter, ParameterList, Module
-from torch_geometric.nn import GATConv, global_max_pool, MessagePassing
+from torch.nn import Parameter
+from graph_models_helpers import min_max_norm
+from torch_geometric.nn import MessagePassing
 from torch import nn
-from torch_scatter import scatter_mean, scatter_std
-
-DROPOUT = 0.0
 
 
 class Connectome(MessagePassing):
-    def __init__(self, input_shape, edge_weights, num_connectome_passes, batch_size, dtype, device, train_edges, train_neurons, lambda_func=None):
+    def __init__(
+        self,
+        input_shape,
+        edge_weights,
+        num_connectome_passes,
+        batch_size,
+        dtype,
+        device,
+        train_edges,
+        train_neurons,
+        lambda_func=None,
+    ):
         super(Connectome, self).__init__(aggr="add")
 
         self.num_passes = num_connectome_passes
         self.num_nodes_per_graph = input_shape
         self.batch_size = batch_size
-        self.edge_weight = torch.tensor(edge_weights, dtype=dtype, device=device)
         self.train_edges = train_edges
         self.train_neurons = train_neurons
         self.lambda_func = lambda_func
 
-        if train_edges:    
+        self.register_buffer(
+            "edge_weights", torch.tensor(edge_weights, dtype=dtype, device=device)
+        )
+
+        if train_edges:
             # This allows us to have negative weights, as well as synapses comprised
             #  of many weights, where some are positive and some negative, and the result
             #  is edge_weight * edge_weight_multiplier
-            self.edge_weight_multiplier = Parameter(torch.Tensor(edge_weights.shape[0]).to(device))
+            self.edge_weight_multiplier = Parameter(
+                torch.Tensor(edge_weights.shape[0]).to(device)
+            )
             nn.init.uniform_(self.edge_weight_multiplier, a=-0.1, b=0.1)
         if train_neurons:
-            self.neuron_activation_threshold = Parameter(torch.Tensor(input_shape).to(device))
+            self.neuron_activation_threshold = Parameter(
+                torch.Tensor(input_shape).to(device)
+            )
             nn.init.uniform_(self.neuron_activation_threshold, a=0, b=0.1)
 
     def forward(self, x, edge_index):
@@ -36,7 +51,6 @@ class Connectome(MessagePassing):
 
         for _ in range(self.num_passes):
             x = self.propagate(edge_index, size=size, x=x, edge_weight=self.edge_weight)
-            # we might want to normalize the output
 
         return x
 
@@ -48,9 +62,8 @@ class Connectome(MessagePassing):
             # multiply by the modulated edge weight
             x_j = x_j * edge_weight * self.edge_weight_multiplier
         else:
-            # multiply only by the edge weight
             x_j = x_j * edge_weight
-        # reshape back
+
         return x_j.view(-1, 1)
 
     def update(self, aggr_out):
@@ -60,13 +73,12 @@ class Connectome(MessagePassing):
             # Then, we apply the lambda function with a threshold, to emulate the biological
             temp = aggr_out.view(self.batch_size, -1)
             # Min-max normalization per graph so that the thresholds are not too high
-            temp = (temp - temp.min(dim=1, keepdim=True).values) / (
-                temp.max(dim=1, keepdim=True).values - temp.min(dim=1, keepdim=True).values
-            )
-            # Apply the threshold. Note the "abs" to make sure that the threshold is always positive
+            temp = min_max_norm(temp)
+            # Apply the threshold. Note the "abs" to make sure that the threshold is not
+            #  helping the neuron to activate
             sig_out = self.lambda_func(temp - abs(self.neuron_activation_threshold))
             return sig_out.view(-1, 1)
-        
+
         return aggr_out
 
 
@@ -116,7 +128,7 @@ class FullGraphModel(nn.Module):
         # get the mean for each batch
         x = torch.mean(x, dim=1, keepdim=True)
         # normalize per batch
-        x = x / x.norm()
+        # x = x / x.norm()
 
         # final layer to get the correct magnitude
         return self.final_fc(x).squeeze()
@@ -130,164 +142,5 @@ class FullGraphModel(nn.Module):
         return x.view(-1, self.num_features), batch.view(-1)
 
     @staticmethod
-    def normalize_non_zero(x, batch, epsilon=1e-5):
-        # x has shape [batch_size * num_neurons, num_features]
-        # batch has shape [batch_size * num_neurons]
-        batch_size = batch.max().item() + 1
-        non_zero_mask = x != 0
-
-        non_zero_entries = x[non_zero_mask]
-        non_zero_batch = batch[non_zero_mask.squeeze()]
-
-        mean_per_batch = scatter_mean(non_zero_entries, non_zero_batch, dim=0, dim_size=batch_size)
-        std_per_batch = (
-            scatter_std(non_zero_entries, non_zero_batch, dim=0, dim_size=batch_size)
-            + epsilon
-        )
-
-        x[non_zero_mask] = (
-            non_zero_entries - mean_per_batch[non_zero_batch]
-        ) / std_per_batch[non_zero_batch]
-
-        return x
-
-    @staticmethod
     def min_max_norm(x):
         return (x - x.min()) / (x.max() - x.min())
-
-
-class GNNModel(torch.nn.Module):
-
-    # DEPRECATED
-
-    def __init__(
-        self,
-        num_node_features,
-        decision_making_vector,
-        num_passes,
-        cell_type_indices,
-        batch_size,
-        num_heads=1,
-        visual_input_persistence_rate=1,
-    ):
-
-        super(GNNModel, self).__init__()
-        self.attention_conv = GATConv(
-            num_node_features, out_channels=1, heads=num_heads, concat=False
-        )
-        self.register_buffer("decision_making_vector", decision_making_vector)
-        self.num_passes = num_passes
-        self.batch_size = batch_size
-        self.visual_input_persistence_rate = visual_input_persistence_rate
-        # swish function to attempt to mimic inhibitory behaviours too
-        # TODO: check whether this is a good idea
-        self.activation = torch.nn.SiLU()
-        self.final_activation = torch.nn.ReLU()
-        self.norm = torch.nn.BatchNorm1d(num_node_features)
-
-        self.permutation_layer = RetinaConnectionLayer(
-            cell_type_indices, batch_size, num_node_features
-        )
-        self.final_decision_layer = torch.nn.Linear(in_features=1, out_features=1)
-
-    def forward(self, data):
-        x, edge_index, batch = data.x, data.edge_index, data.batch
-
-        # Match visual stimulus to correct connectome neuron
-        x = self.permutation_layer(x)
-
-        # Make a copy to be used later
-        x_res = x
-
-        # Noise layer for the non-initialized neurons
-        x = self.__add_noise(x)
-
-        # Multiple passes through the connectome
-        for i in range(self.num_passes):
-            x = self.attention_conv(x, edge_index)
-            x = self.norm(x)
-            x = self.activation(x)
-            x = F.dropout(x, training=self.training, p=DROPOUT)
-
-            # Add the initial input (because we might still be visualizing the input)
-            # but decay its influence over time
-            x = x + x_res * self.visual_input_persistence_rate**i
-
-        # Apply the decision-making mask and pool the results of decision-making neurons
-        decision_mask = (
-            self.decision_making_vector.unsqueeze(0)
-            .repeat(self.batch_size, 1)
-            .view(-1, 1)
-        )
-        x = x * decision_mask
-        pooled_x = global_max_pool(x, batch)
-
-        # Create a final layer of just one neuron to "normalize" outputs
-        # This is equivalent to the soul of the fruit fly
-        return self.final_activation(self.final_decision_layer(pooled_x))
-
-    @staticmethod
-    def __add_noise(x):
-        mask = x == 0
-        std_dev = x[x != 0].std().item()
-        noise = (std_dev / 100) * torch.randn_like(x)
-        return torch.where(mask, noise, x)
-
-
-class RetinaConnectionLayer(Module):
-    def __init__(self, cell_type_indices, batch_size, num_features=1, dtype=torch.float):
-        super().__init__()
-        self.cell_type_indices = cell_type_indices
-        # Dictionary: cell type -> count of neurons
-        self.neuron_counts = self.get_neuron_counts(cell_type_indices)
-        self.num_features = num_features
-        self.batch_size = batch_size
-        self.dtype = dtype
-
-        # Initialize weight matrices for each cell type based on neuron_counts
-        self.weights = ParameterList(
-            [
-                Parameter(torch.randn(batch_size, count, count, dtype=dtype))
-                for count in self.neuron_counts.values()
-            ]
-        )
-
-    def forward(self, x):
-        # GNNs work with batches stacked into a unidimensional tensor, but I
-        # find this difficult to work with. Here, we widen it to
-        # [batch_size, num_neurons, num_features]
-        x = x.view(self.batch_size, -1, self.num_features)
-
-        # [batch_size, num_neurons, num_features]
-        output = torch.zeros_like(x)
-        for type_index in self.neuron_counts.keys():
-            # Determine which nodes belong to the current cell type
-            # [num_neurons_for_selected_type]
-            mask_indices = torch.tensor(
-                self.cell_type_indices[self.cell_type_indices == type_index].index,
-                dtype=torch.int32,
-                device=x.device,
-            )
-
-            if len(mask_indices) > 0:
-
-                # To simulate a permutation pairing, apply gumbel softmax in the row dimension
-                soft_weight = F.gumbel_softmax(self.weights[type_index], dim=1)
-
-                # FIXME: two visual neurons can map to the same connectome neuron
-
-                # Apply weights to the nodes of this cell type
-                # [num_neurons_for_selected_type, num_neurons_for_selected_type] *
-                # [batch_size, num_neurons_for_selected_type, num_features] =
-                # [batch_size, num_neurons_for_selected_type, num_features]
-                output[:, mask_indices] = torch.matmul(
-                    soft_weight, torch.index_select(x, 1, mask_indices)
-                )
-
-        # We need to return output in the same shape as the input x
-        # [num_neurons * batch_size, num_features]
-        return output.view(-1, self.num_features)
-
-    @staticmethod
-    def get_neuron_counts(cell_type_indices):
-        return dict(sorted(cell_type_indices.value_counts().to_dict().items()))

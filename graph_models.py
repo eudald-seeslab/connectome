@@ -119,6 +119,7 @@ class FullGraphModel(nn.Module):
         self.num_features = num_features
         self.batch_size = batch_size
         self.final_layer = final_layer
+        self.train_neurons = train_neurons
 
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
@@ -131,8 +132,11 @@ class FullGraphModel(nn.Module):
         if self.final_layer == "mean":
             # get the mean for each batch
             x = torch.mean(x, dim=1, keepdim=True)
-            # normalize per batch
-            # x = x / x.norm()
+        
+        if not self.train_neurons:
+            # When we are training edges or only the final layer, the output
+            #  explodes a bit and we need to normalize it
+            x = x / x.norm()
 
         # final layer to get the correct magnitude
         # Squeeze the num_features. If at some point is not 1, then we have to change this

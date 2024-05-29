@@ -47,6 +47,9 @@ def main(wandb_logger, sweep_config=None):
         random_synapses = config.random_synapses
         base_lr = config.base_lr
         NUM_CONNECTOME_PASSES = config.NUM_CONNECTOME_PASSES
+        train_edges = config.train_edges
+        train_neurons = config.train_neurons
+        final_layer = config.final_layer
     else:
         eye = sweep_config.eye
         neurons = sweep_config.neurons
@@ -54,6 +57,9 @@ def main(wandb_logger, sweep_config=None):
         random_synapses = sweep_config.random_synapses
         base_lr = sweep_config.base_lr
         NUM_CONNECTOME_PASSES = sweep_config.NUM_CONNECTOME_PASSES
+        train_edges = sweep_config.train_edges
+        train_neurons = sweep_config.train_neurons
+        final_layer = sweep_config.final_layer
 
     # for saving later
     start_datetime = datetime.datetime.now().isoformat(sep=" ", timespec="minutes")
@@ -84,10 +90,10 @@ def main(wandb_logger, sweep_config=None):
         dtype=config.dtype,
         edge_weights=data_processor.synaptic_matrix.data,
         device=config.DEVICE,
-        train_edges=config.train_edges,
-        train_neurons=config.train_neurons,
+        train_edges=train_edges,
+        train_neurons=train_neurons,
         lambda_func=config.lambda_func,
-        final_layer=config.final_layer,
+        final_layer=final_layer,
         num_classes=len(config.CLASSES),
     ).to(config.DEVICE)
     optimizer = torch.optim.Adam(model.parameters(), lr=base_lr)

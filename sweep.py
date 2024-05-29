@@ -12,10 +12,13 @@ sweep_config = {
     "metric": {"name": "accuracy", "goal": "maximize"},
     "parameters": {
         "NUM_CONNECTOME_PASSES": {"values": [3, 4, 5, 6]},
-        "base_lr": {"distribution": "uniform", "min": 1e-6, "max": 1e-3},
         "neurons": {"values": ["selected", "all"]},
         "voronoi_criteria": {"values": ["R7", "all"]},
         "random_synapses": {"values": [True, False]},
+        "eye": {"values": ["left", "right"]},
+        "train_edges": {"values": [True, False]},
+        "train_neurons": {"values": [True, False]},
+        "final_layer": {"values": ["mean", "nn"]},
     },
 }
 
@@ -26,7 +29,7 @@ def train(config=None):
 
 
 def run_agent(sweep_id):
-    wandb.agent(sweep_id=sweep_id, function=train, project=project_name, count=20)
+    wandb.agent(sweep_id=sweep_id, function=train, project=project_name, count=60)
 
 
 sweep_id = wandb.sweep(sweep_config, project=project_name)
@@ -44,4 +47,4 @@ if __name__ == "__main__":
     for p in processes:
         p.join()
 
-wandb.agent(sweep_id=sweep_id, function=train, project=project_name, count=20)
+    wandb.agent(sweep_id=sweep_id, function=train, project=project_name, count=20)

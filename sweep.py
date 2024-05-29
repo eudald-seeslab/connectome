@@ -1,3 +1,4 @@
+import argparse
 import wandb
 import multiprocessing
 import config
@@ -32,10 +33,23 @@ def run_agent(sweep_id):
     wandb.agent(sweep_id=sweep_id, function=train, project=project_name, count=60)
 
 
-sweep_id = wandb.sweep(sweep_config, project=project_name)
-
-
 if __name__ == "__main__":
+    # argparse sweep id
+    parser = argparse.ArgumentParser(
+        description="Run a sweep."
+    )
+    parser.add_argument(
+        "--sweep_id",
+        type=str,
+        default=None,
+        help="Sweep id if you have started the sweep elsewhere.",
+    )
+    args = parser.parse_args()
+
+    if args.sweep_id:
+        sweep_id = args.sweep_id
+    else:
+        sweep_id = wandb.sweep(sweep_config, project=project_name)
 
     if config.device_type == "cpu":
         num_agents = 4

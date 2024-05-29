@@ -7,6 +7,7 @@ import torch
 from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
 
+from debug_utils import get_logger, model_summary
 from graph_models_helpers import TrainingError
 import config
 from plots import plot_results
@@ -92,6 +93,9 @@ def main(wandb_logger, sweep_config=None):
     optimizer = torch.optim.Adam(model.parameters(), lr=base_lr)
     criterion = CrossEntropyLoss()
 
+    # Print model details
+    model_summary(model)
+
     # train
     model.train()
     results = initialize_results_df()
@@ -146,13 +150,13 @@ def main(wandb_logger, sweep_config=None):
                     raise TrainingError("Loss is constant. Training will stop.")
 
             wandb_logger.log_dataframe(results, "Training results")
-            print(
+            logger.info(
                 f"Finished epoch {ep + 1} with loss {running_loss / total} "
                 f"and accuracy {total_correct / total}."
             )
             torch.cuda.empty_cache()
     except KeyboardInterrupt:
-        print("Training interrupted. Continuing to testing.")
+        logger.error("Training interrupted. Continuing to testing.")
 
     save_model(model, optimizer, model_name)
 
@@ -191,7 +195,7 @@ def main(wandb_logger, sweep_config=None):
         running_loss, total_correct, total, test_results, final_plots
     )
 
-    print(
+    logger.info(
         f"Finished testing with loss {running_loss / total} and "
         f"accuracy {total_correct / total}."
     )
@@ -199,17 +203,19 @@ def main(wandb_logger, sweep_config=None):
 
 if __name__ == "__main__":
 
+    logger = get_logger("ct")
+
     wandb_logger = WandBLogger("adult_complete")
     wandb_logger.initialize_run()
     try:
         main(wandb_logger)
 
     except KeyboardInterrupt:
-        print("Training interrupted by user.")
+        logger.error("Training interrupted by user.")
 
     except Exception:
         error = traceback.format_exc()
-        print(error)
+        logger.error(error)
         wandb_logger.send_crash(f"Error during training: {error}")
 
     finally:

@@ -49,13 +49,12 @@ class WandBLogger:
     def sweep_config(self):
         return wandb.config
 
-    def log_metrics(self, epoch, iteration, running_loss, total_correct, total):
+    def log_metrics(self, epoch, running_loss, total_correct, total):
         if self.enabled:
             try:
                 wandb.log(
                     {
                         "epoch": epoch,
-                        "iteration": iteration + 1,
                         "loss": running_loss / total,
                         "accuracy": total_correct / total,
                     }

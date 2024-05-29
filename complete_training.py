@@ -141,7 +141,7 @@ def main(wandb_logger, sweep_config=None):
                 total += batch_size
                 total_correct += correct.sum()
 
-                wandb_logger.log_metrics(ep, i, running_loss, total_correct, total)
+                wandb_logger.log_metrics(ep, running_loss, total_correct, total)
                 if i == 0:
                     first_loss = running_loss
                     if torch.isnan(loss).any():

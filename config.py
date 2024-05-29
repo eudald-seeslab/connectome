@@ -1,6 +1,7 @@
 import os
 import torch
 from torch import cuda, device
+from torch.nn.functional import leaky_relu
 from utils import debugger_is_active
 
 # Check for CUDA availability and set device
@@ -25,7 +26,7 @@ train_neurons = True
 # node embedding activation function, as in
 # https://pytorch-geometric.readthedocs.io/en/latest/tutorial/create_gnn.html
 # only for training neurons
-lambda_func = torch.relu # torch.sigmoid or torch.relu
+lambda_func = leaky_relu  # torch activation function
 
 
 # Debugging and logging
@@ -43,7 +44,7 @@ batch_size = 32
 dropout = 0.1
 base_lr = 0.003
 weight_decay = 0.0001
-NUM_CONNECTOME_PASSES = 5
+NUM_CONNECTOME_PASSES = 4
 log_transform_weights = False
 eye = "right"  # "left" or "right"
 # "radius", "contingency", "distance", "num_points", "stripes", "weber"

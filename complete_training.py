@@ -7,7 +7,7 @@ import torch
 from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
 
-from adult_models_helpers import TrainingError
+from graph_models_helpers import TrainingError
 import config
 from plots import plot_results
 from utils import (
@@ -139,7 +139,6 @@ def main(wandb_logger, sweep_config=None):
                 wandb_logger.log_metrics(ep, i, running_loss, total_correct, total)
                 if i == 0:
                     first_loss = running_loss
-                    # if loss is missing, stop
                     if torch.isnan(loss).any():
                         raise TrainingError("Loss is NaN. Training will stop.")
                 if i == 100 and running_loss == first_loss:

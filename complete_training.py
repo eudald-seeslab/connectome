@@ -40,6 +40,8 @@ torch.manual_seed(1234)
 
 def main(wandb_logger, sweep_config=None):
 
+    logger = get_logger("ct", config.debugging)
+
     if sweep_config is None:
         eye = config.eye
         neurons = config.neurons

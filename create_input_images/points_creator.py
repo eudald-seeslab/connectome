@@ -11,21 +11,21 @@ logging.basicConfig(level=logging.INFO)
 
 GENERAL_CONFIG = {
     # so that we can create more images without the names clashing with the previous
-    "version_tag": "v2",
+    "version_tag": "",
     "colour_1": "yellow",
     "colour_2": "blue",
     "boundary_width": 5,
     "background_colour": "#000000", # for gray: #808080
     "yellow": "#fffe04",
     "blue": "#0003f9",
-    "min_point_radius": 10,
-    "max_point_radius": 20,
+    "min_point_radius": 15,
+    "max_point_radius": 25,
     "init_size": 512,
     "mode": "RGB",
     # these are per colour
-    "min_point_num": 0,
-    "max_point_num": 10,
-    "attempts_limit": 500,
+    "min_point_num": 5,
+    "max_point_num": 15,
+    "attempts_limit": 1000,
 }
 
 

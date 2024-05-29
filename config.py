@@ -22,19 +22,19 @@ neurons = "all" # "selected" or "all"
 voronoi_criteria = "R7" #  "R7" or "all"
 random_synapses = False
 train_edges = False
-train_neurons = True
+train_neurons = False
+final_layer = "mean" # "mean" or "nn"
 # node embedding activation function, as in
 # https://pytorch-geometric.readthedocs.io/en/latest/tutorial/create_gnn.html
 # only for training neurons
 lambda_func = leaky_relu  # torch activation function
-final_layer = "nn" # "mean" or "nn"
 
 # Debugging and logging
-debugging = True
+debugging = False
 debug_length = 2
 validation_length = 400
 wandb_ = True
-wandb_images_every = 100
+wandb_images_every = 400
 small = False
 small_length = 4000
 
@@ -47,8 +47,8 @@ weight_decay = 0.0001
 NUM_CONNECTOME_PASSES = 4
 log_transform_weights = False
 eye = "right"  # "left" or "right"
-# "radius", "contingency", "distance", "point_num", "stripes", "weber"
-plot_types = ["point_num"]
+# "radius", "contingency", "distance", "point_num", "stripes", "weber", "colour"
+plot_types = ["weber"]
 
 # sparse stuff is generaly not implemented in half...
 dtype = torch.float32

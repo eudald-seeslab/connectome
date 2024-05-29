@@ -67,6 +67,22 @@ def plot_accuracy_per_value(df, value):
     return ax
 
 
+def plot_accuracy_per_colour(df):
+    df["num_points"] = df["Image"].apply(
+        lambda x: int(os.path.basename(x).split("_")[1])
+        + int(os.path.basename(x).split("_")[2])
+    )
+    df["per_correct"] = df.groupby(["colour", "num_points"])["Is correct"].transform(
+        "mean"
+    )
+    # get directory of the file in "Image"
+    df["colour"] = df["Image"].apply(lambda x: os.path.basename(os.path.dirname(x)))
+    plt.figure()
+    ax = sns.barplot(data=df, x="num_points", y="per_correct", hue="colour")
+    
+    return ax
+
+
 def plot_contingency_table(df):
     label_map = dict(enumerate(config.CLASSES))
     df["Prediction"] = df["Prediction"].map(label_map)
@@ -87,6 +103,8 @@ def plot_results(results_, plot_types):
                 plots.append(plot_weber_fraction(results_.copy()))
             elif plot_type in ["radius", "distance", "point_num", "stripes"]:
                 plots.append(plot_accuracy_per_value(results_.copy(), plot_type))
+            elif plot_type == "colour":
+                plots.append(plot_accuracy_per_colour(results_.copy()))
             elif plot_type == "contingency":
                 plots.append(plot_contingency_table(results_.copy()))
     except Exception:

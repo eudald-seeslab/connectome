@@ -80,6 +80,7 @@ def main(wandb_logger, sweep_config=None):
         voronoi_criteria=voronoi_criteria,
         random_synapses=random_synapses,
         log_transform_weights=config.log_transform_weights,
+        filtered_celltypes=config.filtered_celltypes,
     )
 
     model = FullGraphModel(

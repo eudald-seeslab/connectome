@@ -22,15 +22,18 @@ neurons = "all" # "selected" or "all"
 voronoi_criteria = "R7" #  "R7" or "all"
 random_synapses = False
 train_edges = False
-train_neurons = False
+train_neurons = True
 final_layer = "mean" # "mean" or "nn"
 # node embedding activation function, as in
 # https://pytorch-geometric.readthedocs.io/en/latest/tutorial/create_gnn.html
 # only for training neurons
 lambda_func = leaky_relu  # torch activation function
+# Shut off some neurons based on their cell_type
+# You can find all the cell types in the adult_data/cell_types.csv
+filtered_celltypes = ["Dm3", "T2a"]
 
 # Debugging and logging
-debugging = False
+debugging = True
 debug_length = 2
 validation_length = 400
 wandb_ = True

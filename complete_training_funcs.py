@@ -2,7 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 from imageio.v3 import imread
 import pandas as pd
 import numpy as np
-
+from scipy.sparse import coo_matrix
 import torch
 
 
@@ -85,10 +85,28 @@ def get_side_decision_making_vector(root_ids, rational_cell_types, neurons, side
     if side is not None:
         neurons = neurons[neurons["side"] == side]
 
-    rational_neurons = neurons[
-        neurons["cell_type"].isin(rational_cell_types)
-    ]
+    rational_neurons = neurons[neurons["cell_type"].isin(rational_cell_types)]
     temp = root_ids.merge(rational_neurons, on="root_id", how="left")
     return torch.tensor(
         temp.assign(rational=np.where(temp["side"].isna(), 0, 1))["rational"].values
+    )
+
+
+def construct_synaptic_matrix(neuron_classification, connections, root_ids):
+
+    all_neurons = neuron_classification.merge(root_ids, on="root_id").fillna("Unknown")
+
+    ix_conns = connections.merge(
+        all_neurons[["root_id", "index_id"]], left_on="pre_root_id", right_on="root_id"
+    ).merge(
+        all_neurons[["root_id", "index_id"]],
+        left_on="post_root_id",
+        right_on="root_id",
+        suffixes=("_pre", "_post"),
+    )
+
+    return coo_matrix(
+        (ix_conns["syn_count"], (ix_conns["index_id_pre"], ix_conns["index_id_post"])),
+        shape=(len(root_ids), len(root_ids)),
+        dtype=np.int32,
     )

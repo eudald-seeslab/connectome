@@ -1,11 +1,13 @@
 from matplotlib import pyplot as plt
 import matplotlib
+
 matplotlib.use("Agg")
 
 import numpy as np
 import pandas as pd
 import torch
 from complete_training_funcs import (
+    construct_synaptic_matrix,
     get_activation_from_cell_type,
     get_neuron_activations,
     get_side_decision_making_vector,
@@ -32,12 +34,17 @@ class CompleteModelsDataProcessor:
         voronoi_criteria="all",
         random_synapses=False,
         log_transform_weights=False,
+        filtered_celltypes=None,
     ):
         # get data
-        self.root_ids = pd.read_csv("adult_data/root_id_to_index.csv")
-        self.synaptic_matrix = load_npz("adult_data/good_synaptic_matrix.npz")
-        neuron_classification = pd.read_csv("adult_data/classification.csv")
-        rational_cell_types = pd.read_csv("adult_data/rational_cell_types.csv", index_col=0).index.tolist()
+        rational_cell_types = self.get_rational_cell_types()
+        self._check_filtered_neurons(filtered_celltypes, rational_cell_types)
+        neuron_classification = self._get_neurons(filtered_celltypes, side=None)
+        connections = self._get_connections()
+        self.root_ids = self._get_root_ids(neuron_classification, connections)
+        self.synaptic_matrix = self.get_synaptic_matrix(
+            neuron_classification, connections, self.root_ids
+        )
 
         if log_transform_weights:
             self.synaptic_matrix.data = np.log1p(self.synaptic_matrix.data)
@@ -54,6 +61,19 @@ class CompleteModelsDataProcessor:
         if voronoi_criteria == "R7":
             self.tesselated_df = self.voronoi_cells.get_tesselated_neurons()
             self.voronoi_indices = self.voronoi_cells.get_image_indices()
+
+        self.filtered_celltypes = filtered_celltypes
+
+    @staticmethod
+    def get_synaptic_matrix(
+        filtered_celltypes, neuron_classification, root_ids
+    ):
+        if filtered_celltypes is not None:
+            return construct_synaptic_matrix(
+                filtered_celltypes, neuron_classification, root_ids
+            )
+
+        return load_npz("adult_data/good_synaptic_matrix.npz")
 
     @property
     def number_of_synapses(self):
@@ -79,6 +99,7 @@ class CompleteModelsDataProcessor:
             [get_neuron_activations(self.tesselated_df, a) for a in voronoi_averages],
             axis=1,
         )
+        neuron_activations.index = neuron_activations.index.astype("string")
         activation_df = (
             self.root_ids.merge(
                 neuron_activations, left_on="root_id", right_index=True, how="left"
@@ -127,9 +148,15 @@ class CompleteModelsDataProcessor:
         processed_img = process_images(np.expand_dims(img, 0), self.voronoi_indices)
         voronoi_average = get_voronoi_averages(processed_img)[0]
         # we need to put everything in terms of the voronoi point regions
-        voronoi_average.index = [self.voronoi_cells.voronoi.point_region[int(i)] for i in voronoi_average.index]
+        voronoi_average.index = [
+            self.voronoi_cells.voronoi.point_region[int(i)]
+            for i in voronoi_average.index
+        ]
         corr_tess = self.tesselated_df.copy()
-        corr_tess["voronoi_indices"] = [self.voronoi_cells.voronoi.point_region[int(i)] for i in corr_tess["voronoi_indices"]]
+        corr_tess["voronoi_indices"] = [
+            self.voronoi_cells.voronoi.point_region[int(i)]
+            for i in corr_tess["voronoi_indices"]
+        ]
         neuron_activations = corr_tess.merge(
             voronoi_average, left_on="voronoi_indices", right_index=True
         )
@@ -147,3 +174,66 @@ class CompleteModelsDataProcessor:
         )
         synaptic_matrix.sum_duplicates()
         return synaptic_matrix
+
+    @staticmethod
+    def get_rational_cell_types():
+        return pd.read_csv(
+            "adult_data/rational_cell_types.csv", index_col=0
+        ).index.tolist()
+
+    @staticmethod
+    def _get_root_ids(classification, connections):
+
+        # get neuron root_ids that appear in both classification and in either
+        #  connections pre_root_id or post_root_id
+        neurons = classification[
+            classification["root_id"].isin(connections["pre_root_id"])
+            | classification["root_id"].isin(connections["post_root_id"])
+        ]
+        # pandas is really bad:
+        return neurons.reset_index(drop=True).reset_index()[["root_id", "index"]].rename(columns={"index": "index_id"})
+
+    @staticmethod
+    def _get_neurons(filtered_celltpyes=None, side=None):
+        all_neurons = pd.read_csv(
+            "adult_data/classification.csv", usecols=["root_id", "cell_type", "side"], dtype={"root_id": "string"}
+        )
+        if filtered_celltpyes is not None:
+            all_neurons = all_neurons[
+                ~all_neurons["cell_type"].isin(filtered_celltpyes)
+            ]
+
+        if side is not None:
+            all_neurons = all_neurons[all_neurons["side"] == side]
+
+        # check that we have neurons
+        if all_neurons.empty:
+            raise ValueError("No neurons found with the given criteria.")
+
+        return all_neurons
+
+    @staticmethod
+    def _get_connections():
+        return (
+            pd.read_csv(
+                "adult_data/connections.csv",
+                dtype={
+                    "pre_root_id": "string",
+                    "post_root_id": "string",
+                    "syn_count": np.int32,
+                },
+                index_col=0
+            )
+            .groupby(["pre_root_id", "post_root_id"])
+            .sum("syn_count")
+            .reset_index()
+        )
+
+    @staticmethod
+    def _check_filtered_neurons(filtered_cell_types, rational_cell_types):
+        forbidden_cell_types = ["R8", "R7", "R1-6"] + rational_cell_types
+
+        if not set(filtered_cell_types).isdisjoint(forbidden_cell_types):
+            raise ValueError(
+                f"You can't fitler out any of the following cell types: {', '.join(forbidden_cell_types)}"
+            )

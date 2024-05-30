@@ -40,4 +40,6 @@ def get_logger(name, debug=False):
     )
     ch.setFormatter(formatter)
     logger.addHandler(ch)
+
+    logger.propagate = False
     return logger

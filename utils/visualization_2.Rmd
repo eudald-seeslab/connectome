@@ -294,7 +294,7 @@ filtered_vis_coords <- vis_coords |>
   ) |> 
   mutate(
     x_axis = (PC1 - (-500)) / 300 * 512,
-    y_axis = (PC2 + (-200)) / 300 * 512
+    y_axis = (PC2 - (-200)) / 300 * 512
   )
 ```
 

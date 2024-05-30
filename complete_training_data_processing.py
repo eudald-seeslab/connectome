@@ -42,7 +42,7 @@ class CompleteModelsDataProcessor:
         neuron_classification = self._get_neurons(filtered_celltypes, side=None)
         connections = self._get_connections()
         self.root_ids = self._get_root_ids(neuron_classification, connections)
-        self.synaptic_matrix = self.get_synaptic_matrix(
+        self.synaptic_matrix = construct_synaptic_matrix(
             neuron_classification, connections, self.root_ids
         )
 
@@ -63,17 +63,6 @@ class CompleteModelsDataProcessor:
             self.voronoi_indices = self.voronoi_cells.get_image_indices()
 
         self.filtered_celltypes = filtered_celltypes
-
-    @staticmethod
-    def get_synaptic_matrix(
-        filtered_celltypes, neuron_classification, root_ids
-    ):
-        if filtered_celltypes is not None:
-            return construct_synaptic_matrix(
-                filtered_celltypes, neuron_classification, root_ids
-            )
-
-        return load_npz("adult_data/good_synaptic_matrix.npz")
 
     @property
     def number_of_synapses(self):

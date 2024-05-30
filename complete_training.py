@@ -169,7 +169,7 @@ def main(wandb_logger, sweep_config=None):
 
             torch.cuda.empty_cache()
     except KeyboardInterrupt:
-        logger.error("Training interrupted. Continuing to testing.")
+        logger.warning("Training interrupted by user. Continuing to testing.")
 
     save_model(model, optimizer, model_name)
 

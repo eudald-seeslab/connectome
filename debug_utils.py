@@ -32,14 +32,16 @@ def model_summary(model):
 def get_logger(name, debug=False):
     log_level = logging.DEBUG if debug else logging.INFO
     logger = logging.getLogger(name)
-    logger.setLevel(log_level)
-    ch = logging.StreamHandler()
-    ch.setLevel(log_level)
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s", "%Y-%m-%d %H:%M:%S"
-    )
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
 
-    logger.propagate = False
+    if not logger.hasHandlers():
+        logger.setLevel(log_level)
+        ch = logging.StreamHandler()
+        ch.setLevel(log_level)
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s", "%Y-%m-%d %H:%M:%S"
+        )
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
+        logger.propagate = False
+
     return logger

@@ -1,4 +1,4 @@
-cell_type,count,rational
+cell_type,count
 R1-6,8452,
 Dm3,2545,
 T2a,1781,
@@ -63,15 +63,15 @@ TmY11,371,
 TmY14,370,
 Lawf1,355,
 Tm16,343,
-KCapbp-m,338,1
+KCapbp-m,338,
 TmYem1,316,
 Am,313,
 Lawf2,313,
 Pm2,307,
 JO-B,299,
-KCapbp-ap2,298,1
+KCapbp-ap2,298,
 TmY20,283,
-KCapbp-ap1,280,1
+KCapbp-ap1,280,
 MeTu4,278,
 MeTu3,274,
 ocellar_retinula_cell,273,

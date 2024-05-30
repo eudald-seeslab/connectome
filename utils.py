@@ -38,21 +38,21 @@ def get_image_paths(images_dir, small, small_length):
     return images
 
 
-def synapses_to_matrix_and_dict(right_synapses):
+def synapses_to_matrix_and_dict(synapses):
     # Unique root_ids in synapse_df (both pre and post)
-    neurons_synapse_pre = pd.unique(right_synapses["pre_root_id"])
-    neurons_synapse_post = pd.unique(right_synapses["post_root_id"])
+    neurons_synapse_pre = pd.unique(synapses["pre_root_id"])
+    neurons_synapse_post = pd.unique(synapses["post_root_id"])
     all_neurons = np.unique(np.concatenate([neurons_synapse_pre, neurons_synapse_post]))
 
     # Map neuron root_ids to matrix indices
     root_id_to_index = {root_id: index for index, root_id in enumerate(all_neurons)}
 
     # Convert root_ids in filtered_synapse_df to matrix indices
-    pre_indices = right_synapses["pre_root_id"].map(root_id_to_index).values
-    post_indices = right_synapses["post_root_id"].map(root_id_to_index).values
+    pre_indices = synapses["pre_root_id"].map(root_id_to_index).values
+    post_indices = synapses["post_root_id"].map(root_id_to_index).values
 
     # Use syn_count as the data for the non-zero elements of the matrix
-    data = right_synapses["syn_count"].values
+    data = synapses["syn_count"].values
 
     # Create the sparse matrix
     matrix = coo_matrix(

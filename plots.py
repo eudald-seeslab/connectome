@@ -72,11 +72,10 @@ def plot_accuracy_per_colour(df):
         lambda x: int(os.path.basename(x).split("_")[1])
         + int(os.path.basename(x).split("_")[2])
     )
+    df["colour"] = df["Image"].apply(lambda x: os.path.basename(os.path.dirname(x)))
     df["per_correct"] = df.groupby(["colour", "num_points"])["Is correct"].transform(
         "mean"
     )
-    # get directory of the file in "Image"
-    df["colour"] = df["Image"].apply(lambda x: os.path.basename(os.path.dirname(x)))
     plt.figure()
     ax = sns.barplot(data=df, x="num_points", y="per_correct", hue="colour")
     

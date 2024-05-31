@@ -1,3 +1,4 @@
+import json
 import os
 import random
 import numpy as np
@@ -146,7 +147,7 @@ def clean_model_outputs(outputs_, batch_labels_):
     return probabilities_, predictions_, batch_labels_cpu, correct_
 
 
-def save_model(model_, optimizer_, model_name):
+def save_model(model_, optimizer_, model_name, config_, sweep_config_):
     # create 'models' directory if it doesn't exist
     path_ = os.path.join(os.getcwd(), "models")
     os.makedirs(path_, exist_ok=True)
@@ -154,3 +155,15 @@ def save_model(model_, optimizer_, model_name):
         {"model": model_.state_dict(), "optimizer": optimizer_.state_dict()},
         os.path.join(path_, model_name),
     )
+    # create an accompanying config file
+    config_dict = {
+        key: str(value)
+        for key, value in config_.__dict__.items()
+        if not key.startswith("__") and not "module" in str(value)
+    }
+    if sweep_config_ is not None:
+        config_dict.update(sweep_config_)
+
+    config_path = os.path.join(path_, f"{model_name}_config.txt")
+    with open(config_path, "w", encoding='utf-8') as f: 
+        json.dump(config_dict, f, ensure_ascii=False, indent=4)

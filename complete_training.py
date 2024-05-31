@@ -166,7 +166,7 @@ def main(wandb_logger, sweep_config=None):
     except KeyboardInterrupt:
         logger.warning("Training interrupted by user. Continuing to testing.")
 
-    save_model(model, optimizer, model_name)
+    save_model(model, optimizer, model_name, config, sweep_config)
 
     # test
     testing_images = get_image_paths(

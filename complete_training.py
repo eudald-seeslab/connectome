@@ -106,8 +106,6 @@ def main(wandb_logger, sweep_config=None):
 
     # train
     model.train()
-    results = initialize_results_df()
-
     iterations = get_iteration_number(len(training_images), batch_size)
     try:
         for ep in range(config.num_epochs):
@@ -142,9 +140,6 @@ def main(wandb_logger, sweep_config=None):
                 outputs, predictions, labels_cpu, correct = clean_model_outputs(
                     out, labels
                 )
-                results = update_results_df(
-                    results, batch_files, outputs, predictions, labels_cpu, correct
-                )
                 running_loss += update_running_loss(loss, inputs)
                 total += batch_size
                 total_correct += correct.sum()
@@ -157,7 +152,6 @@ def main(wandb_logger, sweep_config=None):
                 if i == 100 and running_loss == first_loss:
                     raise TrainingError("Loss is constant. Training will stop.")
 
-            wandb_logger.log_dataframe(results, "Training results")
             logger.info(
                 f"Finished epoch {ep + 1} with loss {running_loss / total} "
                 f"and accuracy {total_correct / total}."

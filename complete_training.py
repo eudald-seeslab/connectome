@@ -14,6 +14,7 @@ from plots import plot_results
 from utils import (
     get_image_paths,
     get_iteration_number,
+    guess_your_plots,
     initialize_results_df,
     save_model,
     select_random_images,
@@ -197,7 +198,8 @@ def main(wandb_logger, sweep_config=None):
         total += batch_size
         total_correct += correct.sum()
 
-    final_plots = plot_results(test_results, plot_types=config.plot_types)
+    plot_types = guess_your_plots() if len(config.plot_types) == 0 else config.plot_types
+    final_plots = plot_results(test_results, plot_types=plot_types)
     wandb_logger.log_validation_stats(
         running_loss, total_correct, total, test_results, final_plots
     )

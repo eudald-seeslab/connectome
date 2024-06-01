@@ -183,6 +183,9 @@ class CompleteModelsDataProcessor:
             "adult_data/classification.csv", usecols=["root_id", "cell_type", "side"], dtype={"root_id": "string"}
         )
         if filtered_celltpyes is not None:
+            # If it's not a list, make it so
+            if not isinstance(filtered_celltpyes, list):
+                filtered_celltpyes = [filtered_celltpyes]
             all_neurons = all_neurons[
                 ~all_neurons["cell_type"].isin(filtered_celltpyes)
             ]

@@ -34,7 +34,7 @@ class CompleteModelsDataProcessor:
         voronoi_criteria="all",
         random_synapses=False,
         log_transform_weights=False,
-        filtered_celltypes=None,
+        filtered_celltypes=[],
     ):
         # get data
         rational_cell_types = self.get_rational_cell_types()

@@ -41,7 +41,10 @@ data <- df |>
 data |> 
   ggplot(aes(x = bin_theta, y = activation)) + 
     geom_point() +
-    facet_wrap(~ name, ncol=8, scales = "free")
+    facet_wrap(~ name, ncol=7) +
+  scale_x_discrete(
+    breaks = seq(1, 36, by = 4)
+    )
 ```
 
 ```{r}

@@ -6,6 +6,9 @@ matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 import torch
+from scipy.sparse import coo_matrix
+from torch_geometric.data import Data, Batch
+
 from complete_training_funcs import (
     construct_synaptic_matrix,
     get_activation_from_cell_type,
@@ -15,54 +18,47 @@ from complete_training_funcs import (
     import_images,
     process_images,
 )
-from utils import paths_to_labels
-import config
-from scipy.sparse import coo_matrix, load_npz
-from torch_geometric.data import Data, Batch
-
 from voronoi_cells import VoronoiCells
+from utils import paths_to_labels
 
 
 class CompleteModelsDataProcessor:
 
     tesselated_df = None
 
-    def __init__(
-        self,
-        eye="right",
-        neurons="all",
-        voronoi_criteria="all",
-        random_synapses=False,
-        log_transform_weights=False,
-        filtered_celltypes=[],
-    ):
+    def __init__(self, config_):
         # get data
         rational_cell_types = self.get_rational_cell_types()
-        self._check_filtered_neurons(filtered_celltypes, rational_cell_types)
-        neuron_classification = self._get_neurons(filtered_celltypes, side=None)
+        self._check_filtered_neurons(config_.filtered_celltypes, rational_cell_types)
+        neuron_classification = self._get_neurons(config_.filtered_celltypes, side=None)
         connections = self._get_connections()
         self.root_ids = self._get_root_ids(neuron_classification, connections)
         self.synaptic_matrix = construct_synaptic_matrix(
             neuron_classification, connections, self.root_ids
         )
 
-        if log_transform_weights:
+        if config_.log_transform_weights:
             self.synaptic_matrix.data = np.log1p(self.synaptic_matrix.data)
-        if random_synapses:
+        if config_.random_synapses:
             self.synaptic_matrix = self.shuffle_synaptic_matrix(self.synaptic_matrix)
 
         self.decision_making_vector = get_side_decision_making_vector(
             self.root_ids, rational_cell_types, neuron_classification
         )
-        self.neurons = neurons
+        self.neurons = config_.neurons
         self.voronoi_cells = VoronoiCells(
-            eye=eye, neurons=self.neurons, voronoi_criteria=voronoi_criteria
+            eye=config_.eye,
+            neurons=self.neurons,
+            voronoi_criteria=config_.voronoi_criteria,
         )
-        if voronoi_criteria == "R7":
+        if config_.voronoi_criteria == "R7":
             self.tesselated_df = self.voronoi_cells.get_tesselated_neurons()
             self.voronoi_indices = self.voronoi_cells.get_image_indices()
 
-        self.filtered_celltypes = filtered_celltypes
+        self.filtered_celltypes = config_.filtered_celltypes
+        self.dtype = config_.dtype
+        self.device = config_.DEVICE
+        self.classes = config_.CLASSES
 
     @property
     def number_of_synapses(self):
@@ -73,10 +69,9 @@ class CompleteModelsDataProcessor:
         self.tesselated_df = self.voronoi_cells.get_tesselated_neurons()
         self.voronoi_indices = self.voronoi_cells.get_image_indices()
 
-    @staticmethod
-    def get_data_from_paths(paths):
+    def get_data_from_paths(self, paths):
         imgs = import_images(paths)
-        labels = paths_to_labels(paths)
+        labels = paths_to_labels(paths, self.classes)
         return imgs, labels
 
     def process_batch(self, imgs, labels):
@@ -104,8 +99,8 @@ class CompleteModelsDataProcessor:
             np.array([self.synaptic_matrix.row, self.synaptic_matrix.col]),
             dtype=torch.int64,  # do not touch
         )
-        weights = torch.tensor(self.synaptic_matrix.data, dtype=config.dtype)
-        activation_tensor = torch.tensor(activation_df.values, dtype=config.dtype)
+        weights = torch.tensor(self.synaptic_matrix.data, dtype=self.dtype)
+        activation_tensor = torch.tensor(activation_df.values, dtype=self.dtype)
         graph_list_ = []
         for j in range(activation_tensor.shape[1]):
             # Shape [num_nodes, 1], one feature per node
@@ -115,12 +110,12 @@ class CompleteModelsDataProcessor:
                 edge_index=edges,
                 edge_attr=weights,
                 y=labels[j],
-                device=config.DEVICE,
+                device=self.device,
             )
             graph_list_.append(graph)
 
-        inputs = Batch.from_data_list(graph_list_).to(config.DEVICE)
-        labels = torch.tensor(labels, dtype=torch.long).to(config.DEVICE)
+        inputs = Batch.from_data_list(graph_list_).to(self.device)
+        labels = torch.tensor(labels, dtype=torch.long).to(self.device)
 
         return inputs, labels
 

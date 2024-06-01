@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import coo_matrix
 import torch
-import config
 
 
 def get_files_from_directory(directory_path):
@@ -26,7 +25,7 @@ def get_image_paths(images_dir, small, small_length):
             images = random.sample(images, small_length)
         except ValueError:
             print(
-                f"Not enough videos in {images_dir} to sample {small_length}."
+                f"Not enough images in {images_dir} to sample {small_length}."
                 f"Continuing with {len(images)}."
             )
 
@@ -59,24 +58,24 @@ def synapses_to_matrix_and_dict(synapses):
     return matrix, root_id_to_index
 
 
-def get_iteration_number(im_num, batch_size):
-    if config.debugging:
-        return config.debug_length
-    if config.small and im_num > config.small_length:
-        return config.small_length // batch_size
-    return im_num // batch_size
+def get_iteration_number(im_num, config_):
+    if config_.debugging:
+        return config_.debug_length
+    if config_.small and im_num > config_.small_length:
+        return config_.small_length // config_.batch_size
+    return im_num // config_.batch_size
 
 
-def get_label(name):
+def get_label(name, classes):
     x = os.path.basename(os.path.dirname(name))
     try:
-        return config.CLASSES.index(x)
+        return classes.index(x)
     except ValueError:
         raise ValueError(f"Unexpected directory label {x}")
 
 
-def paths_to_labels(paths):
-    return [get_label(a) for a in paths]
+def paths_to_labels(paths, classes):
+    return [get_label(a, classes) for a in paths]
 
 
 def select_random_images(all_files, batch_size, already_selected):
@@ -141,7 +140,15 @@ def clean_model_outputs(outputs_, batch_labels_):
     return probabilities_, predictions_, batch_labels_cpu, correct_
 
 
-def save_model(model_, optimizer_, model_name, config_, sweep_config_):
+def module_to_clean_dict(module_):
+    return {
+        key: str(value)
+        for key, value in module_.__dict__.items()
+        if not key.startswith("__") and not "module" in str(value)
+    }
+
+
+def save_model(model_, optimizer_, model_name, config_):
     # create 'models' directory if it doesn't exist
     path_ = os.path.join(os.getcwd(), "models")
     os.makedirs(path_, exist_ok=True)
@@ -150,14 +157,17 @@ def save_model(model_, optimizer_, model_name, config_, sweep_config_):
         os.path.join(path_, model_name),
     )
     # create an accompanying config file
-    config_dict = {
-        key: str(value)
-        for key, value in config_.__dict__.items()
-        if not key.startswith("__") and not "module" in str(value)
-    }
-    if sweep_config_ is not None:
-        config_dict.update(sweep_config_)
-
+    config_dict = module_to_clean_dict(config_)
     config_path = os.path.join(path_, f"{model_name}_config.txt")
     with open(config_path, "w", encoding="utf-8") as f:
         json.dump(config_dict, f, ensure_ascii=False, indent=4)
+
+
+def update_config_with_sweep(config, sweep_config):
+    if sweep_config is not None:
+        for key, value in sweep_config.items():
+            if hasattr(config, key):
+                setattr(config, key, value)
+            else:
+                raise ValueError(f"Config does not have attribute {key}")
+    return config

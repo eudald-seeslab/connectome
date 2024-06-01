@@ -3,7 +3,6 @@ import traceback
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
-import config 
 
 pd.options.mode.chained_assignment = None
 
@@ -16,11 +15,14 @@ def plot_weber_fraction(results_df: pd.DataFrame) -> plt.Figure:
     results_df["blue"] = results_df["Image"].apply(
         lambda x: os.path.basename(x).split("_")[2]
     )
-    results_df["weber_ratio"] = results_df.apply(
-        lambda row: max(int(row["yellow"]), int(row["blue"]))
-        / min(int(row["yellow"]), int(row["blue"])),
-        axis=1,
-    )
+    try:
+        results_df["weber_ratio"] = results_df.apply(
+            lambda row: max(int(row["yellow"]), int(row["blue"]))
+            / min(int(row["yellow"]), int(row["blue"])),
+            axis=1,
+        )
+    except ZeroDivisionError:
+        results_df["weber_ratio"] = 0
     results_df["equalized"] = results_df["Image"].apply(
         lambda x: "equalized" in os.path.basename(x).lower()
     )
@@ -84,8 +86,8 @@ def plot_accuracy_per_colour(df):
     return ax
 
 
-def plot_contingency_table(df):
-    label_map = dict(enumerate(config.CLASSES))
+def plot_contingency_table(df, classes):
+    label_map = dict(enumerate(classes))
     df["Prediction"] = df["Prediction"].map(label_map)
     df["True label"] = df["True label"].map(label_map)
 
@@ -96,7 +98,7 @@ def plot_contingency_table(df):
     )
 
 
-def plot_results(results_, plot_types):
+def plot_results(results_, plot_types, classes=None):
     plots = []
     try:
         for plot_type in plot_types:
@@ -107,7 +109,7 @@ def plot_results(results_, plot_types):
             elif plot_type == "colour":
                 plots.append(plot_accuracy_per_colour(results_.copy()))
             elif plot_type == "contingency":
-                plots.append(plot_contingency_table(results_.copy()))
+                plots.append(plot_contingency_table(results_.copy(), classes))
     except Exception:
         error = traceback.format_exc()
         print(f"Error plotting results: {error}")

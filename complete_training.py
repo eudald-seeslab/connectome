@@ -17,6 +17,7 @@ from utils import (
     initialize_results_df,
     save_model,
     select_random_images,
+    update_config_with_sweep,
     update_results_df,
     update_running_loss,
 )
@@ -40,26 +41,12 @@ torch.manual_seed(1234)
 
 def main(wandb_logger, sweep_config=None):
 
-    logger = get_logger("ct", config.debugging)
-
+    u_config = update_config_with_sweep(config, sweep_config)
+    # if it's not a sweep, we need to initialize wandb
     if sweep_config is None:
-        eye = config.eye
-        neurons = config.neurons
-        voronoi_criteria = config.voronoi_criteria
-        random_synapses = config.random_synapses
-        NUM_CONNECTOME_PASSES = config.NUM_CONNECTOME_PASSES
-        train_edges = config.train_edges
-        train_neurons = config.train_neurons
-        final_layer = config.final_layer
-    else:
-        eye = sweep_config.eye
-        neurons = sweep_config.neurons
-        voronoi_criteria = sweep_config.voronoi_criteria
-        random_synapses = sweep_config.random_synapses
-        NUM_CONNECTOME_PASSES = sweep_config.NUM_CONNECTOME_PASSES
-        train_edges = sweep_config.train_edges
-        train_neurons = sweep_config.train_neurons
-        final_layer = sweep_config.final_layer
+        wandb_logger.initialize_run(u_config)
+
+    logger = get_logger("ct", u_config.debugging)
 
     # for saving later
     start_datetime = datetime.datetime.now().isoformat(sep=" ", timespec="minutes")
@@ -67,37 +54,31 @@ def main(wandb_logger, sweep_config=None):
 
     # update batch size number of connectome passes (otherwise we run out of memory)
     batch_size = (
-        config.batch_size // 2 if NUM_CONNECTOME_PASSES > 5 else config.batch_size
+        u_config.batch_size // 2
+        if u_config.NUM_CONNECTOME_PASSES > 5
+        else u_config.batch_size
     )
 
     # get data and prepare model
     training_images = get_image_paths(
-        config.TRAINING_DATA_DIR, config.small, config.small_length
+        u_config.TRAINING_DATA_DIR, u_config.small, u_config.small_length
     )
-    data_processor = CompleteModelsDataProcessor(
-        eye=eye,
-        neurons=neurons,
-        voronoi_criteria=voronoi_criteria,
-        random_synapses=random_synapses,
-        log_transform_weights=config.log_transform_weights,
-        filtered_celltypes=config.filtered_celltypes,
-    )
-
+    data_processor = CompleteModelsDataProcessor(u_config)
     model = FullGraphModel(
         input_shape=data_processor.number_of_synapses,
-        num_connectome_passes=NUM_CONNECTOME_PASSES,
+        num_connectome_passes=u_config.NUM_CONNECTOME_PASSES,
         decision_making_vector=data_processor.decision_making_vector,
         batch_size=batch_size,
-        dtype=config.dtype,
+        dtype=u_config.dtype,
         edge_weights=data_processor.synaptic_matrix.data,
-        device=config.DEVICE,
-        train_edges=train_edges,
-        train_neurons=train_neurons,
-        lambda_func=config.lambda_func,
-        final_layer=final_layer,
-        num_classes=len(config.CLASSES),
-    ).to(config.DEVICE)
-    optimizer = torch.optim.Adam(model.parameters(), lr=config.base_lr)
+        device=u_config.DEVICE,
+        train_edges=u_config.train_edges,
+        train_neurons=u_config.train_neurons,
+        lambda_func=u_config.lambda_func,
+        final_layer=u_config.final_layer,
+        num_classes=len(u_config.CLASSES),
+    ).to(u_config.DEVICE)
+    optimizer = torch.optim.Adam(model.parameters(), lr=u_config.base_lr)
     criterion = CrossEntropyLoss()
     early_stopping = EarlyStopping(patience=2, min_delta=0)
 
@@ -106,9 +87,9 @@ def main(wandb_logger, sweep_config=None):
 
     # train
     model.train()
-    iterations = get_iteration_number(len(training_images), batch_size)
+    iterations = get_iteration_number(len(training_images), u_config)
     try:
-        for ep in range(config.num_epochs):
+        for ep in range(u_config.num_epochs):
 
             already_selected = []
             running_loss, total_correct, total = 0, 0, 0
@@ -116,11 +97,11 @@ def main(wandb_logger, sweep_config=None):
                 batch_files, already_selected = select_random_images(
                     training_images, batch_size, already_selected
                 )
-                if voronoi_criteria == "all":
+                if u_config.voronoi_criteria == "all":
                     # create voronoi cells each batch so they are different
                     data_processor.recreate_voronoi_cells()
                 images, labels = data_processor.get_data_from_paths(batch_files)
-                if i % config.wandb_images_every == 0:
+                if i % u_config.wandb_images_every == 0:
                     p = data_processor.plot_input_images(images[0])
                     wandb_logger.log_image(
                         p, basename(batch_files[0]), "Voronoi - Original - Activations"
@@ -130,7 +111,7 @@ def main(wandb_logger, sweep_config=None):
                 inputs, labels = data_processor.process_batch(images, labels)
 
                 optimizer.zero_grad()
-                with torch.autocast(config.device_type):
+                with torch.autocast(u_config.device_type):
                     out = model(inputs)
                     loss = criterion(out, labels)
                     loss.backward()
@@ -165,25 +146,25 @@ def main(wandb_logger, sweep_config=None):
     except KeyboardInterrupt:
         logger.warning("Training interrupted by user. Continuing to testing.")
 
-    save_model(model, optimizer, model_name, config, sweep_config)
+    save_model(model, optimizer, model_name, u_config)
 
     # test
     testing_images = get_image_paths(
-        config.TESTING_DATA_DIR, config.small, config.small_length
+        u_config.TESTING_DATA_DIR, u_config.small, u_config.small_length
     )
     already_selected_testing = []
     total_correct, total, running_loss = 0, 0, 0.0
     test_results = initialize_results_df()
 
     model.eval()
-    iterations = get_iteration_number(len(testing_images), batch_size)
+    iterations = get_iteration_number(len(testing_images), u_config)
     for _ in tqdm(range(iterations)):
         batch_files, already_selected_testing = select_random_images(
             testing_images, batch_size, already_selected_testing
         )
         images, labels = data_processor.get_data_from_paths(batch_files)
         inputs, labels = data_processor.process_batch(images, labels)
-        inputs = inputs.to(config.DEVICE)
+        inputs = inputs.to(u_config.DEVICE)
 
         out = model(inputs)
         loss = criterion(out, labels)
@@ -198,9 +179,9 @@ def main(wandb_logger, sweep_config=None):
         total_correct += correct.sum()
 
     plot_types = (
-        guess_your_plots(config) if len(config.plot_types) == 0 else config.plot_types
+        guess_your_plots(u_config) if len(u_config.plot_types) == 0 else u_config.plot_types
     )
-    final_plots = plot_results(test_results, plot_types=plot_types)
+    final_plots = plot_results(test_results, plot_types=plot_types, classes=u_config.CLASSES)
     wandb_logger.log_validation_stats(
         running_loss, total_correct, total, test_results, final_plots
     )
@@ -215,8 +196,7 @@ if __name__ == "__main__":
 
     logger = get_logger("ct", config.debugging)
 
-    wandb_logger = WandBLogger("adult_complete")
-    wandb_logger.initialize_run()
+    wandb_logger = WandBLogger("adult_complete", config.wandb_, config.wandb_images_every)
     try:
         main(wandb_logger)
 

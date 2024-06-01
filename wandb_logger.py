@@ -1,56 +1,37 @@
 import wandb
 from wandb import AlertLevel
-import config
-
-
-MODEL_CONFIG = {
-    "num_epochs": config.num_epochs,
-    "batch_size": config.batch_size,
-    "base_lr": config.base_lr,
-    "num_connectome_passes": config.NUM_CONNECTOME_PASSES,
-    "log_transform_weights": config.log_transform_weights,
-    "training_data": config.TRAINING_DATA_DIR,
-    "testing_data": config.TESTING_DATA_DIR,
-    "neurons": config.neurons,
-    "voronoi_criteria": config.voronoi_criteria,
-    "random_synapses": config.random_synapses,
-    "small": config.small,
-    "small_length": config.small_length,
-    "eye": config.eye,
-    "train_edges": config.train_edges,
-    "train_neurons": config.train_neurons,
-    "lambda_func": config.lambda_func.__name__,
-    "final_layer": config.final_layer,
-}
+from utils import module_to_clean_dict
 
 
 class WandBLogger:
-    def __init__(self, project_name):
+
+    def __init__(self, project_name, enabled=True, imgs_every=500):
         self.project_name = project_name
-        self.model_config = MODEL_CONFIG
-        self.enabled = config.wandb_
-        self.log_images_every = config.wandb_images_every
+        self.enabled = enabled
+        self.log_images_every = imgs_every
         self.initialized = False
-    
-    def get_run_id(self):
+
+    @staticmethod
+    def get_run_id():
         try:
             return wandb.run.id
-        except KeyError:
+        except AttributeError:
             return "NO_RUN_ID"
 
-    def initialize_run(self, group=None):
+    def initialize_run(self, config_, group=None):
         if self.enabled and not self.initialized:
-            wandb.init(project=self.project_name, config=self.model_config, group=group)
+            model_config = module_to_clean_dict(config_)
+            wandb.init(project=self.project_name, config=model_config, group=group)
             self.initialized = True
-    
+
     def initialize_sweep(self, sweep_config):
         if self.enabled:
             return wandb.sweep(sweep_config, project=self.project_name)
-        
+
     def start_agent(self, sweep_id, func):
         if self.enabled:
             wandb.agent(sweep_id, function=func)
-    
+
     @property
     def sweep_config(self):
         return wandb.config

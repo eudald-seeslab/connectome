@@ -1,14 +1,16 @@
 import argparse
 import wandb
 import multiprocessing
+import pandas as pd
+
 import config
 from complete_training import main
 from wandb_logger import WandBLogger
 
 
-project_name = "Complete_v3"
+project_name = "cell_killer"
 
-sweep_config = {
+sweep_config1 = {
     "method": "bayes",
     "metric": {"name": "accuracy", "goal": "maximize"},
     "parameters": {
@@ -21,6 +23,20 @@ sweep_config = {
         "train_neurons": {"values": [True, False]},
         "final_layer": {"values": ["mean", "nn"]},
     },
+}
+
+cts = pd.read_csv("adult_data/cell_types.csv")
+cts = cts[cts["count"] > 1000]
+rational_cell_types = pd.read_csv("adult_data/rational_cell_types.csv", index_col=0).index.tolist()
+forbidden_cell_types = rational_cell_types + ["R8", "R7", "R1-6"]
+cell_types = [x for x in cts["cell_type"].values if x not in forbidden_cell_types]
+
+sweep_config2 = {
+    "method": "bayes",
+    "metric": {"name": "accuracy", "goal": "maximize"},
+    "parameters": {
+        "filtered_celltypes": {"values": cell_types},
+    }
 }
 
 def train(config=None):
@@ -49,7 +65,7 @@ if __name__ == "__main__":
     if args.sweep_id:
         sweep_id = args.sweep_id
     else:
-        sweep_id = wandb.sweep(sweep_config, project=project_name)
+        sweep_id = wandb.sweep(sweep_config2, project=project_name)
 
     if config.device_type == "cpu":
         num_agents = 4

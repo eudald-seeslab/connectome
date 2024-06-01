@@ -20,7 +20,7 @@ CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 # Neural data
 neurons = "all"  # "selected" or "all"
 voronoi_criteria = "R7"  #  "R7" or "all"
-random_synapses = True
+random_synapses = False
 train_edges = True
 train_neurons = False
 final_layer = "mean"  # "mean" or "nn"
@@ -33,12 +33,12 @@ lambda_func = leaky_relu  # torch activation function
 filtered_celltypes = []  #  ["Dm3", "T2a"]
 
 # Debugging and logging
-debugging = True
+debugging = False
 debug_length = 2
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400
-small = True
+small = False
 small_length = 4000
 
 # Training configuration

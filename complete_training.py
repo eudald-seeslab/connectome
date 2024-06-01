@@ -10,11 +10,10 @@ from tqdm import tqdm
 from debug_utils import get_logger, model_summary
 from graph_models_helpers import EarlyStopping, TrainingError
 import config
-from plots import plot_results
+from plots import guess_your_plots, plot_results
 from utils import (
     get_image_paths,
     get_iteration_number,
-    guess_your_plots,
     initialize_results_df,
     save_model,
     select_random_images,
@@ -198,7 +197,9 @@ def main(wandb_logger, sweep_config=None):
         total += batch_size
         total_correct += correct.sum()
 
-    plot_types = guess_your_plots() if len(config.plot_types) == 0 else config.plot_types
+    plot_types = (
+        guess_your_plots(config) if len(config.plot_types) == 0 else config.plot_types
+    )
     final_plots = plot_results(test_results, plot_types=plot_types)
     wandb_logger.log_validation_stats(
         running_loss, total_correct, total, test_results, final_plots

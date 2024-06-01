@@ -3,15 +3,9 @@ import os
 import random
 import numpy as np
 import pandas as pd
-import sys
 from scipy.sparse import coo_matrix
 import torch
 import config
-
-
-def debugger_is_active() -> bool:
-    """Return if the debugger is currently active"""
-    return hasattr(sys, "gettrace") and sys.gettrace() is not None
 
 
 def get_files_from_directory(directory_path):
@@ -165,22 +159,5 @@ def save_model(model_, optimizer_, model_name, config_, sweep_config_):
         config_dict.update(sweep_config_)
 
     config_path = os.path.join(path_, f"{model_name}_config.txt")
-    with open(config_path, "w", encoding='utf-8') as f: 
+    with open(config_path, "w", encoding="utf-8") as f:
         json.dump(config_dict, f, ensure_ascii=False, indent=4)
-
-def guess_your_plots():
-    classes = config.CLASSES
-    # if there is a colour class, it's either weber or colour. One of the plots will be 
-    #  useless, but it won't crash, just don't look at it
-    if any([x in classes for x in ["blue", "yellow", "green", "red"]]):
-        return ["weber", "colour"]
-    # if there are geometry classes, it's radius, distance and contingency
-    if any([x in classes for x in ["circle", "square", "triangle", "star"]]):
-        return ["radius", "distance", "contingency"]
-    # if there are numbers bigger than 10 in the classes, they will be angles, so it's stripes
-    if any([int(x) > 10 for x in classes]):
-        return ["stripes"]
-    # if there are numbers smaller than 10, it's guess the number of points
-    if any([int(x) < 10 for x in classes]):
-        return ["point_num"]
-    return []

@@ -3,7 +3,7 @@ import traceback
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
-import config
+import config 
 
 pd.options.mode.chained_assignment = None
 
@@ -51,7 +51,9 @@ def plot_accuracy_per_value(df, value):
     elif value == "distance":
         split = 2
     else:
-        raise ValueError("Value must be 'radius', 'distance', 'point_num', or 'stripes'")
+        raise ValueError(
+            "Value must be 'radius', 'distance', 'point_num', or 'stripes'"
+        )
 
     df[value] = df["Image"].apply(lambda x: os.path.basename(x).split("_")[split])
     df[value] = df[value].astype(int)
@@ -78,7 +80,7 @@ def plot_accuracy_per_colour(df):
     )
     plt.figure()
     ax = sns.barplot(data=df, x="num_points", y="per_correct", hue="colour")
-    
+
     return ax
 
 
@@ -111,3 +113,21 @@ def plot_results(results_, plot_types):
         print(f"Error plotting results: {error}")
 
     return plots
+
+
+def guess_your_plots(config_):
+    classes = config_.CLASSES
+    # if there is a colour class, it's either weber or colour. One of the plots will be
+    #  useless, but it won't crash, just don't look at it
+    if any([x in classes for x in ["blue", "yellow", "green", "red"]]):
+        return ["weber", "colour"]
+    # if there are geometry classes, it's radius, distance and contingency
+    if any([x in classes for x in ["circle", "square", "triangle", "star"]]):
+        return ["radius", "distance", "contingency"]
+    # if there are numbers bigger than 10 in the classes, they will be angles, so it's stripes
+    if any([int(x) > 10 for x in classes]):
+        return ["stripes"]
+    # if there are numbers smaller than 10, it's guess the number of points
+    if any([int(x) < 10 for x in classes]):
+        return ["point_num"]
+    return []

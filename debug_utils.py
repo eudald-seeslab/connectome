@@ -1,4 +1,5 @@
 import logging
+import sys
 import time
 
 logger = logging.getLogger("ct")
@@ -45,3 +46,8 @@ def get_logger(name, debug=False):
         logger.propagate = False
 
     return logger
+
+
+def debugger_is_active() -> bool:
+    """Return if the debugger is currently active"""
+    return hasattr(sys, "gettrace") and sys.gettrace() is not None

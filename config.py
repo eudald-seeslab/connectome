@@ -2,7 +2,7 @@ import os
 import torch
 from torch import cuda, device
 from torch.nn.functional import leaky_relu
-from utils import debugger_is_active
+from debug_utils import debugger_is_active
 
 # Check for CUDA availability and set device
 device_type = "cuda" if cuda.is_available() else "cpu"
@@ -10,30 +10,30 @@ device_type = "cuda" if cuda.is_available() else "cpu"
 DEVICE = device(device_type)
 
 # Directory paths relative to the project root
-TRAINING_DATA_DIR = "images/one_to_five_single_colour/train"
-TESTING_DATA_DIR = "images/one_to_five_single_colour/test"
+TRAINING_DATA_DIR = "images/stripes/train"
+TESTING_DATA_DIR = "images/stripes/test"
 # not used
 VALIDATION_DATA_DIR = "images/big_pointsval"
 # get directory names from the training data directory
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 
 # Neural data
-neurons = "all" # "selected" or "all"
-voronoi_criteria = "R7" #  "R7" or "all"
+neurons = "all"  # "selected" or "all"
+voronoi_criteria = "R7"  #  "R7" or "all"
 random_synapses = False
-train_edges = False
-train_neurons = True
-final_layer = "mean" # "mean" or "nn"
+train_edges = True
+train_neurons = False
+final_layer = "mean"  # "mean" or "nn"
 # node embedding activation function, as in
 # https://pytorch-geometric.readthedocs.io/en/latest/tutorial/create_gnn.html
 # only for training neurons
 lambda_func = leaky_relu  # torch activation function
 # Shut off some neurons based on their cell_type
 # You can find all the cell types in the adult_data/cell_types.csv
-filtered_celltypes = ["Dm3", "T2a"]
+filtered_celltypes = []  #  ["Dm3", "T2a"]
 
 # Debugging and logging
-debugging = True
+debugging = False
 debug_length = 2
 validation_length = 400
 wandb_ = True
@@ -45,13 +45,14 @@ small_length = 4000
 num_epochs = 50
 batch_size = 32
 dropout = 0.1
-base_lr = 0.003
+base_lr = 0.001
 weight_decay = 0.0001
 NUM_CONNECTOME_PASSES = 4
 log_transform_weights = False
 eye = "right"  # "left" or "right"
 # "radius", "contingency", "distance", "point_num", "stripes", "weber", "colour"
-plot_types = ["weber"]
+# if empty, I will try to guess the plots from the classes
+plot_types = []
 
 # sparse stuff is generaly not implemented in half...
 dtype = torch.float32

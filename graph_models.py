@@ -139,7 +139,7 @@ class FullGraphModel(nn.Module):
             x = x / x.norm()
 
         # final layer to get the correct magnitude
-        # Squeeze the num_features. If at some point is not 1, then we have to change this
+        # Squeeze the num_features. If at some point it is not 1, then we have to change this
         return self.final_fc(x.squeeze(2)).squeeze()
 
     def decision_making_mask(self, x, batch):

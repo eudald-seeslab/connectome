@@ -37,12 +37,11 @@ data <- df |>
       )
     ) |> 
   group_by(name, bin_theta) |> 
-  summarize(activation = sum(value)) |> 
-  mutate(activation = log1p(activation))
+  summarize(activation = sum(value))
 data |> 
   ggplot(aes(x = bin_theta, y = activation)) + 
     geom_point() +
-    facet_wrap(~ name, ncol=8)
+    facet_wrap(~ name, ncol=8, scales = "free")
 ```
 
 ```{r}
@@ -63,17 +62,8 @@ df |>
   facet_wrap(~  name, ncol = 6)
 ```
 
-```{r}
-df |> 
-  select(x, y, activation_10) |> 
-    mutate(
-    r = sqrt((x - center[1])^2 + (y - center[2])^2),
-    theta = atan2(y - center[2], x - center[1])
-    ) 
-```
 
 ```{r}
-df$name
-```
 
+```
 

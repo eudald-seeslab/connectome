@@ -33,10 +33,10 @@ class WandBLogger:
         self.initialized = False
     
     def get_run_id(self):
-        if self.enabled:
+        try:
             return wandb.run.id
-        else:
-            return ""
+        except KeyError:
+            return "NO_RUN_ID"
 
     def initialize_run(self, group=None):
         if self.enabled and not self.initialized:

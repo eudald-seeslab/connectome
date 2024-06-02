@@ -73,7 +73,7 @@ netron
 networkx~=3.2.1
 notebook==6.5.4
 notebook_shim==0.2.3
-numpy~=1.24.4
+numpy~=1.26.0
 nvidia-cublas-cu11==11.10.3.66
 nvidia-cuda-cupti-cu11==11.7.101
 nvidia-cuda-nvrtc-cu11==11.7.99
@@ -85,7 +85,7 @@ nvidia-cusparse-cu11==11.7.4.91
 nvidia-nvtx-cu11==11.7.91
 overrides==7.3.1
 packaging==23.1
-pandas==1.5.3
+pandas
 pandocfilters==1.5.0
 parso==0.8.3
 pathspec==0.11.1
@@ -156,7 +156,7 @@ tensorboard~=2.13.0
 pathtools~=0.1.2
 cachetools~=5.3.1
 Markdown~=3.4.4
-seaborn~=0.12.2
+seaborn~=0.13.2
 oauthlib~=3.2.2
 Werkzeug~=2.3.6
 toolz~=0.12.1

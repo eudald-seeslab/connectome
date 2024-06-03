@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 import torch
 from torch import cuda, device
 from torch.nn.functional import leaky_relu
@@ -10,8 +11,8 @@ device_type = "cuda" if cuda.is_available() else "cpu"
 DEVICE = device(device_type)
 
 # Directory paths relative to the project root
-TRAINING_DATA_DIR = "images/one_to_five_single_colour/train"
-TESTING_DATA_DIR = "images/one_to_five_single_colour/test"
+TRAINING_DATA_DIR = "images/two_shapes/train"
+TESTING_DATA_DIR = "images/two_shapes/test"
 # not used
 VALIDATION_DATA_DIR = "images/big_pointsval"
 # get directory names from the training data directory
@@ -30,7 +31,10 @@ final_layer = "mean"  # "mean" or "nn"
 lambda_func = leaky_relu  # torch activation function
 # Shut off some neurons based on their cell_type
 # You can find all the cell types in the adult_data/cell_types.csv
-filtered_celltypes = []  #  ["Dm3", "T2a"]
+cts = pd.read_csv("adult_data/cell_types.csv")
+filtered_celltypes = [
+    a for a in cts[cts["count"] > 1000]["cell_type"] if a.startswith("L")
+]
 
 # Debugging and logging
 debugging = False
@@ -60,6 +64,6 @@ sparse_layout = torch.sparse_coo
 
 # small checks so that i don't screw up
 wandb_ = False if debugger_is_active() else wandb_
-# wandb_ = False if debugging else wandb_
+wandb_ = False if debugging else wandb_
 validation_length = validation_length if small else None
 num_epochs = 1 if debugging else num_epochs

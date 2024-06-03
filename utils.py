@@ -6,6 +6,8 @@ import pandas as pd
 from scipy.sparse import coo_matrix
 import torch
 
+from debug_utils import model_summary
+
 
 def get_files_from_directory(directory_path):
     files = []
@@ -158,7 +160,12 @@ def save_model(model_, optimizer_, model_name, config_):
     )
     # create an accompanying config file
     config_dict = module_to_clean_dict(config_)
-    config_path = os.path.join(path_, f"{model_name}_config.txt")
+
+    # Get model summary information and add it to the config
+    model_summary_info = model_summary(model_, print=False)
+    config_dict["model_summary"] = model_summary_info
+
+    config_path = os.path.join(path_, model_name.replace(".pth", "_config.txt"))
     with open(config_path, "w", encoding="utf-8") as f:
         json.dump(config_dict, f, ensure_ascii=False, indent=4)
 

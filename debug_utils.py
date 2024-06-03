@@ -20,13 +20,18 @@ def get_size_of_tensor(x):
     return (x.indices().nelement() * 8 + x.values().nelement() * 4) / 1024**2
 
 
-def model_summary(model):
+def model_summary(model, print_=True):
+    param_info = {}
     for name, param in model.named_parameters():
         if param.requires_grad:
-            logger.debug(f"{name}: {param.shape}")
-    logger.debug(
-        f"The model has {sum(p.numel() for p in model.parameters() if p.requires_grad)} parameters."
-    )
+            if print_:
+                logger.debug(f"{name}: {param.shape}")
+            param_info[name] = list(param.shape)
+    total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    param_info["total_params"] = total_params
+    if print_:
+        logger.debug(f"The model has {total_params} parameters.")
+    return param_info
 
 
 # Create logger

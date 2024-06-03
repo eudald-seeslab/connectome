@@ -50,7 +50,8 @@ def main(wandb_logger, sweep_config=None):
 
     # for saving later
     start_datetime = datetime.datetime.now().isoformat(sep=" ", timespec="minutes")
-    model_name = f"{wandb_logger.get_run_id()}_{start_datetime}.pth"
+    dchar = "_DEBUG" if u_config.debugging else ""
+    model_name = f"{wandb_logger.get_run_id()}_{start_datetime}{dchar}.pth"
 
     # update batch size number of connectome passes (otherwise we run out of memory)
     batch_size = (

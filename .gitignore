@@ -245,6 +245,7 @@ sweep_plots
 
 # big data files
 connections.csv
+connections_refined.csv
 
 # input data
 /images

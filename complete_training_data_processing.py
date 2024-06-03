@@ -31,7 +31,7 @@ class CompleteModelsDataProcessor:
         rational_cell_types = self.get_rational_cell_types()
         self._check_filtered_neurons(config_.filtered_celltypes, rational_cell_types)
         neuron_classification = self._get_neurons(config_.filtered_celltypes, side=None)
-        connections = self._get_connections()
+        connections = self._get_connections(config_.refined_synaptic_data)
         self.root_ids = self._get_root_ids(neuron_classification, connections)
         self.synaptic_matrix = construct_synaptic_matrix(
             neuron_classification, connections, self.root_ids
@@ -184,7 +184,7 @@ class CompleteModelsDataProcessor:
             usecols=["root_id", "cell_type", "side"],
             dtype={"root_id": "string"},
         ).fillna("Unknown")
-        
+
         if filtered_celltpyes is not None:
             # If it's not a list, make it so
             if not isinstance(filtered_celltpyes, list):
@@ -203,10 +203,11 @@ class CompleteModelsDataProcessor:
         return all_neurons
 
     @staticmethod
-    def _get_connections():
+    def _get_connections(refined_synaptic_data=False):
+        file_char = "_refined" if refined_synaptic_data else ""
         return (
             pd.read_csv(
-                "adult_data/connections.csv",
+                f"adult_data/connections{file_char}.csv",
                 dtype={
                     "pre_root_id": "string",
                     "post_root_id": "string",

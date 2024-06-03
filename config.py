@@ -11,8 +11,8 @@ device_type = "cuda" if cuda.is_available() else "cpu"
 DEVICE = device(device_type)
 
 # Directory paths relative to the project root
-TRAINING_DATA_DIR = "images/two_shapes/train"
-TESTING_DATA_DIR = "images/two_shapes/test"
+TRAINING_DATA_DIR = "images/five_to_fifteen/train"
+TESTING_DATA_DIR = "images/five_to_fifteen/test"
 # not used
 VALIDATION_DATA_DIR = "images/big_pointsval"
 # get directory names from the training data directory
@@ -31,10 +31,9 @@ final_layer = "mean"  # "mean" or "nn"
 lambda_func = leaky_relu  # torch activation function
 # Shut off some neurons based on their cell_type
 # You can find all the cell types in the adult_data/cell_types.csv
-cts = pd.read_csv("adult_data/cell_types.csv")
-filtered_celltypes = [
-    a for a in cts[cts["count"] > 1000]["cell_type"] if a.startswith("L")
-]
+filtered_celltypes = []
+# Updated synaptic data taking into account the excitatory or inhibitory nature of the synapse
+refined_synaptic_data = True
 
 # Debugging and logging
 debugging = False

@@ -180,8 +180,11 @@ class CompleteModelsDataProcessor:
     @staticmethod
     def _get_neurons(filtered_celltpyes=None, side=None):
         all_neurons = pd.read_csv(
-            "adult_data/classification.csv", usecols=["root_id", "cell_type", "side"], dtype={"root_id": "string"}
-        )
+            "adult_data/classification.csv",
+            usecols=["root_id", "cell_type", "side"],
+            dtype={"root_id": "string"},
+        ).fillna("Unknown")
+        
         if filtered_celltpyes is not None:
             # If it's not a list, make it so
             if not isinstance(filtered_celltpyes, list):

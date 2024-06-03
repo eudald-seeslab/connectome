@@ -162,7 +162,7 @@ def save_model(model_, optimizer_, model_name, config_):
     config_dict = module_to_clean_dict(config_)
 
     # Get model summary information and add it to the config
-    model_summary_info = model_summary(model_, print=False)
+    model_summary_info = model_summary(model_, print_=False)
     config_dict["model_summary"] = model_summary_info
 
     config_path = os.path.join(path_, model_name.replace(".pth", "_config.txt"))

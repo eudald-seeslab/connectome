@@ -103,7 +103,7 @@ class VoronoiCells:
     def plot_voronoi_cells_with_image(self, image, ax):
 
         # Display the image
-        ax.imshow(image, extent=[0, 512, 0, 512])
+        ax.imshow(image, extent=[0, self.pixel_num, 0, self.pixel_num])
 
         # Plot Voronoi diagram
         self._plot_voronoi_cells(ax)

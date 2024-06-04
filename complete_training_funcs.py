@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from imageio.v3 import imread
+from PIL import Image
 import pandas as pd
 import numpy as np
 from scipy.sparse import coo_matrix
@@ -13,6 +14,23 @@ def import_images(img_paths):
 
     # Stack images into a single NumPy array
     imgs = np.stack(imgs, axis=0)
+    return imgs
+
+
+def preprocess_images(imgs):
+    # The system is designed to work with 512x512 colour images. The obvious solution
+    # would be to resize the tesselation of the neurons, who doesn't care about scale, 
+    # but beware, traveler, because we have to be careful because very
+    # small images will make the Voronoi tessellation fail (because there might 
+    # not be enough pixels to create the cells). So, we are doomed to resize the image...
+    # The colour part is easy, just repeat the image 3 times to create the 3 channels.
+    
+    if imgs[0].shape[0] != 512:
+        imgs = np.array([np.array(Image.fromarray(a).resize((512, 512))) for a in imgs])
+    
+    if imgs.ndim == 3:
+        imgs = np.stack([imgs]*3, axis=-1)
+        
     return imgs
 
 

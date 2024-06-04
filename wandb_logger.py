@@ -18,10 +18,14 @@ class WandBLogger:
         except AttributeError:
             return "NO_RUN_ID"
 
-    def initialize_run(self, config_, group=None):
+    def initialize_run(self, config_):
         if self.enabled and not self.initialized:
             model_config = module_to_clean_dict(config_)
-            wandb.init(project=self.project_name, config=model_config, group=group)
+            wandb.init(
+                project=self.project_name, 
+                config=model_config, 
+                group=config_.group
+            )
             self.initialized = True
 
     def initialize_sweep(self, sweep_config):

@@ -3,6 +3,7 @@ import pandas as pd
 import torch
 from torch import cuda, device
 from torch.nn.functional import leaky_relu
+from PIL import Image
 from debug_utils import debugger_is_active
 
 # Check for CUDA availability and set device
@@ -11,12 +12,16 @@ device_type = "cuda" if cuda.is_available() else "cpu"
 DEVICE = device(device_type)
 
 # Directory paths relative to the project root
-TRAINING_DATA_DIR = "images/five_to_fifteen/train"
-TESTING_DATA_DIR = "images/five_to_fifteen/test"
+TRAINING_DATA_DIR = "images/mnist/train"
+TESTING_DATA_DIR = "images/mnist/test"
 # not used
 VALIDATION_DATA_DIR = "images/big_pointsval"
 # get directory names from the training data directory
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
+# get one sample of one class to get the image size
+sample_image = os.listdir(os.path.join(TRAINING_DATA_DIR, CLASSES[0]))[0]
+# get the image size
+image_size = Image.open(os.path.join(TRAINING_DATA_DIR, CLASSES[0], sample_image)).size[0]
 
 # Neural data
 neurons = "all"  # "selected" or "all"
@@ -41,11 +46,12 @@ debug_length = 2
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400
+group = "mnist"
 small = False
 small_length = 4000
 
 # Training configuration
-num_epochs = 50
+num_epochs = 100
 batch_size = 32
 dropout = 0.1
 base_lr = 0.001
@@ -55,7 +61,7 @@ log_transform_weights = False
 eye = "right"  # "left" or "right"
 # "radius", "contingency", "distance", "point_num", "stripes", "weber", "colour"
 # if empty, I will try to guess the plots from the classes
-plot_types = []
+plot_types = ["contingency"]
 
 # sparse stuff is generaly not implemented in half...
 dtype = torch.float32

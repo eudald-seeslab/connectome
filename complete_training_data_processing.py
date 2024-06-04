@@ -16,6 +16,7 @@ from complete_training_funcs import (
     get_side_decision_making_vector,
     get_voronoi_averages,
     import_images,
+    preprocess_images,
     process_images,
 )
 from voronoi_cells import VoronoiCells
@@ -77,6 +78,7 @@ class CompleteModelsDataProcessor:
     def process_batch(self, imgs, labels):
         # FIXME: this needs a lot of cleaning
 
+        imgs = preprocess_images(imgs)
         processed_imgs = process_images(imgs, self.voronoi_indices)
         voronoi_averages = get_voronoi_averages(processed_imgs)
         neuron_activations = pd.concat(
@@ -129,7 +131,8 @@ class CompleteModelsDataProcessor:
 
     def plot_neuron_activations(self, img, ax):
         # This is repeated in process_batch, but it's the cleanest way to get the plots
-        processed_img = process_images(np.expand_dims(img, 0), self.voronoi_indices)
+        img = preprocess_images(np.expand_dims(img, 0))
+        processed_img = process_images(img, self.voronoi_indices)
         voronoi_average = get_voronoi_averages(processed_img)[0]
         # we need to put everything in terms of the voronoi point regions
         voronoi_average.index = [

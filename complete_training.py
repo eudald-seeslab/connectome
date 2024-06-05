@@ -15,7 +15,7 @@ from utils import (
     get_image_paths,
     get_iteration_number,
     initialize_results_df,
-    save_model,
+    save_checkpoint,
     select_random_images,
     update_config_with_sweep,
     update_results_df,
@@ -51,16 +51,14 @@ def main(wandb_logger, sweep_config=None):
     # for saving later
     start_datetime = datetime.datetime.now().isoformat(sep=" ", timespec="minutes")
     dchar = "_DEBUG" if u_config.debugging else ""
-    model_name = f"m_{start_datetime}_{wandb_logger.get_run_id()}{dchar}.pth"
+    model_name = f"m_{start_datetime}_{wandb_logger.run_id}{dchar}.pth"
 
     # update batch size number of connectome passes (otherwise we run out of memory)
     batch_size = u_config.batch_size
     batch_size = batch_size // 2 if u_config.NUM_CONNECTOME_PASSES > 5 else batch_size
 
     # get data and prepare model
-    training_images = get_image_paths(
-        u_config.TRAINING_DATA_DIR, u_config.small_length
-    )
+    training_images = get_image_paths(u_config.TRAINING_DATA_DIR, u_config.small_length)
     data_processor = CompleteModelsDataProcessor(u_config)
     model = FullGraphModel(data_processor, u_config).to(u_config.DEVICE)
     optimizer = torch.optim.Adam(model.parameters(), lr=u_config.base_lr)
@@ -118,6 +116,9 @@ def main(wandb_logger, sweep_config=None):
                 if i == 100 and running_loss == first_loss:
                     raise TrainingError("Loss is constant. Training will stop.")
 
+            # save checkpoint (overriding the last)
+            save_checkpoint(model, optimizer, model_name, u_config)
+
             logger.info(
                 f"Finished epoch {ep + 1} with loss {running_loss / total} "
                 f"and accuracy {total_correct / total}."
@@ -131,12 +132,8 @@ def main(wandb_logger, sweep_config=None):
     except KeyboardInterrupt:
         logger.warning("Training interrupted by user. Continuing to testing.")
 
-    save_model(model, optimizer, model_name, u_config)
-
     # test
-    testing_images = get_image_paths(
-        u_config.TESTING_DATA_DIR, u_config.small_length
-    )
+    testing_images = get_image_paths(u_config.TESTING_DATA_DIR, u_config.small_length)
     already_selected_testing = []
     total_correct, total, running_loss = 0, 0, 0.0
     test_results = initialize_results_df()
@@ -164,9 +161,13 @@ def main(wandb_logger, sweep_config=None):
         total_correct += correct.sum()
 
     plot_types = (
-        guess_your_plots(u_config) if len(u_config.plot_types) == 0 else u_config.plot_types
+        guess_your_plots(u_config)
+        if len(u_config.plot_types) == 0
+        else u_config.plot_types
     )
-    final_plots = plot_results(test_results, plot_types=plot_types, classes=u_config.CLASSES)
+    final_plots = plot_results(
+        test_results, plot_types=plot_types, classes=u_config.CLASSES
+    )
     wandb_logger.log_validation_stats(
         running_loss, total_correct, total, test_results, final_plots
     )
@@ -181,7 +182,9 @@ if __name__ == "__main__":
 
     logger = get_logger("ct", config.debugging)
 
-    wandb_logger = WandBLogger("adult_complete", config.wandb_, config.wandb_images_every)
+    wandb_logger = WandBLogger(
+        "adult_complete", config.wandb_, config.wandb_images_every
+    )
     try:
         main(wandb_logger)
 

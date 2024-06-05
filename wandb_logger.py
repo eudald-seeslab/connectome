@@ -11,8 +11,8 @@ class WandBLogger:
         self.log_images_every = imgs_every
         self.initialized = False
 
-    @staticmethod
-    def get_run_id():
+    @property
+    def run_id():
         try:
             return wandb.run.id
         except AttributeError:

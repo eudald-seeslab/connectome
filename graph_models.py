@@ -6,42 +6,36 @@ from torch import nn
 
 
 class Connectome(MessagePassing):
-    def __init__(
-        self,
-        input_shape,
-        edge_weights,
-        num_connectome_passes,
-        batch_size,
-        dtype,
-        device,
-        train_edges,
-        train_neurons,
-        lambda_func=None,
-    ):
+    def __init__(self, data_processor, config):
         super(Connectome, self).__init__(aggr="add")
 
-        self.num_passes = num_connectome_passes
-        self.num_nodes_per_graph = input_shape
-        self.batch_size = batch_size
-        self.train_edges = train_edges
-        self.train_neurons = train_neurons
-        self.lambda_func = lambda_func
+        self.num_passes = config.NUM_CONNECTOME_PASSES
+        num_nodes = data_processor.number_of_synapses
+        edge_weight = data_processor.synaptic_matrix.data
+        num_synapses = edge_weight.shape[0]
+        self.batch_size = config.batch_size
+        self.train_edges = config.train_edges
+        self.train_neurons = config.train_neurons
+        self.lambda_func = config.lambda_func
+        dtype = config.dtype
+        device = config.DEVICE
 
         self.register_buffer(
-            "edge_weight", torch.tensor(edge_weights, dtype=dtype, device=device)
+            "edge_weight",
+            torch.tensor(edge_weight, dtype=dtype, device=device),
         )
 
-        if train_edges:
+        if config.train_edges:
             # This allows us to have negative weights, as well as synapses comprised
             #  of many weights, where some are positive and some negative, and the result
             #  is edge_weight * edge_weight_multiplier
             self.edge_weight_multiplier = Parameter(
-                torch.Tensor(edge_weights.shape[0]).to(device)
-            )
+                torch.Tensor(num_synapses).to(device)
+                )
             nn.init.uniform_(self.edge_weight_multiplier, a=-0.1, b=0.1)
-        if train_neurons:
+        if config.train_neurons:
             self.neuron_activation_threshold = Parameter(
-                torch.Tensor(input_shape).to(device)
+                torch.Tensor(num_nodes).to(device)
             )
             nn.init.uniform_(self.neuron_activation_threshold, a=0, b=0.1)
 
@@ -84,42 +78,19 @@ class Connectome(MessagePassing):
 
 class FullGraphModel(nn.Module):
 
-    def __init__(
-        self,
-        input_shape,
-        num_connectome_passes,
-        decision_making_vector,
-        batch_size,
-        dtype,
-        edge_weights,
-        device,
-        train_edges,
-        train_neurons,
-        lambda_func,
-        final_layer="mean",
-        num_classes=2,
-        num_features=1,
-    ):
+    def __init__(self, data_processor, config_):
         super(FullGraphModel, self).__init__()
-        self.register_buffer("decision_making_vector", decision_making_vector)
-
-        self.connectome = Connectome(
-            input_shape=input_shape,
-            edge_weights=edge_weights,
-            num_connectome_passes=num_connectome_passes,
-            batch_size=batch_size,
-            dtype=dtype,
-            device=device,
-            train_edges=train_edges,
-            train_neurons=train_neurons,
-            lambda_func=lambda_func,
-        )
-        final_layer_input_size = int(decision_making_vector.sum()) if final_layer == "nn" else 1
-        self.final_fc = nn.Linear(final_layer_input_size, num_classes, dtype=dtype)
-        self.num_features = num_features
-        self.batch_size = batch_size
+        
+        self.connectome = Connectome(data_processor, config_)
+        self.register_buffer("decision_making_vector", data_processor.decision_making_vector)
+        final_layer = config_.final_layer
+        final_layer_input_size = int(data_processor.decision_making_vector.sum()) if final_layer == "nn" else 1
+        self.final_fc = nn.Linear(final_layer_input_size, len(config_.CLASSES), dtype=config_.dtype)
+        self.num_features = 1 # only works with 1 for now
+        self.batch_size = config_.batch_size
         self.final_layer = final_layer
-        self.train_neurons = train_neurons
+        self.train_neurons = config_.train_neurons
+
 
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
@@ -132,7 +103,7 @@ class FullGraphModel(nn.Module):
         if self.final_layer == "mean":
             # get the mean for each batch
             x = torch.mean(x, dim=1, keepdim=True)
-        
+
         if not self.train_neurons:
             # When we are training edges or only the final layer, the output
             #  explodes a bit and we need to normalize it

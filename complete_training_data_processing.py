@@ -28,7 +28,6 @@ class CompleteModelsDataProcessor:
     tesselated_df = None
 
     def __init__(self, config_):
-        # get data
         rational_cell_types = self.get_rational_cell_types()
         self._check_filtered_neurons(config_.filtered_celltypes, rational_cell_types)
         neuron_classification = self._get_neurons(config_.filtered_celltypes, side=None)

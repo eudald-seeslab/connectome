@@ -65,20 +65,7 @@ def main(wandb_logger, sweep_config=None):
         u_config.TRAINING_DATA_DIR, u_config.small_length
     )
     data_processor = CompleteModelsDataProcessor(u_config)
-    model = FullGraphModel(
-        input_shape=data_processor.number_of_synapses,
-        num_connectome_passes=u_config.NUM_CONNECTOME_PASSES,
-        decision_making_vector=data_processor.decision_making_vector,
-        batch_size=batch_size,
-        dtype=u_config.dtype,
-        edge_weights=data_processor.synaptic_matrix.data,
-        device=u_config.DEVICE,
-        train_edges=u_config.train_edges,
-        train_neurons=u_config.train_neurons,
-        lambda_func=u_config.lambda_func,
-        final_layer=u_config.final_layer,
-        num_classes=len(u_config.CLASSES),
-    ).to(u_config.DEVICE)
+    model = FullGraphModel(data_processor, u_config).to(u_config.DEVICE)
     optimizer = torch.optim.Adam(model.parameters(), lr=u_config.base_lr)
     criterion = CrossEntropyLoss()
     early_stopping = EarlyStopping(patience=2, min_delta=0)

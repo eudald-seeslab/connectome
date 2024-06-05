@@ -1,5 +1,4 @@
 import os
-import pandas as pd
 import torch
 from torch import cuda, device
 from torch.nn.functional import leaky_relu
@@ -14,13 +13,10 @@ DEVICE = device(device_type)
 # Directory paths relative to the project root
 TRAINING_DATA_DIR = "images/mnist/train"
 TESTING_DATA_DIR = "images/mnist/test"
-# not used
-VALIDATION_DATA_DIR = "images/big_pointsval"
 # get directory names from the training data directory
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 # get one sample of one class to get the image size
 sample_image = os.listdir(os.path.join(TRAINING_DATA_DIR, CLASSES[0]))[0]
-# get the image size
 image_size = Image.open(os.path.join(TRAINING_DATA_DIR, CLASSES[0], sample_image)).size[0]
 
 # Neural data
@@ -43,19 +39,16 @@ refined_synaptic_data = False
 # Debugging and logging
 debugging = False
 debug_length = 2
+small_length = None
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400
-group = "mnist"
-small = False
-small_length = 4000
+wandb_group = "mnist"
 
 # Training configuration
 num_epochs = 100
 batch_size = 32
-dropout = 0.1
 base_lr = 0.001
-weight_decay = 0.0001
 NUM_CONNECTOME_PASSES = 4
 log_transform_weights = False
 eye = "right"  # "left" or "right"
@@ -64,12 +57,12 @@ eye = "right"  # "left" or "right"
 # If None, no plots will be generated
 plot_types = ["contingency"]
 
-# sparse stuff is generaly not implemented in half...
+# sparse stuff is generaly not implemented in half
 dtype = torch.float32
 sparse_layout = torch.sparse_coo
 
 # small checks so that i don't screw up
 wandb_ = False if debugger_is_active() else wandb_
 wandb_ = False if debugging else wandb_
-validation_length = validation_length if small else None
+validation_length = validation_length if small_length is not None else None
 num_epochs = 1 if debugging else num_epochs

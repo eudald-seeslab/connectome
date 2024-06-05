@@ -22,9 +22,9 @@ class WandBLogger:
         if self.enabled and not self.initialized:
             model_config = module_to_clean_dict(config_)
             wandb.init(
-                project=self.project_name, 
-                config=model_config, 
-                group=config_.group
+                project=self.project_name,
+                config=model_config,
+                group=config_.wandb_group,
             )
             self.initialized = True
 

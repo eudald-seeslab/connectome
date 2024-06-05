@@ -11,18 +11,18 @@ from debug_utils import model_summary
 
 def get_files_from_directory(directory_path):
     files = []
-    for root, dirs, filenames in os.walk(directory_path):
+    for root, _, filenames in os.walk(directory_path):
         for filename in filenames:
             if filename.endswith((".npy", ".png", ".jpg", ".jpeg")):
                 files.append(os.path.join(root, filename))
     return files
 
 
-def get_image_paths(images_dir, small, small_length):
+def get_image_paths(images_dir, small_length):
     images = get_files_from_directory(images_dir)
     assert len(images) > 0, f"No images found in {images_dir}."
 
-    if small:
+    if small_length is not None:
         try:
             images = random.sample(images, small_length)
         except ValueError:
@@ -63,8 +63,9 @@ def synapses_to_matrix_and_dict(synapses):
 def get_iteration_number(im_num, config_):
     if config_.debugging:
         return config_.debug_length
-    if config_.small and im_num > config_.small_length:
-        return config_.small_length // config_.batch_size
+    small_length = config_.small_length
+    if small_length is not None and im_num > small_length:
+        return small_length // config_.batch_size
     return im_num // config_.batch_size
 
 

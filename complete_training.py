@@ -62,7 +62,7 @@ def main(wandb_logger, sweep_config=None):
 
     # get data and prepare model
     training_images = get_image_paths(
-        u_config.TRAINING_DATA_DIR, u_config.small, u_config.small_length
+        u_config.TRAINING_DATA_DIR, u_config.small_length
     )
     data_processor = CompleteModelsDataProcessor(u_config)
     model = FullGraphModel(
@@ -151,7 +151,7 @@ def main(wandb_logger, sweep_config=None):
 
     # test
     testing_images = get_image_paths(
-        u_config.TESTING_DATA_DIR, u_config.small, u_config.small_length
+        u_config.TESTING_DATA_DIR, u_config.small_length
     )
     already_selected_testing = []
     total_correct, total, running_loss = 0, 0, 0.0

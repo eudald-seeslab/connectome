@@ -12,7 +12,7 @@ class WandBLogger:
         self.initialized = False
 
     @property
-    def run_id():
+    def run_id(self):
         try:
             return wandb.run.id
         except AttributeError:

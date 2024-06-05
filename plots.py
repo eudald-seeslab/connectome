@@ -118,6 +118,14 @@ def plot_results(results_, plot_types, classes=None):
 
 
 def guess_your_plots(config_):
+    if config_.plot_types is None:
+        # If the user has specified None, don't plot anything
+        return []
+    if len(config_.plot_types) > 0:
+        # If the user has specified the plot types, use them
+        return config_.plot_types
+
+    # If the user has left an empty list, it's guessing time
     classes = config_.CLASSES
     # if there is a colour class, it's either weber or colour. One of the plots will be
     #  useless, but it won't crash, just don't look at it
@@ -129,7 +137,7 @@ def guess_your_plots(config_):
     # if there are numbers bigger than 10 in the classes, they will be angles, so it's stripes
     if any([int(x) > 10 for x in classes]):
         return ["stripes"]
-    # if there are numbers smaller than 10, it's guess the number of points
-    if any([int(x) < 10 for x in classes]):
+    # if there are numbers smaller than 10, it's guess the numbers
+    if all([int(x) < 10 for x in classes]):
         return ["point_num"]
     return []

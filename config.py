@@ -38,7 +38,7 @@ lambda_func = leaky_relu  # torch activation function
 # You can find all the cell types in the adult_data/cell_types.csv
 filtered_celltypes = []
 # Updated synaptic data taking into account the excitatory or inhibitory nature of the synapse
-refined_synaptic_data = True
+refined_synaptic_data = False
 
 # Debugging and logging
 debugging = False
@@ -61,6 +61,7 @@ log_transform_weights = False
 eye = "right"  # "left" or "right"
 # "radius", "contingency", "distance", "point_num", "stripes", "weber", "colour"
 # if empty, I will try to guess the plots from the classes
+# If None, no plots will be generated
 plot_types = ["contingency"]
 
 # sparse stuff is generaly not implemented in half...

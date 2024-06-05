@@ -19,6 +19,10 @@ CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 sample_image = os.listdir(os.path.join(TRAINING_DATA_DIR, CLASSES[0]))[0]
 image_size = Image.open(os.path.join(TRAINING_DATA_DIR, CLASSES[0], sample_image)).size[0]
 
+# Models
+# None if you want to start from scratch
+resume_checkpoint = "m_2024-06-04 22:58_cnhat6se.pth"
+
 # Neural data
 neurons = "all"  # "selected" or "all"
 voronoi_criteria = "R7"  #  "R7" or "all"
@@ -37,9 +41,9 @@ filtered_celltypes = []
 refined_synaptic_data = False
 
 # Debugging and logging
-debugging = False
+debugging = True
 debug_length = 2
-small_length = None
+small_length = 100
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400

@@ -1,4 +1,5 @@
 import datetime
+import os
 from os.path import basename
 import traceback
 import warnings
@@ -64,6 +65,13 @@ def main(wandb_logger, sweep_config=None):
     optimizer = torch.optim.Adam(model.parameters(), lr=u_config.base_lr)
     criterion = CrossEntropyLoss()
     early_stopping = EarlyStopping(patience=2, min_delta=0)
+
+    if u_config.resume_checkpoint is not None:
+        logger.warning(f"Resuming training from {u_config.resume_checkpoint}")
+        checkpoint_path = os.path.join("models", u_config.resume_checkpoint)
+        checkpoint = torch.load(checkpoint_path, map_location=u_config.DEVICE)
+        model.load_state_dict(checkpoint["model"])
+        optimizer.load_state_dict(checkpoint["optimizer"])
 
     # Print model details
     model_summary(model)

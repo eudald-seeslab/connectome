@@ -54,11 +54,8 @@ def main(wandb_logger, sweep_config=None):
     model_name = f"m_{start_datetime}_{wandb_logger.get_run_id()}{dchar}.pth"
 
     # update batch size number of connectome passes (otherwise we run out of memory)
-    batch_size = (
-        u_config.batch_size // 2
-        if u_config.NUM_CONNECTOME_PASSES > 5
-        else u_config.batch_size
-    )
+    batch_size = u_config.batch_size
+    batch_size = batch_size // 2 if u_config.NUM_CONNECTOME_PASSES > 5 else batch_size
 
     # get data and prepare model
     training_images = get_image_paths(

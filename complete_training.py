@@ -16,6 +16,7 @@ from utils import (
     get_image_paths,
     get_iteration_number,
     initialize_results_df,
+    process_warnings,
     save_checkpoint,
     select_random_images,
     update_config_with_sweep,
@@ -48,10 +49,7 @@ def main(wandb_logger, sweep_config=None):
         wandb_logger.initialize_run(u_config)
 
     logger = get_logger("ct", u_config.debugging)
-    if u_config.debugging:
-        logger.warning("WARNING: debugging mode is active.")
-    if u_config.small_length is not None:
-        logger.warning(f"WARNING: small_length is set to {u_config.small_length}.")
+    process_warnings(u_config, logger)
 
     # for saving later
     start_datetime = datetime.datetime.now().isoformat(sep=" ", timespec="minutes")
@@ -97,12 +95,9 @@ def main(wandb_logger, sweep_config=None):
                     data_processor.recreate_voronoi_cells()
                 images, labels = data_processor.get_data_from_paths(batch_files)
                 if i % u_config.wandb_images_every == 0:
-                    p = data_processor.plot_input_images(images[0])
-                    wandb_logger.log_image(
-                        p, basename(batch_files[0]), "Voronoi - Original - Activations"
-                    )
-                    plt.close("all")
-
+                    p, title = data_processor.plot_input_images(images[0])
+                    wandb_logger.log_image(p, basename(batch_files[0]), title)
+                    
                 inputs, labels = data_processor.process_batch(images, labels)
 
                 optimizer.zero_grad()
@@ -112,10 +107,7 @@ def main(wandb_logger, sweep_config=None):
                     loss.backward()
                     optimizer.step()
 
-                # Calculate run parameters
-                outputs, predictions, labels_cpu, correct = clean_model_outputs(
-                    out, labels
-                )
+                _, _, _, correct = clean_model_outputs(out, labels)
                 running_loss += update_running_loss(loss, inputs)
                 total += batch_size
                 total_correct += correct.sum()
@@ -140,7 +132,6 @@ def main(wandb_logger, sweep_config=None):
                 logger.info("Early stopping activated. Continuing to testing.")
                 break
 
-            torch.cuda.empty_cache()
     except KeyboardInterrupt:
         logger.warning("Training interrupted by user. Continuing to testing.")
 
@@ -163,7 +154,6 @@ def main(wandb_logger, sweep_config=None):
         out = model(inputs)
         loss = criterion(out, labels)
 
-        # Calculate run parameters
         outputs, predictions, labels_cpu, correct = clean_model_outputs(out, labels)
         test_results = update_results_df(
             test_results, batch_files, outputs, predictions, labels_cpu, correct
@@ -172,11 +162,7 @@ def main(wandb_logger, sweep_config=None):
         total += batch_size
         total_correct += correct.sum()
 
-    plot_types = (
-        guess_your_plots(u_config)
-        if len(u_config.plot_types) == 0
-        else u_config.plot_types
-    )
+    plot_types = guess_your_plots(u_config)
     final_plots = plot_results(
         test_results, plot_types=plot_types, classes=u_config.CLASSES
     )

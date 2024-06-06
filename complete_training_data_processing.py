@@ -127,7 +127,9 @@ class CompleteModelsDataProcessor:
         self.voronoi_cells.plot_voronoi_cells_with_image(img, axes[1])
         self.plot_neuron_activations(img, axes[2])
         plt.tight_layout()
-        return fig
+        plt.close("all")
+
+        return fig, "Voronoi - Original - Activations"
 
     def plot_neuron_activations(self, img, ax):
         # This is repeated in process_batch, but it's the cleanest way to get the plots

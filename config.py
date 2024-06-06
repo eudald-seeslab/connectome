@@ -11,8 +11,8 @@ device_type = "cuda" if cuda.is_available() else "cpu"
 DEVICE = device(device_type)
 
 # Directory paths relative to the project root
-TRAINING_DATA_DIR = "images/mnist/train"
-TESTING_DATA_DIR = "images/mnist/test"
+TRAINING_DATA_DIR = "images/five_to_fifteen/train"
+TESTING_DATA_DIR = "images/five_to_fifteen/test"
 # get directory names from the training data directory
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 # get one sample of one class to get the image size
@@ -21,7 +21,7 @@ image_size = Image.open(os.path.join(TRAINING_DATA_DIR, CLASSES[0], sample_image
 
 # Models
 # None if you want to start from scratch
-resume_checkpoint = "m_2024-06-04 22:58_cnhat6se.pth"
+resume_checkpoint = None # "model_2024-05-19 16:16:58.pth"
 
 # Neural data
 neurons = "all"  # "selected" or "all"
@@ -37,20 +37,25 @@ lambda_func = leaky_relu  # torch activation function
 # Shut off some neurons based on their cell_type
 # You can find all the cell types in the adult_data/cell_types.csv
 filtered_celltypes = []
+# You can also filter a fraction of the neurons
+# Note: it's a fraction of the number of neurons after filtering by cell type
+# and also after removing the protected cell types (R1-6, R7, R8, and the rational cell types)
+# None if you don't want to filter
+filtered_fraction = None # 0.5
 # Updated synaptic data taking into account the excitatory or inhibitory nature of the synapse
 refined_synaptic_data = False
 
 # Debugging and logging
-debugging = True
+debugging = False
 debug_length = 2
-small_length = 100
+small_length = None
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400
-wandb_group = "mnist"
+wandb_group = "weber"
 
 # Training configuration
-num_epochs = 100
+num_epochs = 50
 batch_size = 32
 base_lr = 0.001
 NUM_CONNECTOME_PASSES = 4
@@ -59,7 +64,7 @@ eye = "right"  # "left" or "right"
 # "radius", "contingency", "distance", "point_num", "stripes", "weber", "colour"
 # if empty, I will try to guess the plots from the classes
 # If None, no plots will be generated
-plot_types = ["contingency"]
+plot_types = []
 
 # sparse stuff is generaly not implemented in half
 dtype = torch.float32

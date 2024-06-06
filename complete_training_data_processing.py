@@ -29,7 +29,8 @@ class CompleteModelsDataProcessor:
 
     def __init__(self, config_):
         rational_cell_types = self.get_rational_cell_types()
-        self._check_filtered_neurons(config_.filtered_celltypes, rational_cell_types)
+        self.protected_cell_types = ["R1-6", "R7", "R8"] + rational_cell_types
+        self._check_filtered_neurons(config_.filtered_celltypes)
         neuron_classification = self._get_neurons(config_.filtered_celltypes, side=None)
         connections = self._get_connections(config_.refined_synaptic_data)
         self.root_ids = self._get_root_ids(neuron_classification, connections)
@@ -179,8 +180,7 @@ class CompleteModelsDataProcessor:
         # pandas is really bad:
         return neurons.reset_index(drop=True).reset_index()[["root_id", "index"]].rename(columns={"index": "index_id"})
 
-    @staticmethod
-    def _get_neurons(filtered_celltpyes=None, side=None):
+    def _get_neurons(self, filtered_celltpyes=None, filtered_fraction=None, side=None):
         all_neurons = pd.read_csv(
             "adult_data/classification.csv",
             usecols=["root_id", "cell_type", "side"],
@@ -194,6 +194,22 @@ class CompleteModelsDataProcessor:
             all_neurons = all_neurons[
                 ~all_neurons["cell_type"].isin(filtered_celltpyes)
             ]
+
+        if filtered_fraction is not None:
+            # We can't filter neurons in the retina or decision making neurons
+            # so we separate these first
+            protected_neurons = all_neurons[
+                all_neurons["cell_type"].isin(self.protected_cell_types)
+            ]
+            non_protected_neurons = all_neurons[
+                ~all_neurons["cell_type"].isin(self.protected_cell_types)
+            ]
+            # We filter the non-protected neurons
+            non_protected_neurons = non_protected_neurons.sample(
+                frac=filtered_fraction, random_state=1714
+            )
+            # And put everything back together
+            all_neurons = pd.concat([protected_neurons, non_protected_neurons])
 
         if side is not None:
             all_neurons = all_neurons[all_neurons["side"] == side]
@@ -222,11 +238,9 @@ class CompleteModelsDataProcessor:
             .reset_index()
         )
 
-    @staticmethod
-    def _check_filtered_neurons(filtered_cell_types, rational_cell_types):
-        forbidden_cell_types = ["R8", "R7", "R1-6"] + rational_cell_types
+    def _check_filtered_neurons(self, filtered_cell_types):
 
-        if not set(filtered_cell_types).isdisjoint(forbidden_cell_types):
+        if not set(filtered_cell_types).isdisjoint(self.protected_cell_types):
             raise ValueError(
-                f"You can't fitler out any of the following cell types: {', '.join(forbidden_cell_types)}"
+                f"You can't fitler out any of the following cell types: {', '.join(self.forbidden_cell_types)}"
             )

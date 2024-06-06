@@ -179,3 +179,18 @@ def update_config_with_sweep(config, sweep_config):
             else:
                 raise ValueError(f"Config does not have attribute {key}")
     return config
+
+
+def process_warnings(u_config, logger):
+    if u_config.debugging:
+        logger.warning("WARNING: debugging mode is active.")
+    if u_config.small_length is not None:
+        logger.warning(f"WARNING: small_length is set to {u_config.small_length}.")
+    if u_config.filtered_celltypes:
+        logger.warning(
+            f"WARNING: Filtering neurons by the following cell types: {', '.join(u_config.filtered_celltypes)}."
+        )
+    if u_config.filtered_fraction is not None:
+        logger.warning(
+            f"WARNING: Filtering a fraction of neurons: {u_config.filtered_fraction}."
+        )

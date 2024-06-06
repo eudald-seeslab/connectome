@@ -48,6 +48,10 @@ def main(wandb_logger, sweep_config=None):
         wandb_logger.initialize_run(u_config)
 
     logger = get_logger("ct", u_config.debugging)
+    if u_config.debugging:
+        logger.warning("WARNING: debugging mode is active.")
+    if u_config.small_length is not None:
+        logger.warning(f"WARNING: small_length is set to {u_config.small_length}.")
 
     # for saving later
     start_datetime = datetime.datetime.now().isoformat(sep=" ", timespec="minutes")

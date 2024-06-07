@@ -3,7 +3,6 @@ import os
 from os.path import basename
 import traceback
 import warnings
-from matplotlib import pyplot as plt
 import torch
 from torch.nn import CrossEntropyLoss
 from tqdm import tqdm

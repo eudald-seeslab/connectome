@@ -31,7 +31,9 @@ class CompleteModelsDataProcessor:
         rational_cell_types = self.get_rational_cell_types()
         self.protected_cell_types = ["R1-6", "R7", "R8"] + rational_cell_types
         self._check_filtered_neurons(config_.filtered_celltypes)
-        neuron_classification = self._get_neurons(config_.filtered_celltypes, side=None)
+        neuron_classification = self._get_neurons(
+            config_.filtered_celltypes, config_.filtered_fraction, side=None
+            )
         connections = self._get_connections(config_.refined_synaptic_data)
         self.root_ids = self._get_root_ids(neuron_classification, connections)
         self.synaptic_matrix = construct_synaptic_matrix(
@@ -189,7 +191,7 @@ class CompleteModelsDataProcessor:
             dtype={"root_id": "string"},
         ).fillna("Unknown")
 
-        if filtered_celltpyes is not None:
+        if filtered_celltpyes is not None and len(filtered_celltpyes) > 0:
             # If it's not a list, make it so
             if not isinstance(filtered_celltpyes, list):
                 filtered_celltpyes = [filtered_celltpyes]

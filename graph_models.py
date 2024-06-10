@@ -39,6 +39,8 @@ class Connectome(MessagePassing):
             )
             nn.init.uniform_(self.neuron_activation_threshold, a=0, b=0.1)
 
+        self.neuron_dropout = nn.Dropout(config.neuron_dropout)
+
     def forward(self, x, edge_index):
         # Start propagating messages.
         size = (x.size(0), x.size(0))
@@ -57,6 +59,9 @@ class Connectome(MessagePassing):
             x_j = x_j * edge_weight * self.edge_weight_multiplier
         else:
             x_j = x_j * edge_weight
+
+        # Apply the neuron dropout
+        x_j = self.neuron_dropout(x_j)
 
         return x_j.view(-1, 1)
 
@@ -86,6 +91,7 @@ class FullGraphModel(nn.Module):
         final_layer = config_.final_layer
         final_layer_input_size = int(data_processor.decision_making_vector.sum()) if final_layer == "nn" else 1
         self.final_fc = nn.Linear(final_layer_input_size, len(config_.CLASSES), dtype=config_.dtype)
+        self.decision_making_dropout = nn.Dropout(config_.decision_dropout)
         self.num_features = 1 # only works with 1 for now
         self.batch_size = config_.batch_size
         self.final_layer = final_layer
@@ -108,6 +114,8 @@ class FullGraphModel(nn.Module):
             # When we are training edges or only the final layer, the output
             #  explodes a bit and we need to normalize it
             x = x / x.norm()
+
+        x = self.decision_making_dropout(x)
 
         # final layer to get the correct magnitude
         # Squeeze the num_features. If at some point it is not 1, then we have to change this

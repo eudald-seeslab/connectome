@@ -11,8 +11,8 @@ device_type = "cuda" if cuda.is_available() else "cpu"
 DEVICE = device(device_type)
 
 # Directory paths relative to the project root
-TRAINING_DATA_DIR = "images/five_to_fifteen/train"
-TESTING_DATA_DIR = "images/five_to_fifteen/test"
+TRAINING_DATA_DIR = "images/two_shapes/train"
+TESTING_DATA_DIR = "images/two_shapes/test"
 # get directory names from the training data directory
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 # get one sample of one class to get the image size
@@ -41,9 +41,15 @@ filtered_celltypes = []
 # Note: it's a fraction of the number of neurons after filtering by cell type
 # and also after removing the protected cell types (R1-6, R7, R8, and the rational cell types)
 # None if you don't want to filter
-filtered_fraction = None # 0.5
+filtered_fraction = None
 # Updated synaptic data taking into account the excitatory or inhibitory nature of the synapse
 refined_synaptic_data = False
+# droputs: there is a dropout for the neuron activations to simulate that, for some reason 
+#  (oscillations, the neuron having fired too recently, etc) the neuron does not fire
+neuron_dropout = 0.1
+# decision dropout: there is a dropout for the decision making vector to simulate that
+#  the decision making process also has some neurons not available all the time
+decision_dropout = 0.2
 
 # Debugging and logging
 debugging = False

@@ -179,9 +179,7 @@ if __name__ == "__main__":
 
     logger = get_logger("ct", config.debugging)
 
-    wandb_logger = WandBLogger(
-        "adult_complete", config.wandb_, config.wandb_images_every
-    )
+    wandb_logger = WandBLogger("cell_killer", config.wandb_, config.wandb_images_every)
     try:
         main(wandb_logger)
 

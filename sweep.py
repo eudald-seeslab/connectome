@@ -39,6 +39,24 @@ sweep_config2 = {
     }
 }
 
+sweep_config3 = {
+    "method": "random",
+    "metric": {"name": "accuracy", "goal": "maximize"},
+    "parameters": {
+        "filtered_fraction": {"values": [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
+    },
+}
+
+sweep_config4 = {
+    "method": "random",
+    "metric": {"name": "Validation accuracy", "goal": "maximize"},
+    "parameters": {
+        "neuron_dropout": {"values": [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
+        "decision_dropout": {"values": [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
+    },
+}
+
+
 def train(config=None):
     wandb_logger = WandBLogger(project_name)
     with wandb.init(config=config):
@@ -65,7 +83,7 @@ if __name__ == "__main__":
     if args.sweep_id:
         sweep_id = args.sweep_id
     else:
-        sweep_id = wandb.sweep(sweep_config2, project=project_name)
+        sweep_id = wandb.sweep(sweep_config4, project=project_name)
 
     if config.device_type == "cpu":
         num_agents = 4

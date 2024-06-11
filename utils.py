@@ -160,6 +160,7 @@ def save_checkpoint(model_, optimizer_, model_name, config_):
         os.path.join(path_, model_name),
     )
     # create an accompanying config file
+    # get the config module and create a dictionary from it
     config_dict = module_to_clean_dict(config_)
 
     # Get model summary information and add it to the config

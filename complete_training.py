@@ -121,6 +121,7 @@ def main(wandb_logger, sweep_config=None):
 
             # save checkpoint (overriding the last)
             save_checkpoint(model, optimizer, model_name, u_config)
+            torch.cuda.empty_cache()
 
             logger.info(
                 f"Finished epoch {ep + 1} with loss {running_loss / total} "

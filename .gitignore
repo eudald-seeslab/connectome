@@ -976,3 +976,6 @@ flyvis/data/connectome/ConnectomeDir_0001/nodes/layer_index/TmY13.h5
 flyvis/data/connectome/ConnectomeDir_0001/nodes/layer_index/TmY14.h5
 flyvis/data/connectome/ConnectomeDir_0001/nodes/layer_index/TmY15.h5
 flyvis/data/connectome/ConnectomeDir_0001/nodes/layer_index/TmY18.h5
+
+# pycharm stuff
+.idea

@@ -17,6 +17,7 @@ class Connectome(MessagePassing):
         self.train_edges = config.train_edges
         self.train_neurons = config.train_neurons
         self.lambda_func = config.lambda_func
+        self.refined_synaptic_data = config.refined_synaptic_data
         dtype = config.dtype
         device = config.DEVICE
 
@@ -55,8 +56,18 @@ class Connectome(MessagePassing):
         # manual reshape to make sure that the multiplication is done correctly
         x_j = x_j.view(self.batch_size, -1)
         if self.train_edges:
-            # multiply by the modulated edge weight
-            x_j = x_j * edge_weight * self.edge_weight_multiplier
+            # Here we are multiplying the edge weight by the edge_weight_multiplier. For biological 
+            # plausibility, we want to make sure that the edge_weight_multiplier is not bigger than 1
+            # Now, if we have the raw synaptic data, all weights are positive, so we need to allow for
+            # negative weights, so edge_weight_multiplier will be \in [-1, 1]
+            # If we have refined synaptic data, which can have negative weights, the edge_weight_multiplier
+            # will be \in [0, 1]
+            if self.refined_synaptic_data:
+                edge_weight_multiplier = torch.sigmoid(self.edge_weight_multiplier)
+            else:
+                edge_weight_multiplier = torch.tanh(self.edge_weight_multiplier)
+            
+            x_j = x_j * edge_weight * edge_weight_multiplier
         else:
             x_j = x_j * edge_weight
 

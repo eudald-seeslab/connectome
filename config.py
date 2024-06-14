@@ -11,8 +11,9 @@ device_type = "cuda" if cuda.is_available() else "cpu"
 DEVICE = device(device_type)
 
 # Directory paths relative to the project root
-TRAINING_DATA_DIR = "images/two_shapes/train"
-TESTING_DATA_DIR = "images/two_shapes/test"
+data_type = "two_shapes"
+TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
+TESTING_DATA_DIR = os.path.join("images", data_type, "test")
 # get directory names from the training data directory
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 # get one sample of one class to get the image size
@@ -27,7 +28,7 @@ resume_checkpoint = None # "model_2024-05-19 16:16:58.pth"
 neurons = "all"  # "selected" or "all"
 voronoi_criteria = "R7"  #  "R7" or "all"
 random_synapses = False
-train_edges = True
+train_edges = False
 train_neurons = False
 final_layer = "mean"  # "mean" or "nn"
 # node embedding activation function, as in
@@ -43,13 +44,13 @@ filtered_celltypes = []
 # None if you don't want to filter
 filtered_fraction = None
 # Updated synaptic data taking into account the excitatory or inhibitory nature of the synapse
-refined_synaptic_data = False
-# droputs: there is a dropout for the neuron activations to simulate that, for some reason 
+refined_synaptic_data = True
+# droputs: there is a dropout for the neuron activations to simulate that, for some reason
 #  (oscillations, the neuron having fired too recently, etc) the neuron does not fire
-neuron_dropout = 0.1
+neuron_dropout = 0
 # decision dropout: there is a dropout for the decision making vector to simulate that
 #  the decision making process also has some neurons not available all the time
-decision_dropout = 0.2
+decision_dropout = 0
 
 # Debugging and logging
 debugging = False
@@ -58,12 +59,12 @@ small_length = None
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400
-wandb_group = "weber"
+wandb_group = data_type     # you can put something else here
 
 # Training configuration
-num_epochs = 50
+num_epochs = 100
 batch_size = 32
-base_lr = 0.001
+base_lr = 0.0003
 NUM_CONNECTOME_PASSES = 4
 log_transform_weights = False
 eye = "right"  # "left" or "right"

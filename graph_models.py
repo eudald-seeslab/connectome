@@ -33,7 +33,7 @@ class Connectome(MessagePassing):
             self.edge_weight_multiplier = Parameter(
                 torch.Tensor(num_synapses).to(device)
                 )
-            nn.init.uniform_(self.edge_weight_multiplier, a=-0.1, b=0.1)
+            nn.init.uniform_(self.edge_weight_multiplier, a=-1, b=1)
         if config.train_neurons:
             self.neuron_activation_threshold = Parameter(
                 torch.Tensor(num_nodes).to(device)

@@ -8,7 +8,7 @@ from complete_training import main
 from wandb_logger import WandBLogger
 
 
-project_name = "cell_killer"
+project_name = "architecture"
 
 sweep_config1 = {
     "method": "bayes",
@@ -56,6 +56,17 @@ sweep_config4 = {
     },
 }
 
+sweep_config5 = {
+    "method": "random",
+    "metric": {"name": "Validation accuracy", "goal": "maximize"},
+    "parameters": {
+        "train_neurons": {"values": [True, False]},
+        "train_edges": {"values": [True, False]},
+        "refined_synaptic_data": {"values": [True, False]},
+        "final_layer": {"values": ["mean", "nn"]},
+    },
+}
+
 
 def train(config=None):
     wandb_logger = WandBLogger(project_name)
@@ -83,7 +94,7 @@ if __name__ == "__main__":
     if args.sweep_id:
         sweep_id = args.sweep_id
     else:
-        sweep_id = wandb.sweep(sweep_config4, project=project_name)
+        sweep_id = wandb.sweep(sweep_config5, project=project_name)
 
     if config.device_type == "cpu":
         num_agents = 4

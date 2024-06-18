@@ -65,7 +65,7 @@ def main(wandb_logger, sweep_config=None):
     model = FullGraphModel(data_processor, u_config).to(u_config.DEVICE)
     optimizer = torch.optim.Adam(model.parameters(), lr=u_config.base_lr)
     criterion = CrossEntropyLoss()
-    early_stopping = EarlyStopping(patience=5, min_delta=0)
+    early_stopping = EarlyStopping(patience=u_config.patience, min_delta=0)
 
     if u_config.resume_checkpoint is not None:
         logger.warning(f"Resuming training from {u_config.resume_checkpoint}")

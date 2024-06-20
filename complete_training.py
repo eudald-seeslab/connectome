@@ -143,24 +143,25 @@ def main(wandb_logger, sweep_config=None):
 
     model.eval()
     iterations = get_iteration_number(len(testing_images), u_config)
-    for _ in tqdm(range(iterations)):
-        batch_files, already_selected_testing = select_random_images(
-            testing_images, batch_size, already_selected_testing
-        )
-        images, labels = data_processor.get_data_from_paths(batch_files)
-        inputs, labels = data_processor.process_batch(images, labels)
-        inputs = inputs.to(u_config.DEVICE)
+    with torch.no_grad():
+        for _ in tqdm(range(iterations)):
+            batch_files, already_selected_testing = select_random_images(
+                testing_images, batch_size, already_selected_testing
+            )
+            images, labels = data_processor.get_data_from_paths(batch_files)
+            inputs, labels = data_processor.process_batch(images, labels)
+            inputs = inputs.to(u_config.DEVICE)
 
-        out = model(inputs)
-        loss = criterion(out, labels)
+            out = model(inputs)
+            loss = criterion(out, labels)
 
-        outputs, predictions, labels_cpu, correct = clean_model_outputs(out, labels)
-        test_results = update_results_df(
-            test_results, batch_files, outputs, predictions, labels_cpu, correct
-        )
-        running_loss += update_running_loss(loss, inputs)
-        total += batch_size
-        total_correct += correct.sum()
+            outputs, predictions, labels_cpu, correct = clean_model_outputs(out, labels)
+            test_results = update_results_df(
+                test_results, batch_files, outputs, predictions, labels_cpu, correct
+            )
+            running_loss += update_running_loss(loss, inputs)
+            total += batch_size
+            total_correct += correct.sum()
 
     plot_types = guess_your_plots(u_config)
     final_plots = plot_results(

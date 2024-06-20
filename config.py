@@ -5,12 +5,7 @@ from torch.nn.functional import leaky_relu
 from PIL import Image
 from debug_utils import debugger_is_active
 
-# Check for CUDA availability and set device
-device_type = "cuda" if cuda.is_available() else "cpu"
-# device_type = "cpu"
-DEVICE = device(device_type)
-
-# Directory paths relative to the project root
+# Data
 data_type = "five_to_fifteen"
 TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
 TESTING_DATA_DIR = os.path.join("images", data_type, "test")
@@ -20,17 +15,25 @@ CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 sample_image = os.listdir(os.path.join(TRAINING_DATA_DIR, CLASSES[0]))[0]
 image_size = Image.open(os.path.join(TRAINING_DATA_DIR, CLASSES[0], sample_image)).size[0]
 
-# Models
+# Training configuration
+num_epochs = 100
+batch_size = 32
+base_lr = 0.0003 # 0.0003
+patience = 2
+
+# Checkpoint
 # None if you want to start from scratch
 resume_checkpoint = None # "model_2024-05-19 16:16:58.pth"
 
-# Neural data
+# Model architecture
+NUM_CONNECTOME_PASSES = 4
 neurons = "all"  # "selected" or "all"
 voronoi_criteria = "R7"  #  "R7" or "all"
 random_synapses = False
-train_edges = False
-train_neurons = True
+train_edges = True
+train_neurons = False
 final_layer = "mean"  # "mean" or "nn"
+eye = "right"  # "left" or "right"
 # node embedding activation function, as in
 # https://pytorch-geometric.readthedocs.io/en/latest/tutorial/create_gnn.html
 # only for training neurons
@@ -51,6 +54,12 @@ neuron_dropout = 0
 # decision dropout: there is a dropout for the decision making vector to simulate that
 #  the decision making process also has some neurons not available all the time
 decision_dropout = 0
+log_transform_weights = False
+
+# CUDA stuff
+device_type = "cuda" if cuda.is_available() else "cpu"
+# device_type = "cpu"
+DEVICE = device(device_type)
 
 # Debugging and logging
 debugging = False
@@ -59,16 +68,10 @@ small_length = None
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400
+wandb_project = "synaptic_limit"
 wandb_group = data_type     # you can put something else here
 
-# Training configuration
-num_epochs = 100
-batch_size = 32
-base_lr = 0.00003
-patience = 2
-NUM_CONNECTOME_PASSES = 4
-log_transform_weights = False
-eye = "right"  # "left" or "right"
+# Plots
 # "radius", "contingency", "distance", "point_num", "stripes", "weber", "colour"
 # if empty, I will try to guess the plots from the classes
 # If None, no plots will be generated

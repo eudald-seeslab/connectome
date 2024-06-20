@@ -180,12 +180,12 @@ if __name__ == "__main__":
 
     logger = get_logger("ct", config.debugging)
 
-    wandb_logger = WandBLogger("cell_killer", config.wandb_, config.wandb_images_every)
+    wandb_logger = WandBLogger(config.wandb_project, config.wandb_, config.wandb_images_every)
     try:
         main(wandb_logger)
 
     except KeyboardInterrupt:
-        logger.error("Training interrupted by user.")
+        logger.error("Testing interrupted by user. Aborting.")
 
     except Exception:
         error = traceback.format_exc()

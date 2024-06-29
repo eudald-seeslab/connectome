@@ -151,6 +151,7 @@ def main(wandb_logger, sweep_config=None):
             images, labels = data_processor.get_data_from_paths(batch_files)
             inputs, labels = data_processor.process_batch(images, labels)
             inputs = inputs.to(u_config.DEVICE)
+            labels = labels.to(u_config.DEVICE)
 
             out = model(inputs)
             loss = criterion(out, labels)

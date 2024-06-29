@@ -96,7 +96,7 @@ class FullGraphModel(nn.Module):
 
     def __init__(self, data_processor, config_):
         super(FullGraphModel, self).__init__()
-        
+
         self.connectome = Connectome(data_processor, config_)
         self.register_buffer("decision_making_vector", data_processor.decision_making_vector)
         final_layer = config_.final_layer
@@ -108,7 +108,6 @@ class FullGraphModel(nn.Module):
         self.final_layer = final_layer
         self.train_neurons = config_.train_neurons
 
-
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
 
@@ -117,6 +116,10 @@ class FullGraphModel(nn.Module):
         # get final decision
         x = x.view(self.batch_size, -1, self.num_features)
         x, batch = self.decision_making_mask(x, batch)
+        # Save the intermediate output for analysis
+        if not self.training:
+            self.intermediate_output = x.view(self.batch_size, -1).clone().detach()
+
         if self.final_layer == "mean":
             # get the mean for each batch
             x = torch.mean(x, dim=1, keepdim=True)

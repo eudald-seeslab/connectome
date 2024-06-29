@@ -64,3 +64,8 @@ class EarlyStopping:
     def should_stop(self, loss):
         self._update_stopper(loss)
         return self.early_stop
+
+
+def store_intermediate_output(module, input, output):
+    if not module.training:
+        module.intermediate_output = output.clone().detach()

@@ -6,7 +6,7 @@ from PIL import Image
 from debug_utils import debugger_is_active
 
 # Data
-data_type = "five_to_fifteen"
+data_type = "four_to_twelve"
 TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
 TESTING_DATA_DIR = os.path.join("images", data_type, "test")
 # get directory names from the training data directory
@@ -18,12 +18,12 @@ image_size = Image.open(os.path.join(TRAINING_DATA_DIR, CLASSES[0], sample_image
 # Training configuration
 num_epochs = 100
 batch_size = 32
-base_lr = 0.0003 # 0.0003
+base_lr = 0.0003
 patience = 2
 
 # Checkpoint
 # None if you want to start from scratch
-resume_checkpoint = None # "model_2024-05-19 16:16:58.pth"
+resume_checkpoint = "m_2024-06-28 08:36_zq93rn1l.pth" # "model_2024-05-19 16:16:58.pth"
 
 # Model architecture
 NUM_CONNECTOME_PASSES = 4

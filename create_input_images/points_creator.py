@@ -18,13 +18,13 @@ GENERAL_CONFIG = {
     "background_colour": "#000000", # for gray: #808080
     "yellow": "#fffe04",
     "blue": "#0003f9",
-    "min_point_radius": 15,
-    "max_point_radius": 25,
+    "min_point_radius": 20,
+    "max_point_radius": 30,
     "init_size": 512,
     "mode": "RGB",
     # these are per colour
-    "min_point_num": 5,
-    "max_point_num": 15,
+    "min_point_num": 4,
+    "max_point_num": 12,
     "attempts_limit": 1000,
 }
 

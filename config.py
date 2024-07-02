@@ -6,7 +6,7 @@ from PIL import Image
 from debug_utils import debugger_is_active
 
 # Data
-data_type = "four_to_twelve"
+data_type = "one_to_ten"
 TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
 TESTING_DATA_DIR = os.path.join("images", data_type, "test")
 # get directory names from the training data directory
@@ -23,7 +23,7 @@ patience = 2
 
 # Checkpoint
 # None if you want to start from scratch
-resume_checkpoint = "m_2024-06-28 08:36_zq93rn1l.pth" # "model_2024-05-19 16:16:58.pth"
+resume_checkpoint = None  # "model_2024-05-19 16:16:58.pth"
 
 # Model architecture
 NUM_CONNECTOME_PASSES = 4
@@ -68,7 +68,7 @@ small_length = None
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400
-wandb_project = "synaptic_limit"
+wandb_project = "multitasking"
 wandb_group = data_type     # you can put something else here
 
 # Plots

@@ -6,7 +6,7 @@ from PIL import Image
 from debug_utils import debugger_is_active
 
 # Data
-data_type = "one_to_ten"
+data_type = "one_to_five"
 TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
 TESTING_DATA_DIR = os.path.join("images", data_type, "test")
 # get directory names from the training data directory
@@ -23,21 +23,24 @@ patience = 2
 
 # Checkpoint
 # None if you want to start from scratch
-resume_checkpoint = None  # "model_2024-05-19 16:16:58.pth"
+resume_checkpoint = None # "m_2024-07-10 18:08_1tn2z4xj.pth"
 
 # Model architecture
 NUM_CONNECTOME_PASSES = 4
 neurons = "all"  # "selected" or "all"
 voronoi_criteria = "R7"  #  "R7" or "all"
 random_synapses = False
-train_edges = True
-train_neurons = False
+train_edges = False
+train_neurons = True
 final_layer = "mean"  # "mean" or "nn"
 eye = "right"  # "left" or "right"
 # node embedding activation function, as in
 # https://pytorch-geometric.readthedocs.io/en/latest/tutorial/create_gnn.html
 # only for training neurons
 lambda_func = leaky_relu  # torch activation function
+# we need to normalize the output of the connectome to avoid exploding gradients
+# before applying the activation function (above)
+neuron_normalization = "log1p"  # "log1p" or "min_max"
 # Shut off some neurons based on their cell_type
 # You can find all the cell types in the adult_data/cell_types.csv
 filtered_celltypes = []
@@ -68,7 +71,7 @@ small_length = None
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400
-wandb_project = "multitasking"
+wandb_project = "synaptic_limit"
 wandb_group = data_type     # you can put something else here
 
 # Plots

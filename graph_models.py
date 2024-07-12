@@ -1,6 +1,6 @@
 import torch
 from torch.nn import Parameter
-from graph_models_helpers import min_max_norm
+from graph_models_helpers import log_norm, min_max_norm
 from torch_geometric.nn import MessagePassing
 from torch import nn
 
@@ -17,6 +17,7 @@ class Connectome(MessagePassing):
         self.train_edges = config.train_edges
         self.train_neurons = config.train_neurons
         self.lambda_func = config.lambda_func
+        self.neuron_normalization = config.neuron_normalization
         self.refined_synaptic_data = config.refined_synaptic_data
         dtype = config.dtype
         device = config.DEVICE
@@ -56,7 +57,7 @@ class Connectome(MessagePassing):
         # manual reshape to make sure that the multiplication is done correctly
         x_j = x_j.view(self.batch_size, -1)
         if self.train_edges:
-            # Here we are multiplying the edge weight by the edge_weight_multiplier. For biological 
+            # Here we are multiplying the edge weight by the edge_weight_multiplier. For biological
             # plausibility, we want to make sure that the edge_weight_multiplier is not bigger than 1
             # Now, if we have the raw synaptic data, all weights are positive, so we need to allow for
             # negative weights, so edge_weight_multiplier will be \in [-1, 1]
@@ -66,7 +67,7 @@ class Connectome(MessagePassing):
                 edge_weight_multiplier = torch.sigmoid(self.edge_weight_multiplier)
             else:
                 edge_weight_multiplier = torch.tanh(self.edge_weight_multiplier)
-            
+
             x_j = x_j * edge_weight * edge_weight_multiplier
         else:
             x_j = x_j * edge_weight
@@ -82,8 +83,10 @@ class Connectome(MessagePassing):
             # Each node gets its updated feature as the sum of its neighbor contributions.
             # Then, we apply the lambda function with a threshold, to emulate the biological
             temp = aggr_out.view(self.batch_size, -1)
-            # Min-max normalization per graph so that the thresholds are not too high
-            temp = min_max_norm(temp)
+            if self.neuron_normalization == "min_max":
+                temp = min_max_norm(temp)
+            elif self.neuron_normalization == "log1p":
+                temp = log_norm(temp)
             # Apply the threshold. Note the "abs" to make sure that the threshold is not
             #  helping the neuron to activate
             sig_out = self.lambda_func(temp - abs(self.neuron_activation_threshold))

@@ -1,3 +1,4 @@
+import torch
 from torch_scatter import scatter_mean, scatter_std
 
 
@@ -9,6 +10,15 @@ def min_max_norm(x):
     return (x - x.min(dim=1, keepdim=True).values) / (
         x.max(dim=1, keepdim=True).values - x.min(dim=1, keepdim=True).values
     )
+
+
+def log_norm(x):
+    # Note that we first set negative values to 0 to avoid log(0), but
+    # this is not a problem since these weights would be filtered
+    # out anyway in the activation function
+    
+    x[x < 0] = 0
+    return torch.log1p(x)
 
 
 def normalize_non_zero(x, batch, epsilon=1e-5):

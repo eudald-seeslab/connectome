@@ -40,24 +40,27 @@ class WandBLogger:
     def sweep_config(self):
         return wandb.config
 
-    def log_metrics(self, epoch, running_loss, total_correct, total):
+    def log_metrics(self, epoch, running_loss, total_correct, total, task=None):
+
+        char_ = task if task is not None else ""
         if self.enabled:
             try:
                 wandb.log(
                     {
                         "epoch": epoch,
-                        "loss": running_loss / total,
-                        "accuracy": total_correct / total,
+                        f"loss {char_}": running_loss / total,
+                        f"accuracy {char_}": total_correct / total,
                     }
                 )
             except Exception as e:
                 print(f"Error logging running stats to wandb: {e}. Continuing...")
 
-    def log_image(self, vals, name, title):
+    def log_image(self, vals, name, title, task=None):
+        char_ = task if task is not None else ""
         if self.enabled:
             wandb.log(
                 {
-                    f"{title} image": wandb.Image(
+                    f"{title} image {char_}": wandb.Image(
                         vals, caption=f"{title} image {name}"
                     ),
                 }
@@ -68,18 +71,19 @@ class WandBLogger:
             wandb.log({title: wandb.Table(dataframe=df)})
 
     def log_validation_stats(
-        self, running_loss_, total_correct_, total_, results_, plots
+        self, running_loss_, total_correct_, total_, results_, plots, task=None
     ):
+        char_ = task if task is not None else ""
         if len(plots) > 0:
-            plot_dict = {f"Plot {i}": wandb.Image(plot) for i, plot in enumerate(plots)}
+            plot_dict = {f"Plot {i} {char_}": wandb.Image(plot) for i, plot in enumerate(plots)}
         else:
             plot_dict = {}
         if self.enabled:
             wandb.log(
                 {
-                    "Validation loss": running_loss_ / total_,
-                    "Validation accuracy": total_correct_ / total_,
-                    "Validation results": wandb.Table(dataframe=results_),
+                    f"Validation loss {char_}": running_loss_ / total_,
+                    f"Validation accuracy {char_}": total_correct_ / total_,
+                    f"Validation results {char_}": wandb.Table(dataframe=results_),
                 }
                 | plot_dict
             )

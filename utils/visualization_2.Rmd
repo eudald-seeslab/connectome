@@ -116,7 +116,11 @@ vis_coords <- vis_coords |>
 ```{r}
 vis_coords |> 
   ggplot(aes(x = x_axis, y = y_axis, colour = cell_type)) + 
-  geom_point()
+  geom_point() +
+  xlab("PC1") + 
+  ylab("PC2") + 
+  labs(colour="Neuron type")
+ggsave("plots/retina_projection.png", scale=2, dpi=300)
 ```
 
 

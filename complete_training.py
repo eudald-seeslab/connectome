@@ -68,7 +68,6 @@ def main(wandb_logger, sweep_config=None):
     early_stopping = EarlyStopping(patience=u_config.patience, min_delta=0)
 
     if u_config.resume_checkpoint is not None:
-        logger.warning(f"Resuming training from {u_config.resume_checkpoint}")
         checkpoint_path = os.path.join("models", u_config.resume_checkpoint)
         checkpoint = torch.load(checkpoint_path, map_location=u_config.DEVICE)
         model.load_state_dict(checkpoint["model"])

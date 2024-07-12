@@ -195,3 +195,15 @@ def process_warnings(u_config, logger):
         logger.warning(
             f"WARNING: Filtering a fraction of neurons: {u_config.filtered_fraction}."
         )
+    if u_config.resume_checkpoint is not None:
+        if u_config.num_epochs == 0:
+            logger.warning(f"Resume_checkpoint is not None and num_epochs is 0. "
+                           f"The model will not be trained, only evaluated.")
+        else:
+            logger.warning(f"Resuming training from {u_config.resume_checkpoint}")
+    else:
+        if u_config.num_epochs == 0:
+            raise ValueError(
+                "num_epochs is 0 and resume_checkpoint is None. "
+                "Please set num_epochs to a positive integer."
+            )

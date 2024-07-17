@@ -26,10 +26,11 @@ from utils import paths_to_labels
 class CompleteModelsDataProcessor:
 
     tesselated_df = None
+    retinal_cells = ["R1-6", "R7", "R8"]
 
     def __init__(self, config_):
         rational_cell_types = self.get_rational_cell_types()
-        self.protected_cell_types = ["R1-6", "R7", "R8"] + rational_cell_types
+        self.protected_cell_types = self.retinal_cells + rational_cell_types
         self._check_filtered_neurons(config_.filtered_celltypes)
         neuron_classification = self._get_neurons(
             config_.filtered_celltypes, config_.filtered_fraction, side=None
@@ -63,6 +64,55 @@ class CompleteModelsDataProcessor:
         self.device = config_.DEVICE
         self.classes = config_.CLASSES
 
+        self.edges = torch.tensor(
+            np.array([self.synaptic_matrix.row, self.synaptic_matrix.col]),
+            dtype=torch.int64,  # do not touch
+        )
+        self.weights = torch.tensor(self.synaptic_matrix.data, dtype=self.dtype)
+
+    def process_batch(self, imgs, labels):
+        """
+        Preprocesses a batch of images and labels. This includes reshaping and colouring the images if necessary, 
+        tesselating it according to the voronoi cells from the connectome, and getting the neuron activations for each
+        cell. Finally, it constructs the graphs of this batch with the appropriate activations.
+
+        Args:
+            imgs (list): A list of images to be processed.
+            labels (list): A list of corresponding labels.
+
+        Returns:
+            inputs (Batch): A Batch object containing processed graph data.
+            labels (torch.Tensor): A tensor containing the labels.
+
+        Raises:
+            None
+
+        """
+
+        # Reshape and colour if needed
+        imgs = preprocess_images(imgs)
+        # Compute mean of three colours and add the voronoi indices
+        processed_imgs = process_images(imgs, self.voronoi_indices)
+        # Get the average activation for each voronoi cell
+        voronoi_averages = get_voronoi_averages(processed_imgs)
+        # Map these activations to the appropriate retinal neurons
+        activation_tensor = self.calculate_neuron_activations(voronoi_averages)
+        # Create the connectome graph with the appropirate activations
+        graph_list_ = [
+            Data(
+                x=activation_tensor[:, j].unsqueeze(1),
+                edge_index=self.edges,
+                edge_attr=self.weights,
+                y=labels[j],
+            )
+            for j in range(activation_tensor.shape[1])
+        ]
+
+        inputs = Batch.from_data_list(graph_list_).to(self.device)
+        labels = torch.tensor(labels, dtype=torch.long).to(self.device)
+
+        return inputs, labels
+    
     @property
     def number_of_synapses(self):
         return self.synaptic_matrix.shape[0]
@@ -77,12 +127,7 @@ class CompleteModelsDataProcessor:
         labels = paths_to_labels(paths, self.classes)
         return imgs, labels
 
-    def process_batch(self, imgs, labels):
-        # FIXME: this needs a lot of cleaning
-
-        imgs = preprocess_images(imgs)
-        processed_imgs = process_images(imgs, self.voronoi_indices)
-        voronoi_averages = get_voronoi_averages(processed_imgs)
+    def calculate_neuron_activations(self, voronoi_averages):
         neuron_activations = pd.concat(
             [get_neuron_activations(self.tesselated_df, a) for a in voronoi_averages],
             axis=1,
@@ -96,32 +141,8 @@ class CompleteModelsDataProcessor:
             .set_index("index_id")
             .drop(columns=["root_id"])
         )
-        # Check that all neurons have been activated
-        # TODO: investigate why sometimes this fails
-        # assert activation_df[activation_df.iloc[:, 0] > 0].shape[0] == self.tesselated_df.shape[0]
-        edges = torch.tensor(
-            np.array([self.synaptic_matrix.row, self.synaptic_matrix.col]),
-            dtype=torch.int64,  # do not touch
-        )
-        weights = torch.tensor(self.synaptic_matrix.data, dtype=self.dtype)
-        activation_tensor = torch.tensor(activation_df.values, dtype=self.dtype)
-        graph_list_ = []
-        for j in range(activation_tensor.shape[1]):
-            # Shape [num_nodes, 1], one feature per node
-            node_features = activation_tensor[:, j].unsqueeze(1)
-            graph = Data(
-                x=node_features,
-                edge_index=edges,
-                edge_attr=weights,
-                y=labels[j],
-                device=self.device,
-            )
-            graph_list_.append(graph)
 
-        inputs = Batch.from_data_list(graph_list_).to(self.device)
-        labels = torch.tensor(labels, dtype=torch.long).to(self.device)
-
-        return inputs, labels
+        return torch.tensor(activation_df.values, dtype=self.dtype)
 
     def plot_input_images(self, img):
         fig, axes = plt.subplots(1, 3, figsize=(15, 5))
@@ -243,7 +264,6 @@ class CompleteModelsDataProcessor:
         )
 
     def _check_filtered_neurons(self, filtered_cell_types):
-
         if not set(filtered_cell_types).isdisjoint(self.protected_cell_types):
             raise ValueError(
                 f"You can't fitler out any of the following cell types: {', '.join(self.forbidden_cell_types)}"

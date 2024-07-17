@@ -22,7 +22,7 @@ from utils import (
     update_results_df,
     update_running_loss,
 )
-from complete_training_data_processing import CompleteModelsDataProcessor
+from data_processing import CompleteModelsDataProcessor
 from graph_models import FullGraphModel
 from utils import (
     clean_model_outputs,

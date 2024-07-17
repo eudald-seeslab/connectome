@@ -9,7 +9,7 @@ import torch
 from scipy.sparse import coo_matrix
 from torch_geometric.data import Data, Batch
 
-from complete_training_funcs import (
+from train_funcs import (
     construct_synaptic_matrix,
     get_activation_from_cell_type,
     get_neuron_activations,

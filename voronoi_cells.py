@@ -4,7 +4,7 @@ import pandas as pd
 from scipy.spatial import Voronoi, cKDTree, voronoi_plot_2d
 import matplotlib.pyplot as plt
 
-from complete_training_funcs import assign_cell_type
+from train_funcs import assign_cell_type
 
 class VoronoiCells:
     pixel_num = 512

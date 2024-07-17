@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 from scipy.spatial import Voronoi, cKDTree, voronoi_plot_2d
+import matplotlib.pyplot as plt
 
 from complete_training_funcs import assign_cell_type
 
@@ -100,6 +101,8 @@ class VoronoiCells:
             )
         ax.legend(title="", loc="lower left")
 
+        self.clip_image(ax)
+
     def plot_voronoi_cells_with_image(self, image, ax):
 
         # Display the image
@@ -107,11 +110,13 @@ class VoronoiCells:
 
         # Plot Voronoi diagram
         self._plot_voronoi_cells(ax)
+        self.clip_image(ax)
 
     def plot_neuron_activations(self, n_acts, ax):
-        self._plot_voronoi_cells(ax)
 
-        # n_acts["voronoi_indices"] = n_acts["voronoi_indices"].map(self.index_map).astype(int)
+        ax.set_facecolor("black")
+
+        self._plot_voronoi_cells(ax)
 
         rgb_values = (
             n_acts.loc[:, ["voronoi_indices", "cell_type", "activation"]]
@@ -135,6 +140,28 @@ class VoronoiCells:
                 polygon = [self.voronoi.vertices[i] for i in region]
                 color = rgb_values.loc[region_index, ["r", "g", "b"]]
                 ax.fill(*zip(*polygon), color=color)
+        
+        self.clip_image(ax)
+
+    def clip_image(self, ax):
+        # Set the axis limits to exactly 0 - pixel_num
+        ax.set_xlim(0, self.pixel_num)
+        ax.set_ylim(0, self.pixel_num)
+
+        # Remove axis labels and ticks
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+        # Ensure the aspect ratio is equal
+        ax.set_aspect("equal", "box")
+
+        # Optionally, you might want to set the edge color of the Voronoi cells to a light color
+        # for better visibility against the black background
+        ax.collections[-1].set_edgecolor("orange")
+        ax.collections[-1].set_linewidth(0.5)
+
+        # Tight layout to remove any extra white space
+        plt.tight_layout()
 
     @staticmethod
     def get_colour_average(values, colour):

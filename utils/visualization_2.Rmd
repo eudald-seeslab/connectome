@@ -1,0 +1,322 @@
+---
+title: "cleaning"
+output: html_document
+date: "2024-05-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(glue)
+library(stringr)
+library(plotly)
+library(ggplot2)
+theme_set(theme_bw())
+```
+
+```{r}
+connections <- read_csv(
+  "adult_data/connections.csv", col_types = "cccic"
+  ) |> 
+  group_by(pre_root_id, post_root_id) |> 
+  summarise(syn_count = sum(syn_count))
+
+cla <- read_csv("adult_data/classification.csv", 
+                col_select = c(root_id, cell_type, side),
+                col_types = "ccc"
+                ) |> 
+  filter(side == "right") |> 
+  select(-side) 
+```
+
+```{r}
+clean_conns <- connections |> 
+  inner_join(cla, by = c("pre_root_id" = "root_id")) |> 
+  inner_join(cla, by = c("post_root_id" = "root_id")) |> 
+  ungroup()
+
+clean_cla <- cla |> 
+  inner_join(clean_conns |> distinct(pre_root_id), 
+             by=c("root_id" = "pre_root_id"))
+```
+
+```{r}
+coords <- read_csv(
+  "adult_data/coordinates.csv",
+  col_select = c(root_id, position),
+  col_types = "cc"
+) |>
+  mutate(
+    position = gsub("[", "", position, fixed = T),
+    position = gsub("]", "", position, fixed = T),
+    position = str_trim(position),
+    position = str_squish(position)
+  ) |>
+  separate_wider_delim(position, " ", names = c("x", "y", "z")) |>
+  mutate(across(c(x, y, z), as.numeric)) |> 
+ group_by(root_id) |>
+ summarise(x = mean(x), y = mean(y), z = mean(z))
+
+coords |> write_csv("adult_data/all_coords_clean.csv")
+```
+
+```{r}
+cla_coords <- clean_cla |> 
+  inner_join(coords)
+```
+
+```{r}
+vis_coords <- cla_coords |> 
+  filter(cell_type %in% c("R1-6", "R7", "R8")) 
+```
+
+```{r}
+fig <- plot_ly(vis_coords, x = ~x, y = ~y, z = ~z, color = ~cell_type)
+fig <- fig |> add_markers(size=.5)
+fig
+```
+
+```{r}
+pc <- vis_coords |> 
+  filter(cell_type != "R1-6") |> 
+  select(x, y, z) |> 
+  prcomp()
+
+vis_coords <- vis_coords |> 
+  mutate(
+    PC1 = x * pc$rotation["x", "PC1"] + 
+      y * pc$rotation["y", "PC1"] + 
+      z * pc$rotation["z", "PC1"],
+    PC2 = x * pc$rotation["x", "PC2"] + 
+      y * pc$rotation["y", "PC2"] + 
+      z * pc$rotation["z", "PC2"]
+    ) 
+
+vis_coords |> 
+  ggplot(aes(x = PC1, y = PC2, colour = cell_type)) +
+  geom_point()
+```
+
+```{r}
+vis_coords |> 
+  ggplot(aes(x = y, y = z, colour = cell_type)) +
+  geom_point()
+```
+
+```{r}
+vis_coords <- vis_coords |> 
+  mutate(
+    x_axis = (PC1 - min(PC1)) / (max(PC1) - min(PC1)) * 512,
+    y_axis = (PC2 - min(PC2)) / (max(PC2) - min(PC2)) * 512,
+    )
+```
+
+```{r}
+vis_coords |> 
+  ggplot(aes(x = x_axis, y = y_axis, colour = cell_type)) + 
+  geom_point() +
+  xlab("PC1") + 
+  ylab("PC2") + 
+  labs(colour="Neuron type")
+ggsave("plots/retina_projection.png", scale=2, dpi=300)
+```
+
+
+
+```{r}
+filtered_vis_coords <- vis_coords |> 
+  filter(
+    PC1 >= 150000 & PC1 < 300000,
+    PC2 >= -740000 & PC2 < -640000
+  ) |> 
+  mutate(
+    x_axis = (PC1 - 150000) / 150000 * 512,
+    y_axis = (PC2 + 740000) / 100000 * 512
+  )
+```
+
+```{r}
+filtered_vis_coords |> 
+  ggplot(aes(x = x_axis, y = y_axis, colour = cell_type)) + 
+  geom_point()
+```
+
+```{r}
+table(filtered_vis_coords$cell_type)
+```
+
+
+```{r}
+clean_conns |> write_csv("adult_data/right_connections.csv")
+clean_cla |> write_csv("adult_data/right_classification.csv")
+vis_coords |> write_csv("adult_data/right_visual_positions_all_neurons.csv")
+filtered_vis_coords |> write_csv("adult_data/right_visual_positions_selected_neurons.csv")
+
+```
+
+# Same with the left
+
+```{r}
+connections <- read_csv(
+  "adult_data/connections.csv", col_types = "cccic"
+  ) |> 
+  group_by(pre_root_id, post_root_id) |> 
+  summarise(syn_count = sum(syn_count))
+
+cla <- read_csv("adult_data/classification.csv", 
+                col_select = c(root_id, cell_type, side),
+                col_types = "ccc"
+                ) |> 
+  filter(side == "left") |> 
+  select(-side) 
+```
+
+```{r}
+clean_conns <- connections |> 
+  inner_join(cla, by = c("pre_root_id" = "root_id")) |> 
+  inner_join(cla, by = c("post_root_id" = "root_id")) |> 
+  ungroup()
+
+clean_cla <- cla |> 
+  inner_join(clean_conns |> distinct(pre_root_id), 
+             by=c("root_id" = "pre_root_id"))
+```
+
+```{r}
+coords <- read_csv(
+  "adult_data/coordinates.csv",
+  col_select = c(root_id, position),
+  col_types = "cc"
+) |>
+  mutate(
+    position = gsub("[", "", position, fixed = T),
+    position = gsub("]", "", position, fixed = T),
+    position = str_trim(position),
+    position = str_squish(position)
+  ) |>
+  separate_wider_delim(position, " ", names = c("x", "y", "z")) |>
+  mutate(across(c(x, y, z), as.numeric)) |> 
+ group_by(root_id) |>
+ summarise(x = mean(x), y = mean(y), z = mean(z))
+
+coords |> write_csv("adult_data/all_coords_clean.csv")
+```
+
+```{r}
+cla_coords <- clean_cla |> 
+  inner_join(coords)
+```
+
+```{r}
+vis_coords <- cla_coords |> 
+  filter(cell_type %in% c("R1-6", "R7", "R8")) 
+```
+
+```{r}
+fig <- plot_ly(vis_coords, x = ~x, y = ~y, z = ~z, color = ~cell_type)
+fig <- fig |> add_markers(size=.5)
+fig
+```
+
+
+```{r}
+pc <- vis_coords |> 
+  filter(cell_type != "R1-6") |> 
+  select(x, y, z) |> 
+  prcomp()
+
+vis_coords <- vis_coords |> 
+  mutate(
+    PC1 = x * pc$rotation["x", "PC1"] + 
+      y * pc$rotation["y", "PC1"] + 
+      z * pc$rotation["z", "PC1"],
+    PC2 = x * pc$rotation["x", "PC2"] + 
+      y * pc$rotation["y", "PC2"] + 
+      z * pc$rotation["z", "PC2"]
+    ) 
+
+vis_coords |> 
+  ggplot(aes(x = PC1, y = PC2, colour = cell_type)) +
+  geom_point()
+```
+
+
+```{r}
+vis_coords <- vis_coords |> 
+  mutate(
+    PC1 = x * .3 + 
+      y * .6 + 
+      z * -.4,
+    PC2 = x * (-.1) + 
+      y * .2 + 
+      z * .5
+    ) 
+vis_coords |> 
+  ggplot(aes(x = PC1, y = PC2, colour = cell_type)) +
+  geom_point()
+  
+```
+
+```{r}
+vis_coords <- vis_coords |> 
+  mutate(
+    x_axis = (PC1 - min(PC1)) / (max(PC1) - min(PC1)) * 512,
+    y_axis = (PC2 - min(PC2)) / (max(PC2) - min(PC2)) * 512,
+    )
+```
+
+```{r}
+vis_coords |> 
+  ggplot(aes(x = x_axis, y = y_axis, colour = cell_type)) + 
+  geom_point()
+```
+
+```{r}
+pc <- vis_coords |> 
+  select(x_axis, y_axis) |> 
+  prcomp()
+
+vis_coords <- vis_coords |> 
+  mutate(
+    PC1 = x_axis * pc$rotation["x_axis", "PC1"] + 
+      y_axis * pc$rotation["y_axis", "PC1"],
+    PC2 = x_axis * pc$rotation["x_axis", "PC2"] + 
+      y_axis * pc$rotation["y_axis", "PC2"]
+    )  
+vis_coords |> 
+  ggplot(aes(x = PC1, y = PC2, colour = cell_type)) + 
+  geom_point()
+```
+
+```{r}
+filtered_vis_coords <- vis_coords |> 
+  filter(
+    PC1 >= -500 & PC1 < -200,
+    PC2 >= -200 & PC2 < 100
+  ) |> 
+  mutate(
+    x_axis = (PC1 - (-500)) / 300 * 512,
+    y_axis = (PC2 - (-200)) / 300 * 512
+  )
+```
+
+```{r}
+filtered_vis_coords |> 
+  ggplot(aes(x = x_axis, y = y_axis, colour = cell_type)) + 
+  geom_point()
+```
+
+```{r}
+table(vis_coords$cell_type)
+```
+
+
+```{r}
+clean_conns |> write_csv("adult_data/right_connections.csv")
+clean_cla |> write_csv("adult_data/right_classification.csv")
+vis_coords |> write_csv("adult_data/left_visual_positions_all_neurons.csv")
+filtered_vis_coords |> write_csv("adult_data/left_visual_positions_selected_neurons.csv")
+
+```

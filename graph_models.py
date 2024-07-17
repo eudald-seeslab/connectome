@@ -1,26 +1,47 @@
 import torch
-from torch.nn import functional as F
-from torch.nn import Parameter, ParameterList, Module
-from torch_geometric.nn import GATConv, global_max_pool, MessagePassing
+from torch.nn import Parameter
+from graph_models_helpers import log_norm, min_max_norm
+from torch_geometric.nn import MessagePassing
 from torch import nn
-from torch_scatter import scatter_mean, scatter_std
-
-DROPOUT = 0.0
 
 
-class TrainableEdgeConv(MessagePassing):
-    def __init__(self, input_shape, edge_weights, num_connectome_passes, batch_size, dtype, device):
-        super(TrainableEdgeConv, self).__init__(aggr="add")
+class Connectome(MessagePassing):
+    def __init__(self, data_processor, config):
+        super(Connectome, self).__init__(aggr="add")
 
-        self.num_passes = num_connectome_passes
-        self.num_nodes_per_graph = input_shape
-        self.batch_size = batch_size
-        # This allows us to have negative weights, as well as synapses comprised
-        #  of many weights, where some are positive and some negative, and the result
-        #  is edge_weight * edge_weight_multiplier
-        self.edge_weight = torch.tensor(edge_weights, dtype=dtype, device=device)
-        self.edge_weight_multiplier = Parameter(torch.Tensor(edge_weights.shape[0]).to(device))
-        nn.init.uniform_(self.edge_weight_multiplier, a=-0.1, b=0.1)
+        self.num_passes = config.NUM_CONNECTOME_PASSES
+        num_nodes = data_processor.number_of_synapses
+        edge_weight = data_processor.synaptic_matrix.data
+        num_synapses = edge_weight.shape[0]
+        self.batch_size = config.batch_size
+        self.train_edges = config.train_edges
+        self.train_neurons = config.train_neurons
+        self.lambda_func = config.lambda_func
+        self.neuron_normalization = config.neuron_normalization
+        self.refined_synaptic_data = config.refined_synaptic_data
+        dtype = config.dtype
+        device = config.DEVICE
+
+        self.register_buffer(
+            "edge_weight",
+            torch.tensor(edge_weight, dtype=dtype, device=device),
+        )
+
+        if config.train_edges:
+            # This allows us to have negative weights, as well as synapses comprised
+            #  of many weights, where some are positive and some negative, and the result
+            #  is edge_weight * edge_weight_multiplier
+            self.edge_weight_multiplier = Parameter(
+                torch.Tensor(num_synapses).to(device)
+                )
+            nn.init.uniform_(self.edge_weight_multiplier, a=-1, b=1)
+        if config.train_neurons:
+            self.neuron_activation_threshold = Parameter(
+                torch.Tensor(num_nodes).to(device)
+            )
+            nn.init.uniform_(self.neuron_activation_threshold, a=0, b=0.1)
+
+        self.neuron_dropout = nn.Dropout(config.neuron_dropout)
 
     def forward(self, x, edge_index):
         # Start propagating messages.
@@ -28,7 +49,6 @@ class TrainableEdgeConv(MessagePassing):
 
         for _ in range(self.num_passes):
             x = self.propagate(edge_index, size=size, x=x, edge_weight=self.edge_weight)
-            # we might want to normalize the output
 
         return x
 
@@ -36,244 +56,95 @@ class TrainableEdgeConv(MessagePassing):
         # Message: edge_weight (learnable) multiplied by node feature of the neighbor
         # manual reshape to make sure that the multiplication is done correctly
         x_j = x_j.view(self.batch_size, -1)
-        # multiply by the modulated edge weight
-        x_j = x_j * edge_weight * self.edge_weight_multiplier 
-        # reshape back
+        if self.train_edges:
+            # Here we are multiplying the edge weight by the edge_weight_multiplier. For biological
+            # plausibility, we want to make sure that the edge_weight_multiplier is not bigger than 1
+            # Now, if we have the raw synaptic data, all weights are positive, so we need to allow for
+            # negative weights, so edge_weight_multiplier will be \in [-1, 1]
+            # If we have refined synaptic data, which can have negative weights, the edge_weight_multiplier
+            # will be \in [0, 1]
+            if self.refined_synaptic_data:
+                edge_weight_multiplier = torch.sigmoid(self.edge_weight_multiplier)
+            else:
+                edge_weight_multiplier = torch.tanh(self.edge_weight_multiplier)
+
+            x_j = x_j * edge_weight * edge_weight_multiplier
+        else:
+            x_j = x_j * edge_weight
+
+        # Apply the neuron dropout
+        x_j = self.neuron_dropout(x_j)
+
         return x_j.view(-1, 1)
 
     def update(self, aggr_out):
-        # Each node gets its updated feature as the sum of its neighbor contributions.
-        # sigmoid tries to emulate the biological process of the neuron, 
-        # where the signal is passed if the signal is strong enough, and then it's only 1
-        # aggr_out = aggr_out / aggr_out.abs().max()
-        # return torch.sigmoid(aggr_out)
-        return aggr_out
 
-    def reshape_and_normalize(self, x):
-        x = x.view(self.batch_size, self.num_nodes_per_graph, -1)
-        x = x / x.norm(dim=1, keepdim=True)
-        x = x.view(-1, x.size(2))
-        return x
+        if self.train_neurons:
+            # Each node gets its updated feature as the sum of its neighbor contributions.
+            # Then, we apply the lambda function with a threshold, to emulate the biological
+            temp = aggr_out.view(self.batch_size, -1)
+            if self.neuron_normalization == "min_max":
+                temp = min_max_norm(temp)
+            elif self.neuron_normalization == "log1p":
+                temp = log_norm(temp)
+            # Apply the threshold. Note the "abs" to make sure that the threshold is not
+            #  helping the neuron to activate
+            sig_out = self.lambda_func(temp - abs(self.neuron_activation_threshold))
+            return sig_out.view(-1, 1)
+
+        return aggr_out
 
 
 class FullGraphModel(nn.Module):
 
-    def __init__(
-        self,
-        input_shape,
-        num_connectome_passes,
-        decision_making_vector,
-        batch_size,
-        dtype,
-        edge_weights,
-        device,
-        num_features=1,
-        cell_type_indices=None,
-        retina_connection=True,
-    ):
+    def __init__(self, data_processor, config_):
         super(FullGraphModel, self).__init__()
-        self.retina_connection = retina_connection
-        if retina_connection:
-            self.retina_connection = RetinaConnectionLayer(
-                cell_type_indices, batch_size, num_features=1, dtype=dtype
-            )
-        self.register_buffer("decision_making_vector", decision_making_vector)
 
-        self.connectome = TrainableEdgeConv(input_shape, edge_weights, num_connectome_passes, batch_size, dtype, device)
-
-        self.final_fc = nn.Linear(1, 1, dtype=dtype)
-        self.num_features = num_features
-        self.batch_size = batch_size
+        self.connectome = Connectome(data_processor, config_)
+        self.register_buffer("decision_making_vector", data_processor.decision_making_vector)
+        final_layer = config_.final_layer
+        final_layer_input_size = int(data_processor.decision_making_vector.sum()) if final_layer == "nn" else 1
+        self.final_fc = nn.Linear(final_layer_input_size, len(config_.CLASSES), dtype=config_.dtype)
+        self.decision_making_dropout = nn.Dropout(config_.decision_dropout)
+        self.num_features = 1 # only works with 1 for now
+        self.batch_size = config_.batch_size
+        self.final_layer = final_layer
+        self.train_neurons = config_.train_neurons
 
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
-
-        if self.retina_connection:
-            # find the optimal connection between retina model and connectome
-            x = self.retina_connection(x)
-            x = self.normalize_non_zero(x, batch)
 
         # pass through the connectome
         x = self.connectome(x, edge_index)
         # get final decision
-        x, batch = self.decision_making_mask(x, batch)
-        # x = self.normalize_non_zero(x, batch)
         x = x.view(self.batch_size, -1, self.num_features)
-        # get the mean for each batch
-        x = torch.mean(x, dim=1, keepdim=True)
-        # note the '[0]' to get the median and not the indices
-        # x = torch.max(x, dim=1)[0]
-        # normalize to 0-1
-        # x = self.min_max_norm(x)
+        x, batch = self.decision_making_mask(x, batch)
+        # Save the intermediate output for analysis
+        if not self.training:
+            self.intermediate_output = x.view(self.batch_size, -1).clone().detach()
+
+        if self.final_layer == "mean":
+            # get the mean for each batch
+            x = torch.mean(x, dim=1, keepdim=True)
+
+        if not self.train_neurons:
+            # When we are training edges or only the final layer, the output
+            #  explodes a bit and we need to normalize it
+            x = x / x.norm()
+
+        x = self.decision_making_dropout(x)
 
         # final layer to get the correct magnitude
-        x = self.final_fc(x)
-        return F.relu(x).squeeze()
+        # Squeeze the num_features. If at some point it is not 1, then we have to change this
+        return self.final_fc(x.squeeze(2)).squeeze()
 
     def decision_making_mask(self, x, batch):
-        x = x.view(self.batch_size, -1, self.num_features)
         x = x[:, self.decision_making_vector == 1, :]
 
         batch = batch.view(self.batch_size, -1)
         batch = batch[:, self.decision_making_vector == 1]
-        return x.view(-1, self.num_features), batch.view(-1)
-
-    @staticmethod
-    def normalize_non_zero(x, batch, epsilon=1e-5):
-        # x has shape [batch_size * num_neurons, num_features]
-        # batch has shape [batch_size * num_neurons]
-        batch_size = batch.max().item() + 1
-        non_zero_mask = x != 0
-
-        non_zero_entries = x[non_zero_mask]
-        non_zero_batch = batch[non_zero_mask.squeeze()]
-
-        mean_per_batch = scatter_mean(non_zero_entries, non_zero_batch, dim=0, dim_size=batch_size)
-        std_per_batch = (
-            scatter_std(non_zero_entries, non_zero_batch, dim=0, dim_size=batch_size)
-            + epsilon
-        )
-
-        x[non_zero_mask] = (
-            non_zero_entries - mean_per_batch[non_zero_batch]
-        ) / std_per_batch[non_zero_batch]
-
-        return x
+        return x, batch
 
     @staticmethod
     def min_max_norm(x):
         return (x - x.min()) / (x.max() - x.min())
-
-
-class GNNModel(torch.nn.Module):
-    def __init__(
-        self,
-        num_node_features,
-        decision_making_vector,
-        num_passes,
-        cell_type_indices,
-        batch_size,
-        num_heads=1,
-        visual_input_persistence_rate=1,
-    ):
-
-        super(GNNModel, self).__init__()
-        self.attention_conv = GATConv(
-            num_node_features, out_channels=1, heads=num_heads, concat=False
-        )
-        self.register_buffer("decision_making_vector", decision_making_vector)
-        self.num_passes = num_passes
-        self.batch_size = batch_size
-        self.visual_input_persistence_rate = visual_input_persistence_rate
-        # swish function to attempt to mimic inhibitory behaviours too
-        # TODO: check whether this is a good idea
-        self.activation = torch.nn.SiLU()
-        self.final_activation = torch.nn.ReLU()
-        self.norm = torch.nn.BatchNorm1d(num_node_features)
-
-        self.permutation_layer = RetinaConnectionLayer(
-            cell_type_indices, batch_size, num_node_features
-        )
-        self.final_decision_layer = torch.nn.Linear(in_features=1, out_features=1)
-
-    def forward(self, data):
-        x, edge_index, batch = data.x, data.edge_index, data.batch
-
-        # Match visual stimulus to correct connectome neuron
-        x = self.permutation_layer(x)
-
-        # Make a copy to be used later
-        x_res = x
-
-        # Noise layer for the non-initialized neurons
-        x = self.__add_noise(x)
-
-        # Multiple passes through the connectome
-        for i in range(self.num_passes):
-            x = self.attention_conv(x, edge_index)
-            x = self.norm(x)
-            x = self.activation(x)
-            x = F.dropout(x, training=self.training, p=DROPOUT)
-
-            # Add the initial input (because we might still be visualizing the input)
-            # but decay its influence over time
-            x = x + x_res * self.visual_input_persistence_rate**i
-
-        # Apply the decision-making mask and pool the results of decision-making neurons
-        decision_mask = (
-            self.decision_making_vector.unsqueeze(0)
-            .repeat(self.batch_size, 1)
-            .view(-1, 1)
-        )
-        x = x * decision_mask
-        pooled_x = global_max_pool(x, batch)
-
-        # Create a final layer of just one neuron to "normalize" outputs
-        # This is equivalent to the soul of the fruit fly
-        return self.final_activation(self.final_decision_layer(pooled_x))
-
-    @staticmethod
-    def __add_noise(x):
-        mask = x == 0
-        std_dev = x[x != 0].std().item()
-        noise = (std_dev / 100) * torch.randn_like(x)
-        return torch.where(mask, noise, x)
-
-
-class RetinaConnectionLayer(Module):
-    def __init__(self, cell_type_indices, batch_size, num_features=1, dtype=torch.float):
-        super().__init__()
-        self.cell_type_indices = cell_type_indices
-        # Dictionary: cell type -> count of neurons
-        self.neuron_counts = self.get_neuron_counts(cell_type_indices)
-        self.num_features = num_features
-        self.batch_size = batch_size
-        self.dtype = dtype
-
-        # Initialize weight matrices for each cell type based on neuron_counts
-        self.weights = ParameterList(
-            [
-                Parameter(torch.randn(batch_size, count, count, dtype=dtype))
-                for count in self.neuron_counts.values()
-            ]
-        )
-
-    def forward(self, x):
-        # GNNs work with batches stacked into a unidimensional tensor, but I
-        # find this difficult to work with. Here, we widen it to
-        # [batch_size, num_neurons, num_features]
-        x = x.view(self.batch_size, -1, self.num_features)
-
-        # [batch_size, num_neurons, num_features]
-        output = torch.zeros_like(x)
-        for type_index in self.neuron_counts.keys():
-            # Determine which nodes belong to the current cell type
-            # [num_neurons_for_selected_type]
-            mask_indices = torch.tensor(
-                self.cell_type_indices[self.cell_type_indices == type_index].index,
-                dtype=torch.int32,
-                device=x.device,
-            )
-
-            if len(mask_indices) > 0:
-
-                # To simulate a permutation pairing, apply gumbel softmax in the row dimension
-                soft_weight = F.gumbel_softmax(self.weights[type_index], dim=1)
-
-                # FIXME: two visual neurons can map to the same connectome neuron
-
-                # Apply weights to the nodes of this cell type
-                # [num_neurons_for_selected_type, num_neurons_for_selected_type] *
-                # [batch_size, num_neurons_for_selected_type, num_features] =
-                # [batch_size, num_neurons_for_selected_type, num_features]
-                output[:, mask_indices] = torch.matmul(
-                    soft_weight, torch.index_select(x, 1, mask_indices)
-                )
-
-        # We need to return output in the same shape as the input x
-        # [num_neurons * batch_size, num_features]
-        return output.view(-1, self.num_features)
-
-    @staticmethod
-    def get_neuron_counts(cell_type_indices):
-        return dict(sorted(cell_type_indices.value_counts().to_dict().items()))

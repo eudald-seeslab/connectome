@@ -15,30 +15,29 @@ GENERAL_CONFIG = {
     "colour_1": "yellow",
     "colour_2": "blue",
     "boundary_width": 5,
-    "background_colour": "#808080",
+    "background_colour": "#000000", # for gray: #808080
     "yellow": "#fffe04",
     "blue": "#0003f9",
-    "point_sep": 20,
-    "min_point_radius": 40,
-    "max_point_radius": 80,
+    "min_point_radius": 20,
+    "max_point_radius": 30,
     "init_size": 512,
     "mode": "RGB",
     # these are per colour
-    "min_point_num": 1,
-    "max_point_num": 2,
-    "attempts_limit": 200,
+    "min_point_num": 4,
+    "max_point_num": 12,
+    "attempts_limit": 1000,
 }
 
 
-EASY_RATIOS = [2 / 5, 1 / 2, 2 / 3, 3 / 4]
+EASY_RATIOS = [1 / 3, 2 / 5, 1 / 2, 2 / 3, 3 / 4]
 HARD_RATIOS = [
     4 / 5,
     5 / 6,
     7 / 8,
     8 / 9,
     9 / 10,
-    10 / 11,
-    11 / 12,
+#    10 / 11,
+#    11 / 12,
 ]
 
 
@@ -80,7 +79,7 @@ class ImageGenerator:
         point_array = number_points.design_n_points(
             n2, self.config["colour_2"], point_array=point_array
         )
-        if equalized:
+        if equalized and not self.config["ONE_COLOUR"]:
             point_array = number_points.equalize_areas(point_array)
         return number_points.draw_points(point_array)
 
@@ -119,6 +118,9 @@ class ImageGenerator:
         min_p = self.config["min_point_num"]
         max_p = self.config["max_point_num"]
 
+        if self.config["ONE_COLOUR"]:
+            return [(0, a) for a in range(1, max_p + 1)]
+
         positions = []
         # Note that we don't need the last value of 'a', since 'b' will always be greater.
         for a in range(min_p, max_p):
@@ -139,10 +141,11 @@ class ImageGenerator:
         )
         for i in tqdm(range(self.config["IMAGE_SET_NUM"])):
             for pair in positions:
-                self.create_and_save(pair[0], pair[1], equalized=True, tag=i)
-                self.create_and_save(pair[1], pair[0], equalized=True, tag=i)
                 self.create_and_save(pair[0], pair[1], equalized=False, tag=i)
                 self.create_and_save(pair[1], pair[0], equalized=False, tag=i)
+                if not self.config["ONE_COLOUR"]:
+                    self.create_and_save(pair[0], pair[1], equalized=True, tag=i)
+                    self.create_and_save(pair[1], pair[0], equalized=True, tag=i)
 
 
 def get_config():
@@ -162,7 +165,10 @@ def get_config():
         help="Directory to save images.",
     )
     parser.add_argument(
-        "--easy", type=bool, default=True, help="Use easy mode for image generation."
+        "--easy", action='store_true', help="Use easier ratios between colours."
+    )
+    parser.add_argument(
+        "--one_colour", action='store_true', help="Use only one colour."
     )
     args = parser.parse_args()
 
@@ -170,6 +176,7 @@ def get_config():
         "EASY": args.easy,
         "IMAGE_SET_NUM": args.img_set_num,
         "IMG_DIR": args.img_dir,
+        "ONE_COLOUR": args.one_colour,
     }
     return config
 

@@ -73,7 +73,7 @@ netron
 networkx~=3.2.1
 notebook==6.5.4
 notebook_shim==0.2.3
-numpy~=1.24.4
+numpy~=1.26.0
 nvidia-cublas-cu11==11.10.3.66
 nvidia-cuda-cupti-cu11==11.7.101
 nvidia-cuda-nvrtc-cu11==11.7.99
@@ -85,7 +85,7 @@ nvidia-cusparse-cu11==11.7.4.91
 nvidia-nvtx-cu11==11.7.91
 overrides==7.3.1
 packaging==23.1
-pandas==1.5.3
+pandas
 pandocfilters==1.5.0
 parso==0.8.3
 pathspec==0.11.1
@@ -99,7 +99,6 @@ prometheus-client==0.17.0
 prompt-toolkit==3.0.38
 psutil==5.9.5
 pure-eval==0.2.2
-pycairo==1.23.0
 pycparser==2.21
 Pygments==2.15.1
 pyparsing==3.0.9
@@ -129,9 +128,9 @@ tenacity==8.2.2
 terminado==0.17.1
 threadpoolctl==3.1.0
 tinycss2==1.2.1
-torch==2.3.0
-torchaudio==2.3.0
-torchvision==2.3.0
+torch
+torchaudio
+torchvision
 tornado==6.3.2
 tqdm==4.65.0
 traitlets==5.9.0
@@ -157,7 +156,7 @@ tensorboard~=2.13.0
 pathtools~=0.1.2
 cachetools~=5.3.1
 Markdown~=3.4.4
-seaborn~=0.12.2
+seaborn~=0.13.2
 oauthlib~=3.2.2
 Werkzeug~=2.3.6
 toolz~=0.12.1
@@ -178,6 +177,6 @@ referencing~=0.32.1
 ffmpeg~=1.4
 json5~=0.9.14
 torch_geometric~=2.4.0
-torch_scatter==2.1.2+pt23cu121
-torch_sparse==0.6.18+pt23cu121
+torch_scatter
+torch_sparse
 wandb

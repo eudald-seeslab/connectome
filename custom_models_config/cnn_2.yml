@@ -1,9 +1,0 @@
-model_name: "cnn_2"
-num_layers: 1
-out_channels: 4
-kernel_size: 5
-kernel_stride: 2
-kernel_padding: 0
-pool_kernel_size: 4
-pool_stride: 2
-dropout: 0.85

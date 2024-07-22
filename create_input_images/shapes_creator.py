@@ -45,7 +45,7 @@ class ShapesGenerator:
             self.colours = {col: COLOUR_MAP[col] for col in colours}
         except KeyError:
             raise ValueError(f"One or more of your colours are not implemented. Choices are {', '.join(COLOUR_MAP.keys())}.")
-        
+
         self.shape = shape
         self.train_num = train_num
         self.test_num = test_num
@@ -116,18 +116,22 @@ class ShapesGenerator:
         dist_y = random.randint(-y_space, y_space)
         center = (int(pixels_x / 2) + dist_x, int(pixels_y / 2) + dist_y)
 
+        # for bookkeeping
+        distance = int(np.sqrt(dist_x**2 + dist_y**2))
+        angle = int((np.arctan2(dist_y, dist_x) / np.pi + 1) * 180)
+
         vertices = self.get_vertices(shape, center, radius)
         if shape == "circle":
             draw.ellipse(vertices, fill=colour)
         else:
             draw.polygon(vertices, fill=colour)
 
-        return image, int(np.sqrt(dist_x**2 + dist_y**2))
+        return image, distance, angle
 
-    def save_image(self, image, radius, dist_from_center, it, path):
+    def save_image(self, image, radius, dist_from_center, angle, it, path):
         file_path = os.path.join(
             path,
-            f"{self.shape}_{radius}_{dist_from_center}_{it}.png",
+            f"{self.shape}_{radius}_{dist_from_center}_{angle}_{it}_v2.png",
         )
         image.save(file_path)
 
@@ -147,14 +151,18 @@ class ShapesGenerator:
         for i in tqdm(range(self.train_num)):
             for r in range(min_radius, max_radius):
                 for i, col in enumerate(self.colours.values()):
-                    image, dist = self.draw_shape(shape, r, col, jitter)
-                    self.save_image(image, r, dist, i, self.img_paths[f"train_{i + 1}"])
+                    image, dist, angle = self.draw_shape(shape, r, col, jitter)
+                    self.save_image(
+                        image, r, dist, angle, i, self.img_paths[f"train_{i + 1}"]
+                    )
 
         for i in tqdm(range(self.test_num)):
             for r in range(min_radius, max_radius):
                 for i, col in enumerate(self.colours.values()):
-                    image, dist = self.draw_shape(shape, r, col, jitter)
-                    self.save_image(image, r, dist, i, self.img_paths[f"test_{i + 1}"])
+                    image, dist, angle = self.draw_shape(shape, r, col, jitter)
+                    self.save_image(
+                        image, r, dist, angle, i, self.img_paths[f"test_{i + 1}"]
+                    )
 
     def create_dirs_all_classes(self):
         """Create directories for all classes of shapes."""
@@ -180,14 +188,18 @@ class ShapesGenerator:
         for i in tqdm(range(self.train_num)):
             for j, shape in enumerate(shapes):
                 for r in range(min_radius, max_radius):
-                    image, dist = self.draw_shape(shape, r, colour, jitter)
-                    self.save_image(image, r, dist, i, self.img_paths[f"train_{j}"])
+                    image, dist, angle = self.draw_shape(shape, r, colour, jitter)
+                    self.save_image(
+                        image, r, dist, angle, i, self.img_paths[f"train_{j}"]
+                    )
 
         for i in tqdm(range(self.test_num)):
             for j, shape in enumerate(shapes):
                 for r in range(min_radius, max_radius):
-                    image, dist = self.draw_shape(shape, r, colour, jitter)
-                    self.save_image(image, r, dist, i, self.img_paths[f"test_{j}"])
+                    image, dist, angle = self.draw_shape(shape, r, colour, jitter)
+                    self.save_image(
+                        image, r, dist, angle, i, self.img_paths[f"test_{j}"]
+                    )
 
 
 if __name__ == "__main__":

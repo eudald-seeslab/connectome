@@ -29,12 +29,12 @@ NUM_CONNECTOME_PASSES = 4
 neurons = "all"  # "selected" or "all"
 voronoi_criteria = "R7"  #  "R7" or "all"
 random_synapses = False
-train_edges = True
-train_neurons = False
+train_edges = False
+train_neurons = True
 final_layer = "mean"  # "mean" or "nn"
 # Some papers use a subset of neurons to compute the final decision (e.g. https://www-science.org/doi/full/10.1126/sciadv.abq7592)
 # If None, all neurons are used
-num_decision_making_neurons = 30  # None or a number
+num_decision_making_neurons = None  # None or a number
 eye = "right"  # "left" or "right"
 # node embedding activation function, as in
 # https://pytorch-geometric.readthedocs.io/en/latest/tutorial/create_gnn.html
@@ -60,6 +60,9 @@ neuron_dropout = 0
 #  the decision making process also has some neurons not available all the time
 decision_dropout = 0
 log_transform_weights = False
+# According to the literature (see https://www.cell.com/cell/fulltext/S0092-8674(17)31498-8), in the flys retina, 
+#  the R7 and R8 neurons inhibit each other. Set to true if you want to simulate this behaviour
+inhibitory_r7_r8 = True
 
 # CUDA stuff
 device_type = "cuda" if cuda.is_available() else "cpu"
@@ -69,13 +72,13 @@ DEVICE = device(device_type)
 randdom_seed = 1714
 
 # Debugging and logging
-debugging = True
+debugging = False
 debug_length = 2
 small_length = None
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400
-wandb_project = "multitasking"
+wandb_project = "synaptic_limit"
 wandb_group = data_type     # you can put something else here
 
 # Plots

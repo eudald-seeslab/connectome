@@ -17,6 +17,7 @@ from train_funcs import (
     get_side_decision_making_vector,
     get_voronoi_averages,
     import_images,
+    inhibit_r7_r8,
     preprocess_images,
     process_images,
 )
@@ -71,6 +72,7 @@ class CompleteModelsDataProcessor:
             dtype=torch.int64,  # do not touch
         )
         self.weights = torch.tensor(self.synaptic_matrix.data, dtype=self.dtype)
+        self.inhibitory_r7_r8 = config_.inhibitory_r7_r8
 
     @property
     def num_classes(self):
@@ -135,7 +137,7 @@ class CompleteModelsDataProcessor:
 
     def calculate_neuron_activations(self, voronoi_averages):
         neuron_activations = pd.concat(
-            [get_neuron_activations(self.tesselated_df, a) for a in voronoi_averages],
+            [get_neuron_activations(self.tesselated_df, a, self.inhibitory_r7_r8) for a in voronoi_averages],
             axis=1,
         )
         neuron_activations.index = neuron_activations.index.astype("string")
@@ -178,6 +180,9 @@ class CompleteModelsDataProcessor:
         neuron_activations = corr_tess.merge(
             voronoi_average, left_on="voronoi_indices", right_index=True
         )
+        if self.inhibitory_r7_r8:
+            neuron_activations = neuron_activations.apply(inhibit_r7_r8, axis=1)
+            
         neuron_activations["activation"] = neuron_activations.apply(
             get_activation_from_cell_type, axis=1
         )

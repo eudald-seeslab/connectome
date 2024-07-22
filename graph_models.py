@@ -112,13 +112,13 @@ class FullGraphModel(nn.Module):
         self.train_neurons = config_.train_neurons
 
     def forward(self, data):
-        x, edge_index, batch = data.x, data.edge_index, data.batch
+        x, edge_index = data.x, data.edge_index
 
-        # pass through the connectome
+        # pass through the connectome and reshape to wide again (batch_size, num_neurons, num_features)
         x = self.connectome(x, edge_index)
-        # get final decision
         x = x.view(self.batch_size, -1, self.num_features)
-        x, batch = self.decision_making_mask(x, batch)
+        # get final decision
+        x = self.decision_making_mask(x)
         # Save the intermediate output for analysis
         if not self.training:
             self.intermediate_output = x.view(self.batch_size, -1).clone().detach()
@@ -138,12 +138,10 @@ class FullGraphModel(nn.Module):
         # Squeeze the num_features. If at some point it is not 1, then we have to change this
         return self.final_fc(x.squeeze(2)).squeeze()
 
-    def decision_making_mask(self, x, batch):
+    def decision_making_mask(self, x):
         x = x[:, self.decision_making_vector == 1, :]
 
-        batch = batch.view(self.batch_size, -1)
-        batch = batch[:, self.decision_making_vector == 1]
-        return x, batch
+        return x
 
     @staticmethod
     def min_max_norm(x):

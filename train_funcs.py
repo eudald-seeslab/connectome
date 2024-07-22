@@ -88,17 +88,6 @@ def get_activation_from_cell_type(row):
             raise ValueError("Invalid cell type")
         
 
-def inhibit_r7_r8(row):
-    # if row["b"] is bigger than either row["r"] or row["g"], set these to 0, 
-    # otherwise, set row["b"] to 0
-    if row["b"] > row[["r", "g"]].max():
-        row["r"] = 0
-        row["g"] = 0
-    else:
-        row["b"] = 0
-    return row
-
-
 def apply_inhibitory_r7_r8(neuron_activations):
     mask = neuron_activations["b"] > neuron_activations[["r", "g"]].max(axis=1)
     neuron_activations.loc[mask, ["r", "g"]] = 0

@@ -11,13 +11,13 @@ from scipy.sparse import coo_matrix
 from torch_geometric.data import Data, Batch
 
 from train_funcs import (
+    apply_inhibitory_r7_r8,
     construct_synaptic_matrix,
     get_activation_from_cell_type,
     get_neuron_activations,
     get_side_decision_making_vector,
     get_voronoi_averages,
     import_images,
-    inhibit_r7_r8,
     preprocess_images,
     process_images,
 )
@@ -181,7 +181,7 @@ class CompleteModelsDataProcessor:
             voronoi_average, left_on="voronoi_indices", right_index=True
         )
         if self.inhibitory_r7_r8:
-            neuron_activations = neuron_activations.apply(inhibit_r7_r8, axis=1)
+            neuron_activations = apply_inhibitory_r7_r8(neuron_activations)
             
         neuron_activations["activation"] = neuron_activations.apply(
             get_activation_from_cell_type, axis=1

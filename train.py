@@ -24,9 +24,7 @@ from utils import (
 )
 from data_processing import CompleteModelsDataProcessor
 from graph_models import FullGraphModel
-from utils import (
-    clean_model_outputs,
-)
+from utils import clean_model_outputs
 
 from wandb_logger import WandBLogger
 

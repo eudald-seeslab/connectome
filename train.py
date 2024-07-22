@@ -37,12 +37,15 @@ warnings.filterwarnings(
     module="wandb.sdk.data_types.image",
 )
 
-torch.manual_seed(1234)
 
 
 def main(wandb_logger, sweep_config=None):
 
     u_config = update_config_with_sweep(config, sweep_config)
+
+    random_generator = torch.Generator(device=u_config.DEVICE)
+    random_generator.manual_seed(u_config.randdom_seed)
+
     # if it's not a sweep, we need to initialize wandb
     if sweep_config is None:
         wandb_logger.initialize_run(u_config)
@@ -62,7 +65,7 @@ def main(wandb_logger, sweep_config=None):
     # get data and prepare model
     training_images = get_image_paths(u_config.TRAINING_DATA_DIR, u_config.small_length)
     data_processor = CompleteModelsDataProcessor(u_config)
-    model = FullGraphModel(data_processor, u_config).to(u_config.DEVICE)
+    model = FullGraphModel(data_processor, u_config, random_generator).to(u_config.DEVICE)
     optimizer = torch.optim.Adam(model.parameters(), lr=u_config.base_lr)
     criterion = CrossEntropyLoss()
     early_stopping = EarlyStopping(patience=u_config.patience, min_delta=0)

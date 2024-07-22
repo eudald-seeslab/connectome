@@ -97,19 +97,20 @@ class Connectome(MessagePassing):
 
 class FullGraphModel(nn.Module):
 
-    def __init__(self, data_processor, config_):
+    def __init__(self, data_processor, config_, random_generator=None):
         super(FullGraphModel, self).__init__()
 
         self.connectome = Connectome(data_processor, config_)
+        self.train_neurons = config_.train_neurons
         self.register_buffer("decision_making_vector", data_processor.decision_making_vector)
-        final_layer = config_.final_layer
-        final_layer_input_size = int(data_processor.decision_making_vector.sum()) if final_layer == "nn" else 1
-        self.final_fc = nn.Linear(final_layer_input_size, data_processor.num_classes, dtype=config_.dtype)
-        self.decision_making_dropout = nn.Dropout(config_.decision_dropout)
         self.num_features = 1 # only works with 1 for now
         self.batch_size = config_.batch_size
-        self.final_layer = final_layer
-        self.train_neurons = config_.train_neurons
+        self.final_layer = config_.final_layer
+        self.num_decision_making_neurons = config_.num_decision_making_neurons
+        final_layer_input_size = self.compute_final_layer_size(data_processor, config_)
+        self.final_fc = nn.Linear(final_layer_input_size, data_processor.num_classes, dtype=config_.dtype)
+        self.decision_making_dropout = nn.Dropout(config_.decision_dropout)
+        self.decision_making_indices = self.select_decision_making_indices(data_processor, config_, random_generator)
 
     def forward(self, data):
         x, edge_index = data.x, data.edge_index
@@ -141,8 +142,29 @@ class FullGraphModel(nn.Module):
     def decision_making_mask(self, x):
         x = x[:, self.decision_making_vector == 1, :]
 
+        # If we are using a subset of neurons to compute the final decision
+        if self.num_decision_making_neurons is not None:
+            x = x[:, self.decision_making_indices, :]
+        
         return x
 
     @staticmethod
     def min_max_norm(x):
         return (x - x.min()) / (x.max() - x.min())
+
+    @staticmethod
+    def compute_final_layer_size(data_processor, config):
+        if config.final_layer == "nn":
+            if config.num_decision_making_neurons is not None:
+                return config.num_decision_making_neurons
+            return int(data_processor.decision_making_vector.sum())
+        return 1
+
+    @staticmethod
+    def select_decision_making_indices(data_processor, config_, random_generator):
+        if config_.num_decision_making_neurons is not None:
+            decision_making_indices = torch.randperm(
+                data_processor.decision_making_vector.sum(), generator=random_generator, device=config_.DEVICE
+            )[:config_.num_decision_making_neurons]
+            return decision_making_indices
+        return None

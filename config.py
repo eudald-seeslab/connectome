@@ -9,7 +9,6 @@ from debug_utils import debugger_is_active
 data_type = "one_to_five"
 TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
 TESTING_DATA_DIR = os.path.join("images", data_type, "test")
-# get directory names from the training data directory
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 # get one sample of one class to get the image size
 sample_image = os.listdir(os.path.join(TRAINING_DATA_DIR, CLASSES[0]))[0]
@@ -30,9 +29,12 @@ NUM_CONNECTOME_PASSES = 4
 neurons = "all"  # "selected" or "all"
 voronoi_criteria = "R7"  #  "R7" or "all"
 random_synapses = False
-train_edges = False
-train_neurons = True
+train_edges = True
+train_neurons = False
 final_layer = "mean"  # "mean" or "nn"
+# Some papers use a subset of neurons to compute the final decision (e.g. https://www-science.org/doi/full/10.1126/sciadv.abq7592)
+# If None, all neurons are used
+num_decision_making_neurons = 30  # None or a number
 eye = "right"  # "left" or "right"
 # node embedding activation function, as in
 # https://pytorch-geometric.readthedocs.io/en/latest/tutorial/create_gnn.html
@@ -40,7 +42,7 @@ eye = "right"  # "left" or "right"
 lambda_func = leaky_relu  # torch activation function
 # we need to normalize the output of the connectome to avoid exploding gradients
 # before applying the activation function (above)
-neuron_normalization = "log1p"  # "log1p" or "min_max"
+neuron_normalization = "min_max"  # "log1p" or "min_max"
 # Shut off some neurons based on their cell_type
 # You can find all the cell types in the adult_data/cell_types.csv
 filtered_celltypes = []
@@ -63,15 +65,17 @@ log_transform_weights = False
 device_type = "cuda" if cuda.is_available() else "cpu"
 # device_type = "cpu"
 DEVICE = device(device_type)
+# Random seed (it can be set to None)
+randdom_seed = 1714
 
 # Debugging and logging
-debugging = False
+debugging = True
 debug_length = 2
 small_length = None
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400
-wandb_project = "synaptic_limit"
+wandb_project = "multitasking"
 wandb_group = data_type     # you can put something else here
 
 # Plots

@@ -32,7 +32,7 @@ from wandb_logger import WandBLogger
 
 warnings.filterwarnings(
     "ignore",
-    message="invalid value encountered in cast",
+    message="invalid value encountered in cast", 
     category=RuntimeWarning,
     module="wandb.sdk.data_types.image",
 )

@@ -208,3 +208,7 @@ def process_warnings(u_config, logger):
                 "num_epochs is 0 and resume_checkpoint is None. "
                 "Please set num_epochs to a positive integer."
             )
+    if u_config.num_decision_making_neurons is not None:
+        logger.warning(
+            f"Using only {u_config.num_decision_making_neurons} neurons for decision making."
+        )

@@ -1,3 +1,4 @@
+import os
 from matplotlib import pyplot as plt
 import matplotlib
 
@@ -28,7 +29,7 @@ class CompleteModelsDataProcessor:
     tesselated_df = None
     retinal_cells = ["R1-6", "R7", "R8"]
 
-    def __init__(self, config_):
+    def __init__(self, config_, data_dir=None):
         rational_cell_types = self.get_rational_cell_types()
         self.protected_cell_types = self.retinal_cells + rational_cell_types
         self._check_filtered_neurons(config_.filtered_celltypes)
@@ -62,7 +63,8 @@ class CompleteModelsDataProcessor:
         self.filtered_celltypes = config_.filtered_celltypes
         self.dtype = config_.dtype
         self.device = config_.DEVICE
-        self.classes = config_.CLASSES
+        # This is somewhat convoluted to be compatible with the multitask training
+        self.classes = sorted(os.listdir(data_dir)) if data_dir is not None else config_.CLASSES
 
         self.edges = torch.tensor(
             np.array([self.synaptic_matrix.row, self.synaptic_matrix.col]),
@@ -70,6 +72,10 @@ class CompleteModelsDataProcessor:
         )
         self.weights = torch.tensor(self.synaptic_matrix.data, dtype=self.dtype)
 
+    @property
+    def num_classes(self):
+        return len(self.classes)
+    
     def process_batch(self, imgs, labels):
         """
         Preprocesses a batch of images and labels. This includes reshaping and colouring the images if necessary, 

@@ -104,7 +104,7 @@ class FullGraphModel(nn.Module):
         self.register_buffer("decision_making_vector", data_processor.decision_making_vector)
         final_layer = config_.final_layer
         final_layer_input_size = int(data_processor.decision_making_vector.sum()) if final_layer == "nn" else 1
-        self.final_fc = nn.Linear(final_layer_input_size, len(config_.CLASSES), dtype=config_.dtype)
+        self.final_fc = nn.Linear(final_layer_input_size, data_processor.num_classes, dtype=config_.dtype)
         self.decision_making_dropout = nn.Dropout(config_.decision_dropout)
         self.num_features = 1 # only works with 1 for now
         self.batch_size = config_.batch_size

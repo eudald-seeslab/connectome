@@ -86,6 +86,7 @@ def get_activation_from_cell_type(row):
             return row["r"]
         case _:
             raise ValueError("Invalid cell type")
+        
 
 def inhibit_r7_r8(row):
     # if row["b"] is bigger than either row["r"] or row["g"], set these to 0, 
@@ -98,12 +99,19 @@ def inhibit_r7_r8(row):
     return row
 
 
+def apply_inhibitory_r7_r8(neuron_activations):
+    mask = neuron_activations["b"] > neuron_activations[["r", "g"]].max(axis=1)
+    neuron_activations.loc[mask, ["r", "g"]] = 0
+    neuron_activations.loc[~mask, "b"] = 0
+    return neuron_activations
+
+
 def get_neuron_activations(right_visual, voronoi_average, inhibitory_r7_r8=False):
     neuron_activations = right_visual.merge(
         voronoi_average, left_on="voronoi_indices", right_index=True
     )
     if inhibitory_r7_r8:
-        neuron_activations = neuron_activations.apply(inhibit_r7_r8, axis=1)
+        neuron_activations = apply_inhibitory_r7_r8(neuron_activations)
 
     neuron_activations["activation"] = neuron_activations.apply(
         get_activation_from_cell_type, axis=1

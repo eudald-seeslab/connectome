@@ -27,7 +27,7 @@ from utils import paths_to_labels
 
 class CompleteModelsDataProcessor:
 
-    tesselated_df = None
+    tesselated_neurons = None
     retinal_cells = ["R1-6", "R7", "R8"]
 
     def __init__(self, config_, data_dir=None):
@@ -58,7 +58,7 @@ class CompleteModelsDataProcessor:
             voronoi_criteria=config_.voronoi_criteria,
         )
         if config_.voronoi_criteria == "R7":
-            self.tesselated_df = self.voronoi_cells.get_tesselated_neurons()
+            self.tesselated_neurons = self.voronoi_cells.get_tesselated_neurons()
             self.voronoi_indices = self.voronoi_cells.get_image_indices()
 
         self.filtered_celltypes = config_.filtered_celltypes
@@ -127,7 +127,7 @@ class CompleteModelsDataProcessor:
 
     def recreate_voronoi_cells(self):
         self.voronoi_cells.regenerate_random_centers()
-        self.tesselated_df = self.voronoi_cells.get_tesselated_neurons()
+        self.tesselated_neurons = self.voronoi_cells.get_tesselated_neurons()
         self.voronoi_indices = self.voronoi_cells.get_image_indices()
 
     def get_data_from_paths(self, paths):
@@ -137,7 +137,7 @@ class CompleteModelsDataProcessor:
 
     def calculate_neuron_activations(self, voronoi_averages):
         neuron_activations = pd.concat(
-            [get_neuron_activations(self.tesselated_df, a, self.inhibitory_r7_r8) for a in voronoi_averages],
+            [get_neuron_activations(self.tesselated_neurons, a, self.inhibitory_r7_r8) for a in voronoi_averages],
             axis=1,
         )
         neuron_activations.index = neuron_activations.index.astype("string")
@@ -154,7 +154,7 @@ class CompleteModelsDataProcessor:
 
     def plot_input_images(self, img):
         fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-        self.voronoi_cells.plot_voronoi_cells_with_neurons(self.tesselated_df, axes[0])
+        self.voronoi_cells.plot_voronoi_cells_with_neurons(self.tesselated_neurons, axes[0])
         self.voronoi_cells.plot_voronoi_cells_with_image(img, axes[1])
         self.plot_neuron_activations(img, axes[2])
         plt.tight_layout()
@@ -172,7 +172,7 @@ class CompleteModelsDataProcessor:
             self.voronoi_cells.voronoi.point_region[int(i)]
             for i in voronoi_average.index
         ]
-        corr_tess = self.tesselated_df.copy()
+        corr_tess = self.tesselated_neurons.copy()
         corr_tess["voronoi_indices"] = [
             self.voronoi_cells.voronoi.point_region[int(i)]
             for i in corr_tess["voronoi_indices"]

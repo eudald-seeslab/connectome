@@ -6,7 +6,7 @@ from PIL import Image
 from debug_utils import debugger_is_active
 
 # Data
-data_type = "one_to_five"
+data_type = "two_shapes_yellow"
 TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
 TESTING_DATA_DIR = os.path.join("images", data_type, "test")
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
@@ -72,7 +72,7 @@ DEVICE = device(device_type)
 randdom_seed = 1714
 
 # Debugging and logging
-debugging = False
+debugging = True
 debug_length = 2
 small_length = None
 validation_length = 400

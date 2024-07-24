@@ -152,6 +152,8 @@ def module_to_clean_dict(module_):
 
 
 def save_checkpoint(model_, optimizer_, model_name, config_):
+    if config_.debugging:
+        return
     # create 'models' directory if it doesn't exist
     path_ = os.path.join(os.getcwd(), "models")
     os.makedirs(path_, exist_ok=True)

@@ -19,6 +19,7 @@ class Connectome(MessagePassing):
         self.lambda_func = config.lambda_func
         self.neuron_normalization = config.neuron_normalization
         self.refined_synaptic_data = config.refined_synaptic_data
+        self.synaptic_limit = config.synaptic_limit
         dtype = config.dtype
         device = config.DEVICE
 
@@ -43,6 +44,10 @@ class Connectome(MessagePassing):
 
         self.neuron_dropout = nn.Dropout(config.neuron_dropout)
 
+        self.edge_activation_func = self.get_edge_activation_func(
+            config.synaptic_limit, config.refined_synaptic_data
+        )
+
     def forward(self, x, edge_index):
         # Start propagating messages.
         size = (x.size(0), x.size(0))
@@ -57,18 +62,9 @@ class Connectome(MessagePassing):
         # manual reshape to make sure that the multiplication is done correctly
         x_j = x_j.view(self.batch_size, -1)
         if self.train_edges:
-            # Here we are multiplying the edge weight by the edge_weight_multiplier. For biological
-            # plausibility, we want to make sure that the edge_weight_multiplier is not bigger than 1
-            # Now, if we have the raw synaptic data, all weights are positive, so we need to allow for
-            # negative weights, so edge_weight_multiplier will be \in [-1, 1]
-            # If we have refined synaptic data, which can have negative weights, the edge_weight_multiplier
-            # will be \in [0, 1]
-            if self.refined_synaptic_data:
-                edge_weight_multiplier = torch.sigmoid(self.edge_weight_multiplier)
-            else:
-                edge_weight_multiplier = torch.tanh(self.edge_weight_multiplier)
-
-            x_j = x_j * edge_weight * edge_weight_multiplier
+            x_j = (
+                x_j * edge_weight * self.edge_activation_func(self.edge_weight_multiplier)
+            )
         else:
             x_j = x_j * edge_weight
 
@@ -93,6 +89,20 @@ class Connectome(MessagePassing):
             return sig_out.view(-1, 1)
 
         return aggr_out
+
+    @staticmethod
+    def get_edge_activation_func(synaptic_limit, refined_synaptic_data):
+        if synaptic_limit:
+            # Here we are multiplying the edge weight by the edge_weight_multiplier. For biological
+            # plausibility, we might want to make sure that the edge_weight_multiplier is not bigger than 1
+            # Now, if we have the raw synaptic data, all weights are positive, so we need to allow for
+            # negative weights, so edge_weight_multiplier will be \in [-1, 1]
+            # If we have refined synaptic data, which can have negative weights, the edge_weight_multiplier
+            # will be \in [0, 1]
+            if refined_synaptic_data:
+                return torch.sigmoid
+            return torch.tanh
+        return nn.Identity()
 
 
 class FullGraphModel(nn.Module):

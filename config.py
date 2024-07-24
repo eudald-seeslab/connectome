@@ -6,7 +6,7 @@ from PIL import Image
 from debug_utils import debugger_is_active
 
 # Data
-data_type = "two_shapes_yellow"
+data_type = "one_to_five"
 TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
 TESTING_DATA_DIR = os.path.join("images", data_type, "test")
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
@@ -24,13 +24,13 @@ patience = 2
 # None if you want to start from scratch
 resume_checkpoint = None # "m_2024-07-10 18:08_1tn2z4xj.pth"
 
-# Model architecture
+# Model architecture and biological parameters
 NUM_CONNECTOME_PASSES = 4
 neurons = "all"  # "selected" or "all"
 voronoi_criteria = "R7"  #  "R7" or "all"
 random_synapses = False
-train_edges = False
-train_neurons = True
+train_edges = True
+train_neurons = False
 final_layer = "mean"  # "mean" or "nn"
 # Some papers use a subset of neurons to compute the final decision (e.g. https://www-science.org/doi/full/10.1126/sciadv.abq7592)
 # If None, all neurons are used
@@ -42,7 +42,7 @@ eye = "right"  # "left" or "right"
 lambda_func = leaky_relu  # torch activation function
 # we need to normalize the output of the connectome to avoid exploding gradients
 # before applying the activation function (above)
-neuron_normalization = "min_max"  # "log1p" or "min_max"
+neuron_normalization = "log1p"  # "log1p" or "min_max"
 # Shut off some neurons based on their cell_type
 # You can find all the cell types in the adult_data/cell_types.csv
 filtered_celltypes = []
@@ -53,6 +53,8 @@ filtered_celltypes = []
 filtered_fraction = None
 # Updated synaptic data taking into account the excitatory or inhibitory nature of the synapse
 refined_synaptic_data = False
+# Do you want to clip the weights of the connectome, so that they are between 0 and 1?
+synaptic_limit = True
 # droputs: there is a dropout for the neuron activations to simulate that, for some reason
 #  (oscillations, the neuron having fired too recently, etc) the neuron does not fire
 neuron_dropout = 0
@@ -60,7 +62,7 @@ neuron_dropout = 0
 #  the decision making process also has some neurons not available all the time
 decision_dropout = 0
 log_transform_weights = False
-# According to the literature (see https://www.cell.com/cell/fulltext/S0092-8674(17)31498-8), in the flys retina, 
+# According to the literature (see https://www.cell.com/cell/fulltext/S0092-8674(17)31498-8), in the fly's retina, 
 #  the R7 and R8 neurons inhibit each other. Set to true if you want to simulate this behaviour
 inhibitory_r7_r8 = True
 
@@ -78,12 +80,12 @@ small_length = None
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400
-wandb_project = "synaptic_limit"
+wandb_project = "mnist"
 wandb_group = data_type     # you can put something else here
 
 # Plots
 # "radius", "contingency", "distance", "point_num", "stripes", "weber", "colour"
-# if empty, I will try to guess the plots from the classes
+# if empty list, I will try to guess the plots from the classes
 # If None, no plots will be generated
 plot_types = []
 

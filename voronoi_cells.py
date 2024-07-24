@@ -97,7 +97,7 @@ class VoronoiCells:
         for cell_type, color in self.color_map.items():
             points = neuron_data[neuron_data["cell_type"] == cell_type]
             ax.scatter(
-                points["x_axis"], points["y_axis"], color=color, s=5, label=cell_type
+                points["x_axis"], points["y_axis"], color=color, s=3, label=cell_type
             )
         ax.legend(title="", loc="lower left")
 

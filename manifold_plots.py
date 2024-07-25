@@ -70,15 +70,18 @@ def plot_manifold_3d_mult_colours(
     fig.show()
 
 
-def plot_manifold_3d(test_results, algorithm="tsne"):
-    shape_colors = {"circle": "blue", "star": "red"}
+def plot_manifold_3d(test_results, geom="shape", algorithm="tsne"):
+    if geom == "shape":
+        shape_colors = {"circle": "blue", "star": "red"}
+    elif geom == "colour":
+        shape_colors = {"blue": "blue", "yellow": "yellow"}
 
     # Create the 3D scatter plot
     fig = go.Figure()
 
     # Add scatter3d trace for color coding
-    for shape in test_results["shape"].unique():
-        df_shape = test_results[test_results["shape"] == shape]
+    for shape in test_results[geom].unique():
+        df_shape = test_results[test_results[geom] == shape]
         fig.add_trace(
             go.Scatter3d(
                 x=df_shape[f"{algorithm}_Component_1"],

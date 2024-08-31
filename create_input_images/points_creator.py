@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 GENERAL_CONFIG = {
     # so that we can create more images without the names clashing with the previous
-    "version_tag": "",
+    "version_tag": "v3",
     "colour_1": "yellow",
     "colour_2": "blue",
     "boundary_width": 5,
@@ -23,13 +23,13 @@ GENERAL_CONFIG = {
     "init_size": 512,
     "mode": "RGB",
     # these are per colour
-    "min_point_num": 4,
-    "max_point_num": 12,
+    "min_point_num": 1,
+    "max_point_num": 5,
     "attempts_limit": 1000,
 }
 
 
-EASY_RATIOS = [1 / 3, 2 / 5, 1 / 2, 2 / 3, 3 / 4]
+EASY_RATIOS = [1 / 5, 1 / 4, 1 / 3, 2 / 5, 1 / 2, 3 / 5, 2 / 3, 3 / 4]
 HARD_RATIOS = [
     4 / 5,
     5 / 6,

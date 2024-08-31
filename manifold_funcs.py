@@ -1,5 +1,6 @@
 import re
 import torch
+import numpy as np
 from tqdm import tqdm
 from graph_models_helpers import store_intermediate_output
 from plots import guess_your_plots, plot_results
@@ -66,10 +67,7 @@ def manifold_test(model, data_processor, criterion, device, u_config):
             total += batch_size
             total_correct += correct.sum()
 
-    plot_types = guess_your_plots(u_config)
-    final_plots = plot_results(
-        test_results, plot_types=plot_types, classes=u_config.CLASSES
-    )
+
     all_intermediate_outputs = torch.cat(all_intermediate_outputs, dim=0)
     hook.remove()
 
@@ -79,7 +77,7 @@ def manifold_test(model, data_processor, criterion, device, u_config):
     )
     return (
         test_results,
-        final_plots,
+        None,
         total_correct / total,
         all_intermediate_outputs,
         all_labels,
@@ -91,3 +89,28 @@ def extract_details(image_path):
     if match:
         return int(match.group(1)), int(match.group(2)), int(match.group(3))
     return None, None, None
+
+
+def reduce_dimension(df, intermediate, algorithm, n_dimensions):
+    if algorithm == "tsne":
+        from sklearn.manifold import TSNE
+
+        reducer = TSNE(n_components=n_dimensions)
+
+    elif algorithm == "umap":
+        import umap
+
+        reducer = umap.UMAP(n_components=n_dimensions)
+    elif algorithm == "pca":
+        from sklearn.decomposition import PCA
+
+        reducer = PCA(n_components=n_dimensions)
+    else:
+        raise ValueError(f"Unknown algorithm {algorithm}")
+
+    embedding = reducer.fit_transform(intermediate)
+
+    for i in range(n_dimensions):
+        df[f"{algorithm}_Component_{int(i + 1)}"] = embedding[:, i]
+
+    return df

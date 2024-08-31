@@ -119,8 +119,8 @@ def main(wandb_logger, sweep_config=None):
                 if i == 100 and running_loss == first_loss:
                     raise TrainingError("Loss is constant. Training will stop.")
 
-            # save checkpoint (overriding the last)
-            save_checkpoint(model, optimizer, model_name, u_config)
+            # If epoch is None, it will overwrite the previous checkpoint
+            save_checkpoint(model, optimizer, model_name, u_config, epoch=ep if u_config.save_every_checkpoint else None)
             torch.cuda.empty_cache()
 
             logger.info(

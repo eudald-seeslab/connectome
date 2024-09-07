@@ -62,6 +62,7 @@ neuron_dropout = 0
 # decision dropout: there is a dropout for the decision making vector to simulate that
 #  the decision making process also has some neurons not available all the time
 decision_dropout = 0
+# This is to avoid exploding gradients, but I'm not sure it's a great idea, and there are other ways of doing it
 log_transform_weights = False
 # According to the literature (see https://www.cell.com/cell/fulltext/S0092-8674(17)31498-8), in the fly's retina, 
 #  the R7 and R8 neurons inhibit each other. Set to true if you want to simulate this behaviour

@@ -14,6 +14,7 @@ library(stringr)
 library(plotly)
 library(ggplot2)
 theme_set(theme_bw())
+library(ggsci)
 ```
 
 ```{r}
@@ -116,11 +117,24 @@ vis_coords <- vis_coords |>
 ```{r}
 vis_coords |> 
   ggplot(aes(x = x_axis, y = y_axis, colour = cell_type)) + 
-  geom_point() +
+  geom_point(size = 2, alpha = 0.7) +
   xlab("PC1") + 
   ylab("PC2") + 
-  labs(colour="Neuron type")
-ggsave("plots/retina_projection.png", scale=2, dpi=300)
+  scale_color_npg(name = "Neuron Type") +
+  theme_minimal(base_size = 14) + 
+  theme(
+    legend.position = "right",
+    legend.title = element_text(face = "bold"),
+    axis.text = element_blank(),
+    panel.grid = element_blank(),  # Remove grid lines
+    panel.border = element_rect(color = "black", fill = NA)  
+    ) +
+    labs(
+      title = "Projected coordinates of the right eye receptor cells"
+    )
+  coord_fixed(ratio = 1)  # Equal aspect ratio for both axes
+
+ggsave("plots/retina_projection.pdf", width = 10, height = 8, dpi=300)
 ```
 
 

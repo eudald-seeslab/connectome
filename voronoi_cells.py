@@ -73,10 +73,11 @@ class VoronoiCells:
         coords[:, 1] = pixel_num - 1 - coords[:, 1]
         return coords
 
-    def _plot_voronoi_cells(self, ax):
+    def _plot_voronoi_cells(self, ax, show_points=False):
         voronoi_plot_2d(
             self.voronoi,
             ax=ax,
+            show_points=show_points,
             show_vertices=False,
             line_colors="orange",
             line_width=1,
@@ -140,7 +141,7 @@ class VoronoiCells:
                 polygon = [self.voronoi.vertices[i] for i in region]
                 color = rgb_values.loc[region_index, ["r", "g", "b"]]
                 ax.fill(*zip(*polygon), color=color)
-        
+
         self.clip_image(ax)
 
     def clip_image(self, ax):

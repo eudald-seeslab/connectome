@@ -40,12 +40,12 @@ eye = "right"  # "left" or "right"
 # node embedding activation function, as in
 # https://pytorch-geometric.readthedocs.io/en/latest/tutorial/create_gnn.html
 # only for training neurons
-lambda_func = leaky_relu  # torch activation function
+lambda_func = leaky_relu  # any torch activation function
 # we need to normalize the output of the connectome to avoid exploding gradients
 # before applying the activation function (above)
 neuron_normalization = "min_max"  # "log1p" or "min_max"
 # Shut off some neurons based on their cell_type
-# You can find all the cell types in the adult_data/cell_types.csv
+# You can find all the cell types in adult_data/cell_types.csv
 filtered_celltypes = []
 # You can also filter a fraction of the neurons
 # Note: it's a fraction of the number of neurons after filtering by cell type
@@ -67,6 +67,8 @@ log_transform_weights = False
 # According to the literature (see https://www.cell.com/cell/fulltext/S0092-8674(17)31498-8), in the fly's retina, 
 #  the R7 and R8 neurons inhibit each other. Set to true if you want to simulate this behaviour
 inhibitory_r7_r8 = False
+# As of October 2024, there is a new version of the connectome, do you want to use it?
+new_connectome = True
 
 # CUDA stuff
 device_type = "cuda" if cuda.is_available() else "cpu"
@@ -76,7 +78,7 @@ DEVICE = device(device_type)
 randdom_seed = 1714
 
 # Debugging and logging
-debugging = False
+debugging = True
 debug_length = 2
 small_length = 12000
 validation_length = 400

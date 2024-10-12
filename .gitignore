@@ -979,3 +979,7 @@ flyvis/data/connectome/ConnectomeDir_0001/nodes/layer_index/TmY18.h5
 
 # pycharm stuff
 .idea
+
+# new data stuff
+*.feather
+new_data

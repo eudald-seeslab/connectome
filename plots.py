@@ -139,5 +139,7 @@ def guess_your_plots(config_):
         return ["stripes"]
     # if there are numbers smaller than 10, it's guess the numbers
     if all([int(x) < 10 for x in classes]):
-        return ["point_num"]
+        # Except for mnist
+        if not config_.data_type == "mnist":
+            return ["point_num"]
     return []

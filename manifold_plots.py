@@ -1,4 +1,5 @@
 import plotly.graph_objects as go
+import plotly.express as px
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
@@ -70,15 +71,18 @@ def plot_manifold_3d_mult_colours(
     fig.show()
 
 
-def plot_manifold_3d(test_results, algorithm="tsne"):
-    shape_colors = {"circle": "blue", "star": "red"}
+def plot_manifold_3d(test_results, geom="shape", algorithm="tsne"):
+    if geom == "shape":
+        shape_colors = {"circle": "blue", "star": "red"}
+    elif geom == "colour":
+        shape_colors = {"blue": "blue", "yellow": "yellow"}
 
     # Create the 3D scatter plot
     fig = go.Figure()
 
     # Add scatter3d trace for color coding
-    for shape in test_results["shape"].unique():
-        df_shape = test_results[test_results["shape"] == shape]
+    for shape in test_results[geom].unique():
+        df_shape = test_results[test_results[geom] == shape]
         fig.add_trace(
             go.Scatter3d(
                 x=df_shape[f"{algorithm}_Component_1"],
@@ -363,3 +367,19 @@ def create_dash_app_two_sliders(df, algorithm="tsne", port=8050):
 
     # Run the Dash app
     app.run_server(debug=True, port=port)
+
+
+def plot_2D(test_results, algorithm="tsne"):
+    fig = px.scatter(
+        test_results,
+        x=f"{algorithm}_Component_1",
+        y=f"{algorithm}_Component_2",
+        color="colour",
+        labels={
+            f"{algorithm}_Component_1": f"{algorithm} Component 1",
+            f"{algorithm}_Component_2": f"{algorithm} Component 2",
+        },
+        title=f"{algorithm} Plot of Test Results",
+        color_discrete_sequence=px.colors.qualitative.Vivid,
+    )
+    fig.show()

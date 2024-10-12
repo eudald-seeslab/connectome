@@ -7,7 +7,7 @@ cmap = plt.get_cmap("viridis")
 from imageio.v3 import imread
 from scipy.spatial import cKDTree
 
-from complete_training_funcs import get_activation_from_cell_type, assign_cell_type
+from train_funcs import get_activation_from_cell_type, assign_cell_type
 from model_inspection_utils import (
     process_image,
     propagate_data_with_steps,

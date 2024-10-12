@@ -4,7 +4,7 @@ import pandas as pd
 from scipy.spatial import Voronoi, cKDTree, voronoi_plot_2d
 import matplotlib.pyplot as plt
 
-from complete_training_funcs import assign_cell_type
+from train_funcs import assign_cell_type
 
 class VoronoiCells:
     pixel_num = 512
@@ -73,10 +73,11 @@ class VoronoiCells:
         coords[:, 1] = pixel_num - 1 - coords[:, 1]
         return coords
 
-    def _plot_voronoi_cells(self, ax):
+    def _plot_voronoi_cells(self, ax, show_points=False):
         voronoi_plot_2d(
             self.voronoi,
             ax=ax,
+            show_points=show_points,
             show_vertices=False,
             line_colors="orange",
             line_width=1,
@@ -97,7 +98,7 @@ class VoronoiCells:
         for cell_type, color in self.color_map.items():
             points = neuron_data[neuron_data["cell_type"] == cell_type]
             ax.scatter(
-                points["x_axis"], points["y_axis"], color=color, s=5, label=cell_type
+                points["x_axis"], points["y_axis"], color=color, s=3, label=cell_type
             )
         ax.legend(title="", loc="lower left")
 
@@ -140,7 +141,7 @@ class VoronoiCells:
                 polygon = [self.voronoi.vertices[i] for i in region]
                 color = rgb_values.loc[region_index, ["r", "g", "b"]]
                 ax.fill(*zip(*polygon), color=color)
-        
+
         self.clip_image(ax)
 
     def clip_image(self, ax):

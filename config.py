@@ -6,10 +6,9 @@ from PIL import Image
 from debug_utils import debugger_is_active
 
 # Data
-data_type = "one_to_five"
+data_type = "two_shapes_yellow"
 TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
 TESTING_DATA_DIR = os.path.join("images", data_type, "test")
-# get directory names from the training data directory
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 # get one sample of one class to get the image size
 sample_image = os.listdir(os.path.join(TRAINING_DATA_DIR, CLASSES[0]))[0]
@@ -24,8 +23,9 @@ patience = 2
 # Checkpoint
 # None if you want to start from scratch
 resume_checkpoint = None # "m_2024-07-10 18:08_1tn2z4xj.pth"
+save_every_checkpoint = False
 
-# Model architecture
+# Model architecture and biological parameters
 NUM_CONNECTOME_PASSES = 4
 neurons = "all"  # "selected" or "all"
 voronoi_criteria = "R7"  #  "R7" or "all"
@@ -33,6 +33,9 @@ random_synapses = False
 train_edges = False
 train_neurons = True
 final_layer = "mean"  # "mean" or "nn"
+# Some papers use a subset of neurons to compute the final decision (e.g. https://www-science.org/doi/full/10.1126/sciadv.abq7592)
+# If None, all neurons are used
+num_decision_making_neurons = None  # None or a number
 eye = "right"  # "left" or "right"
 # node embedding activation function, as in
 # https://pytorch-geometric.readthedocs.io/en/latest/tutorial/create_gnn.html
@@ -40,7 +43,7 @@ eye = "right"  # "left" or "right"
 lambda_func = leaky_relu  # torch activation function
 # we need to normalize the output of the connectome to avoid exploding gradients
 # before applying the activation function (above)
-neuron_normalization = "log1p"  # "log1p" or "min_max"
+neuron_normalization = "min_max"  # "log1p" or "min_max"
 # Shut off some neurons based on their cell_type
 # You can find all the cell types in the adult_data/cell_types.csv
 filtered_celltypes = []
@@ -51,32 +54,40 @@ filtered_celltypes = []
 filtered_fraction = None
 # Updated synaptic data taking into account the excitatory or inhibitory nature of the synapse
 refined_synaptic_data = False
+# Do you want to clip the weights of the connectome, so that they are between 0 and 1?
+synaptic_limit = True
 # droputs: there is a dropout for the neuron activations to simulate that, for some reason
 #  (oscillations, the neuron having fired too recently, etc) the neuron does not fire
 neuron_dropout = 0
 # decision dropout: there is a dropout for the decision making vector to simulate that
 #  the decision making process also has some neurons not available all the time
 decision_dropout = 0
+# This is to avoid exploding gradients, but I'm not sure it's a great idea, and there are other ways of doing it
 log_transform_weights = False
+# According to the literature (see https://www.cell.com/cell/fulltext/S0092-8674(17)31498-8), in the fly's retina, 
+#  the R7 and R8 neurons inhibit each other. Set to true if you want to simulate this behaviour
+inhibitory_r7_r8 = False
 
 # CUDA stuff
 device_type = "cuda" if cuda.is_available() else "cpu"
 # device_type = "cpu"
 DEVICE = device(device_type)
+# Random seed (it can be set to None)
+randdom_seed = 1714
 
 # Debugging and logging
 debugging = False
 debug_length = 2
-small_length = None
+small_length = 12000
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400
-wandb_project = "synaptic_limit"
+wandb_project = "no_synaptic_limit"
 wandb_group = data_type     # you can put something else here
 
 # Plots
 # "radius", "contingency", "distance", "point_num", "stripes", "weber", "colour"
-# if empty, I will try to guess the plots from the classes
+# if empty list, I will try to guess the plots from the classes
 # If None, no plots will be generated
 plot_types = []
 

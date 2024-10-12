@@ -151,14 +151,25 @@ def module_to_clean_dict(module_):
     }
 
 
-def save_checkpoint(model_, optimizer_, model_name, config_):
-    # create 'models' directory if it doesn't exist
+def save_checkpoint(model_, optimizer_, model_name, config_, epoch=None):
+    if config_.debugging:
+        return
+    
     path_ = os.path.join(os.getcwd(), "models")
+
+    if epoch is not None:
+        model_name = model_name.replace(".pth", f"_{epoch}.pth")
+        path_ = os.path.join(path_, "epoch_checkpoints")
+    
+    # create 'models' directory if it doesn't exist
     os.makedirs(path_, exist_ok=True)
     torch.save(
-        {"model": model_.state_dict(), "optimizer": optimizer_.state_dict()},
+        {"model": model_.state_dict(), "optimizer": optimizer_.state_dict()}, 
         os.path.join(path_, model_name),
-    )
+        )
+    
+    if epoch is not None and epoch > 0:
+        return
     # create an accompanying config file
     # get the config module and create a dictionary from it
     config_dict = module_to_clean_dict(config_)
@@ -184,16 +195,16 @@ def update_config_with_sweep(config, sweep_config):
 
 def process_warnings(u_config, logger):
     if u_config.debugging:
-        logger.warning("WARNING: debugging mode is active.")
+        logger.warning("Debugging mode is active.")
     if u_config.small_length is not None:
-        logger.warning(f"WARNING: small_length is set to {u_config.small_length}.")
+        logger.warning(f"Small_length is set to {u_config.small_length}.")
     if u_config.filtered_celltypes:
         logger.warning(
-            f"WARNING: Filtering neurons by the following cell types: {', '.join(u_config.filtered_celltypes)}."
+            f"Filtering neurons by the following cell types: {', '.join(u_config.filtered_celltypes)}."
         )
     if u_config.filtered_fraction is not None:
         logger.warning(
-            f"WARNING: Filtering a fraction of neurons: {u_config.filtered_fraction}."
+            f"Filtering a fraction of neurons: {u_config.filtered_fraction}."
         )
     if u_config.resume_checkpoint is not None:
         if u_config.num_epochs == 0:
@@ -207,3 +218,7 @@ def process_warnings(u_config, logger):
                 "num_epochs is 0 and resume_checkpoint is None. "
                 "Please set num_epochs to a positive integer."
             )
+    if u_config.num_decision_making_neurons is not None:
+        logger.warning(
+            f"Using only {u_config.num_decision_making_neurons} neurons for decision making."
+        )

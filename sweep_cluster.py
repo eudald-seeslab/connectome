@@ -1,7 +1,7 @@
 # %%
 import argparse
 import itertools
-from complete_training import main
+from train import main
 from wandb_logger import WandBLogger
 import numpy as np
 

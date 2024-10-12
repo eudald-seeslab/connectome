@@ -4,7 +4,7 @@ import multiprocessing
 import pandas as pd
 
 import config
-from complete_training import main
+from train import main
 from wandb_logger import WandBLogger
 
 

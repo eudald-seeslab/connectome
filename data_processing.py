@@ -37,7 +37,9 @@ class CompleteModelsDataProcessor:
         neuron_classification = self._get_neurons(
             config_.filtered_celltypes, config_.filtered_fraction, side=None
             )
-        connections = self._get_connections(config_.refined_synaptic_data)
+        connections = self._get_connections(
+            config_.refined_synaptic_data, config_.new_connectome
+            )
         self.root_ids = self._get_root_ids(neuron_classification, connections)
         self.synaptic_matrix = construct_synaptic_matrix(
             neuron_classification, connections, self.root_ids
@@ -257,11 +259,12 @@ class CompleteModelsDataProcessor:
         return all_neurons
 
     @staticmethod
-    def _get_connections(refined_synaptic_data=False):
+    def _get_connections(refined_synaptic_data=False, new_connectome=False):
         file_char = "_refined" if refined_synaptic_data else ""
+        dir_name = "new_data" if new_connectome else "adult_data"
         return (
             pd.read_csv(
-                f"adult_data/connections{file_char}.csv",
+                os.path.join(dir_name, f"connections{file_char}.csv"),
                 dtype={
                     "pre_root_id": "string",
                     "post_root_id": "string",

@@ -72,13 +72,13 @@ new_connectome = True
 
 # CUDA stuff
 device_type = "cuda" if cuda.is_available() else "cpu"
-# device_type = "cpu"
+device_type = "cpu"
 DEVICE = device(device_type)
 # Random seed (it can be set to None)
 randdom_seed = 1714
 
 # Debugging and logging
-debugging = True
+debugging = False
 debug_length = 2
 small_length = 12000
 validation_length = 400

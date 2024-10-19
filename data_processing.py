@@ -35,7 +35,7 @@ class CompleteModelsDataProcessor:
         self.protected_cell_types = self.retinal_cells + rational_cell_types
         self._check_filtered_neurons(config_.filtered_celltypes)
         neuron_classification = self._get_neurons(
-            config_.filtered_celltypes, config_.filtered_fraction, side=None
+            config_.filtered_celltypes, config_.filtered_fraction, side=None, new_connectome=config_.new_connectome
             )
         connections = self._get_connections(
             config_.refined_synaptic_data, config_.new_connectome
@@ -58,6 +58,7 @@ class CompleteModelsDataProcessor:
             eye=config_.eye,
             neurons=self.neurons,
             voronoi_criteria=config_.voronoi_criteria,
+            new_connectome=config_.new_connectome,
         )
         if config_.voronoi_criteria == "R7":
             self.tesselated_neurons = self.voronoi_cells.get_tesselated_neurons()
@@ -218,9 +219,10 @@ class CompleteModelsDataProcessor:
         # pandas is really bad:
         return neurons.reset_index(drop=True).reset_index()[["root_id", "index"]].rename(columns={"index": "index_id"})
 
-    def _get_neurons(self, filtered_celltpyes=None, filtered_fraction=None, side=None):
+    def _get_neurons(self, filtered_celltpyes=None, filtered_fraction=None, side=None, new_connectome=False):
+        data_dir = "new_data" if new_connectome else "adult_data"
         all_neurons = pd.read_csv(
-            "adult_data/classification.csv",
+            os.path.join(data_dir, "classification.csv"),
             usecols=["root_id", "cell_type", "side"],
             dtype={"root_id": "string"},
         ).fillna("Unknown")

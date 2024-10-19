@@ -79,7 +79,7 @@ class CompleteModelsDataProcessor:
     @property
     def num_classes(self):
         return len(self.classes)
-    
+
     def process_batch(self, imgs, labels):
         """
         Preprocesses a batch of images and labels. This includes reshaping and colouring the images if necessary, 
@@ -122,7 +122,7 @@ class CompleteModelsDataProcessor:
         labels = torch.tensor(labels, dtype=torch.long).to(self.device)
 
         return inputs, labels
-    
+
     @property
     def number_of_synapses(self):
         return self.synaptic_matrix.shape[0]
@@ -156,13 +156,13 @@ class CompleteModelsDataProcessor:
 
     def plot_input_images(self, img):
         fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-        self.voronoi_cells.plot_voronoi_cells_with_neurons(self.tesselated_neurons, axes[0])
-        self.voronoi_cells.plot_voronoi_cells_with_image(img, axes[1])
-        self.plot_neuron_activations(img, axes[2])
+        self.voronoi_cells.plot_input_image(img, axes[0])
+        self.plot_neuron_activations(img, axes[1])
+        self.voronoi_cells.plot_voronoi_cells_with_neurons(self.tesselated_neurons, axes[2])
         plt.tight_layout()
         plt.close("all")
 
-        return fig, "Voronoi - Original - Activations"
+        return fig, "Original -> Voronoi <- Activations"
 
     def plot_neuron_activations(self, img, ax):
         # This is repeated in process_batch, but it's the cleanest way to get the plots
@@ -184,7 +184,7 @@ class CompleteModelsDataProcessor:
         )
         if self.inhibitory_r7_r8:
             neuron_activations = apply_inhibitory_r7_r8(neuron_activations)
-            
+
         neuron_activations["activation"] = neuron_activations.apply(
             get_activation_from_cell_type, axis=1
         )

@@ -113,6 +113,12 @@ class VoronoiCells:
         self._plot_voronoi_cells(ax)
         self.clip_image(ax)
 
+    def plot_input_image(self, image, ax):
+
+        ax.imshow(image, extent=[0, self.pixel_num, 0, self.pixel_num])
+        ax.set_facecolor("black")
+        self.clip_image(ax)
+
     def plot_neuron_activations(self, n_acts, ax):
 
         ax.set_facecolor("black")

@@ -1,0 +1,16 @@
+Coses que podem mirar de testejar:
+
+https://www-nature-com.sabidi.urv.cat/articles/s41586-024-07981-1:
+
+- T2, T3 activated by small objects (https://www-cell-com.sabidi.urv.cat/cell-reports/fulltext/S2211-1247(20)30086-3)
+- Cluster 9 (T2a, Tm21, Tm25, Tm27, TmY3 and Y3) hypothetical object subsystem
+- Cluster 12 is also an object subsystem
+- Cluster 1 is a hypothetical colour subsystem
+- Cluster 3 also
+
+https://www-nature-com.sabidi.urv.cat/articles/s41586-024-07953-5
+- TmY4, TmY9q and TmY9q⟂ are predicted to prefer visual stimuli at the horizontal, q and q⟂ orientations, respectively
+- LC15 responds indiscriminately to any orientation, detecting a disjunction (logical OR) of activity in the three channels.
+- LC10ev corner detector
+
+

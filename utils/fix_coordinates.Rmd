@@ -1,0 +1,158 @@
+---
+title: "More visualizations"
+author: "Eudald"
+date: "2024-10-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(plotly)
+library(readr)
+library(stringr)
+library(glue)
+side_ <- "right"
+```
+
+```{r}
+connections <- read_csv(
+  "new_data/connections.csv", col_types = "cci"
+  ) |> 
+  group_by(pre_root_id, post_root_id) |> 
+  summarise(syn_count = sum(syn_count))
+
+cla <- read_tsv("new_data/neuron_annotations.tsv",
+                col_select = c(root_id, cell_type, side, starts_with("pos")),
+                col_types = "cccddd"
+                ) |> 
+  mutate(across(starts_with("pos"), as.numeric)) |> 
+  rename_with(\(x) str_remove(x, "pos_")) |> 
+  filter(side == side_) |> 
+  select(-side) 
+```
+
+```{r}
+clean_conns <- connections |> 
+  inner_join(cla |> select(root_id), by = c("pre_root_id" = "root_id")) |> 
+  inner_join(cla |> select(root_id), by = c("post_root_id" = "root_id")) |> 
+  ungroup()
+
+clean_cla <- cla |> 
+  inner_join(clean_conns |> distinct(pre_root_id), 
+             by=c("root_id" = "pre_root_id"))
+
+vis_cla <- cla |> 
+  filter(cell_type %in% c("R1-6", "R7", "R8")) 
+```
+
+```{r}
+fig <- plot_ly(vis_cla, x = ~ x, y = ~ y, z = ~ z, color = ~ cell_type)
+fig <- fig |> add_markers(size=.5)
+fig
+```
+
+```{r}
+library(deldir)
+
+# Step 1: Perform PCA on the R1-6 neurons
+pca_r1_6 <- r1_6_data |> 
+  select(x, y, z) |> 
+  prcomp(center = TRUE, scale. = TRUE)
+
+# Add the PCA components to the R1-6 data
+r1_6_data <- r1_6_data |> 
+  mutate(PC1 = pca_r1_6$x[,1], PC2 = pca_r1_6$x[,2])
+
+# Step 2: Create Voronoi cells based on n/6 random R1-6 neurons
+n_r1_6 <- nrow(r1_6_data)
+n_ommatidia <- floor(n_r1_6 / 6)
+
+# Randomly select n/6 R1-6 neurons to define the ommatidia centers
+set.seed(42)  # For reproducibility
+centers_r1_6 <- r1_6_data |> sample_n(n_ommatidia)
+
+# Create Voronoi cells using the selected centers
+voronoi <- deldir(centers_r1_6$PC1, centers_r1_6$PC2)
+
+# Extract Voronoi segment data for plotting
+voronoi_segments <- voronoi$dirsgs |> 
+  as_tibble() |> 
+  rename(x1 = x1, y1 = y1, x2 = x2, y2 = y2)
+
+# Step 3: Assign R7 and R8 neurons to the nearest unoccupied ommatidium (Voronoi cell)
+
+# Function to assign neurons to the nearest unoccupied Voronoi cell
+assign_to_voronoi <- function(neuron_data, voronoi_centers) {
+  neuron_data <- neuron_data |> 
+    mutate(nearest_voronoi = NA_real_, assigned_x = NA_real_, assigned_y = NA_real_)
+  
+  # Create an assignment tracker to store whether an ommatidium is occupied
+  voronoi_centers <- voronoi_centers |> mutate(occupied = FALSE)
+
+  for (i in seq_len(nrow(neuron_data))) {
+    # Calculate distances to each Voronoi center
+    distances <- sqrt((neuron_data$PC1_rescaled[i] - voronoi_centers$PC1)^2 + 
+                      (neuron_data$PC2_rescaled[i] - voronoi_centers$PC2)^2)
+    
+    # Find the nearest unoccupied Voronoi center
+    unoccupied_indices <- which(!voronoi_centers$occupied)
+    nearest_index <- unoccupied_indices[which.min(distances[unoccupied_indices])]
+    
+    # Assign the neuron to the nearest unoccupied ommatidium
+    neuron_data$nearest_voronoi[i] <- nearest_index
+    neuron_data$assigned_x[i] <- voronoi_centers$PC1[nearest_index]
+    neuron_data$assigned_y[i] <- voronoi_centers$PC2[nearest_index]
+    
+    # Mark the ommatidium as occupied
+    voronoi_centers$occupied[nearest_index] <- TRUE
+  }
+  
+  return(neuron_data)
+}
+
+# Perform PCA on R7 and R8 neurons (they will be placed inside the Voronoi cells)
+r7_8_data <- r7_8_data |> 
+  mutate(PC1_rescaled = rescale(PC1_rescaled, to = c(0, 1)),
+         PC2_rescaled = rescale(PC2_rescaled, to = c(0, 1)))
+
+# Initialize assignment status for each ommatidium (none are occupied at the start)
+centers_r1_6 <- centers_r1_6 |> mutate(occupied_r7 = FALSE, occupied_r8 = FALSE)
+
+# Assign R7 neurons to the nearest unoccupied Voronoi cells
+r7_data <- assign_to_voronoi(r7_8_data |> filter(cell_type == "R7"), centers_r1_6)
+
+# Mark the R7-assigned ommatidia as occupied for R7 neurons
+centers_r1_6$occupied_r7[r7_data$nearest_voronoi] <- TRUE
+
+# Assign R8 neurons to the nearest unoccupied Voronoi cells
+r8_data <- assign_to_voronoi(r7_8_data |> filter(cell_type == "R8"), centers_r1_6)
+
+# Step 4: Visualize the results with Voronoi cells and neuron assignments
+ggplot() +
+  geom_point(data = r1_6_data, aes(x = PC1, y = PC2, color = "R1-6"), alpha = 0.8) +
+  geom_point(data = r7_data, aes(x = assigned_x, y = assigned_y, color = "R7"), alpha = 0.8) +
+  geom_jitter(data = r8_data, aes(x = assigned_x, y = assigned_y, color = "R8"), alpha = 0.8, width = .1, height = .1) +
+  geom_segment(data = voronoi_segments, aes(x = x1, y = y1, xend = x2, yend = y2), color = "black", linetype = "dashed") +
+  labs(x = "PC1", y = "PC2", title = "Voronoi-based Neuron Assignment in Ommatidia (R7 and R8)") +
+  theme_minimal()
+```
+
+```{r}
+bind_rows(r1_6_data, r7_data, r8_data) |>
+  select(root_id, cell_type, x, y, z, PC1, PC2, x_axis = assigned_x, y_axis = assigned_y) |>
+  write_csv(glue("new_data/{side_}_visual_positions_all_neurons.csv"))
+
+
+bind_rows(r1_6_data, r7_data, r8_data) |>
+  select(root_id, cell_type, x, y, z, PC1, PC2, x_axis = assigned_x, y_axis = assigned_y) |>
+  filter(abs(x_axis) <= 1.5 & abs(y_axis) <= 1.5) |>
+  write_csv(glue("new_data/{side_}_visual_positions_selected_neurons.csv"))
+```
+
+```{r}
+
+```
+

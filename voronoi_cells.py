@@ -16,9 +16,9 @@ class VoronoiCells:
     index_map = None
     color_map = {"R1-6": "gray", "R7": "red", "R8p": "green", "R8y": "blue"}
 
-    def __init__(self, eye="right", neurons="all", voronoi_criteria="all"):
+    def __init__(self, eye="right", neurons="all", voronoi_criteria="all", new_connectome=False):
         self.img_coords = self.get_image_coords(self.pixel_num)
-        self.neuron_data = self._get_visual_neurons_data(neurons, eye)
+        self.neuron_data = self._get_visual_neurons_data(neurons, eye, new_connectome)
         # if we use the R7 neurons as centers, we can create them already,
         # since they are fixed
         if voronoi_criteria == "R7":
@@ -45,9 +45,10 @@ class VoronoiCells:
         return self.query_points(self.img_coords)
 
     @staticmethod
-    def _get_visual_neurons_data(neurons, side="right"):
+    def _get_visual_neurons_data(neurons, side="right", new_connectome=False):
         file = f"{side}_visual_positions_{neurons}_neurons.csv"
-        data_path = os.path.join("adult_data", file)
+        data_dir = "new_data" if new_connectome else "adult_data"
+        data_path = os.path.join(data_dir, file)
 
         return pd.read_csv(data_path).drop(columns=["x", "y", "z", "PC1", "PC2"])
 
@@ -112,6 +113,11 @@ class VoronoiCells:
         # Plot Voronoi diagram
         self._plot_voronoi_cells(ax)
         self.clip_image(ax)
+
+    def plot_input_image(self, image, ax):
+
+        ax.imshow(image, extent=[0, self.pixel_num, 0, self.pixel_num])
+
 
     def plot_neuron_activations(self, n_acts, ax):
 

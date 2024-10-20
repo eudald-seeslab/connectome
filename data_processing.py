@@ -35,7 +35,7 @@ class CompleteModelsDataProcessor:
         self.protected_cell_types = self.retinal_cells + rational_cell_types
         self._check_filtered_neurons(config_.filtered_celltypes)
         neuron_classification = self._get_neurons(
-            config_.filtered_celltypes, config_.filtered_fraction, side=None
+            config_.filtered_celltypes, config_.filtered_fraction, side=None, new_connectome=config_.new_connectome
             )
         connections = self._get_connections(
             config_.refined_synaptic_data, config_.new_connectome
@@ -58,6 +58,7 @@ class CompleteModelsDataProcessor:
             eye=config_.eye,
             neurons=self.neurons,
             voronoi_criteria=config_.voronoi_criteria,
+            new_connectome=config_.new_connectome,
         )
         if config_.voronoi_criteria == "R7":
             self.tesselated_neurons = self.voronoi_cells.get_tesselated_neurons()
@@ -79,7 +80,7 @@ class CompleteModelsDataProcessor:
     @property
     def num_classes(self):
         return len(self.classes)
-    
+
     def process_batch(self, imgs, labels):
         """
         Preprocesses a batch of images and labels. This includes reshaping and colouring the images if necessary, 
@@ -122,7 +123,7 @@ class CompleteModelsDataProcessor:
         labels = torch.tensor(labels, dtype=torch.long).to(self.device)
 
         return inputs, labels
-    
+
     @property
     def number_of_synapses(self):
         return self.synaptic_matrix.shape[0]
@@ -156,13 +157,13 @@ class CompleteModelsDataProcessor:
 
     def plot_input_images(self, img):
         fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-        self.voronoi_cells.plot_voronoi_cells_with_neurons(self.tesselated_neurons, axes[0])
-        self.voronoi_cells.plot_voronoi_cells_with_image(img, axes[1])
-        self.plot_neuron_activations(img, axes[2])
+        self.voronoi_cells.plot_input_image(img, axes[0])
+        self.plot_neuron_activations(img, axes[1])
+        self.voronoi_cells.plot_voronoi_cells_with_neurons(self.tesselated_neurons, axes[2])
         plt.tight_layout()
         plt.close("all")
 
-        return fig, "Voronoi - Original - Activations"
+        return fig, "Original -> Voronoi <- Activations"
 
     def plot_neuron_activations(self, img, ax):
         # This is repeated in process_batch, but it's the cleanest way to get the plots
@@ -184,7 +185,7 @@ class CompleteModelsDataProcessor:
         )
         if self.inhibitory_r7_r8:
             neuron_activations = apply_inhibitory_r7_r8(neuron_activations)
-            
+
         neuron_activations["activation"] = neuron_activations.apply(
             get_activation_from_cell_type, axis=1
         )
@@ -218,9 +219,10 @@ class CompleteModelsDataProcessor:
         # pandas is really bad:
         return neurons.reset_index(drop=True).reset_index()[["root_id", "index"]].rename(columns={"index": "index_id"})
 
-    def _get_neurons(self, filtered_celltpyes=None, filtered_fraction=None, side=None):
+    def _get_neurons(self, filtered_celltpyes=None, filtered_fraction=None, side=None, new_connectome=False):
+        data_dir = "new_data" if new_connectome else "adult_data"
         all_neurons = pd.read_csv(
-            "adult_data/classification.csv",
+            os.path.join(data_dir, "classification.csv"),
             usecols=["root_id", "cell_type", "side"],
             dtype={"root_id": "string"},
         ).fillna("Unknown")

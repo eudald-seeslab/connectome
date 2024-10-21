@@ -16,7 +16,7 @@ image_size = Image.open(os.path.join(TRAINING_DATA_DIR, CLASSES[0], sample_image
 
 # Training configuration
 num_epochs = 100
-batch_size = 32
+batch_size = 16
 base_lr = 0.0003
 patience = 2
 
@@ -78,7 +78,7 @@ DEVICE = device(device_type)
 randdom_seed = 1714
 
 # Debugging and logging
-debugging = False
+debugging = True
 debug_length = 2
 small_length = 12000
 validation_length = 400

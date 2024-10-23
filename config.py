@@ -6,7 +6,7 @@ from PIL import Image
 from debug_utils import debugger_is_active
 
 # Data
-data_type = "two_shapes_yellow"
+data_type = "circle_80_110_jitter"
 TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
 TESTING_DATA_DIR = os.path.join("images", data_type, "test")
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
@@ -26,7 +26,7 @@ resume_checkpoint = None # "m_2024-07-10 18:08_1tn2z4xj.pth"
 save_every_checkpoint = False
 
 # Model architecture and biological parameters
-NUM_CONNECTOME_PASSES = 4
+NUM_CONNECTOME_PASSES = 3
 neurons = "all"  # "selected" or "all"
 voronoi_criteria = "R7"  #  "R7" or "all"
 random_synapses = False
@@ -64,11 +64,18 @@ neuron_dropout = 0
 decision_dropout = 0
 # This is to avoid exploding gradients, but I'm not sure it's a great idea, and there are other ways of doing it
 log_transform_weights = False
-# According to the literature (see https://www.cell.com/cell/fulltext/S0092-8674(17)31498-8), in the fly's retina, 
+# According to the literature (see https://www.cell.com/cell/fulltext/S0092-8674(17)31498-8), in the fly's retina,
 #  the R7 and R8 neurons inhibit each other. Set to true if you want to simulate this behaviour
 inhibitory_r7_r8 = False
 # As of October 2024, there is a new version of the connectome, do you want to use it?
 new_connectome = True
+# You can choose the cell types used to compute the final decision
+# If None, the ones in adult_data/rational_cell_types.csv will be used
+cluster1 = ["Tm16", "Mi4", "Pm13", "TmY10", "TmY11", "Pm14", "Li11", "Tm36", "MLt2", "Sm04", "Sm32", "Li03", "Li13", "Li23", "Li28", "Li27", "Tm7", "LLPt", "Li32", "Li29", 
+            "Tm5f", "Mlt5", "Tm34", "Sm13", "Tm7", "Li02", "Li30", "Li05", "Li06", "Tm35", "Tm8b", "Li07", "Li04", "Li33", "TmY31", "Tm5c", "Tm20", "Tm33", "Li01", "Tm37", "Tm8a", "Li10",
+            "Tm5d", "Tm32", "Tm31", "Tm5b", "Tm5a", "Sm31", "Li09", "Li12"]
+original_rational = ["KCapbp-m", "KCapbp-ap2", "KCapbp-ap1"]
+rational_cell_types = original_rational
 
 # CUDA stuff
 device_type = "cuda" if cuda.is_available() else "cpu"
@@ -78,9 +85,9 @@ DEVICE = device(device_type)
 randdom_seed = 1714
 
 # Debugging and logging
-debugging = True
+debugging = False
 debug_length = 2
-small_length = 12000
+small_length = None
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400

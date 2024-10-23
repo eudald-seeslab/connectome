@@ -31,7 +31,7 @@ class CompleteModelsDataProcessor:
     retinal_cells = ["R1-6", "R7", "R8"]
 
     def __init__(self, config_, data_dir=None):
-        rational_cell_types = self.get_rational_cell_types()
+        rational_cell_types = self.get_rational_cell_types(config_.rational_cell_types)
         self.protected_cell_types = self.retinal_cells + rational_cell_types
         self._check_filtered_neurons(config_.filtered_celltypes)
         neuron_classification = self._get_neurons(
@@ -202,10 +202,15 @@ class CompleteModelsDataProcessor:
         return synaptic_matrix
 
     @staticmethod
-    def get_rational_cell_types():
+    def get_rational_cell_types_from_file():
         return pd.read_csv(
             "adult_data/rational_cell_types.csv", index_col=0
         ).index.tolist()
+
+    def get_rational_cell_types(self, rational_cell_types):
+        if rational_cell_types is None:
+            return self.get_rational_cell_types_from_file()
+        return rational_cell_types
 
     @staticmethod
     def _get_root_ids(classification, connections):

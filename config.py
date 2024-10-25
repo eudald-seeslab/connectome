@@ -6,7 +6,7 @@ from PIL import Image
 from debug_utils import debugger_is_active
 
 # Data
-data_type = "circle_80_110_jitter"
+data_type = "one_to_ten"
 TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
 TESTING_DATA_DIR = os.path.join("images", data_type, "test")
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
@@ -79,7 +79,7 @@ rational_cell_types = original_rational
 
 # CUDA stuff
 device_type = "cuda" if cuda.is_available() else "cpu"
-device_type = "cpu"
+# device_type = "cpu"
 DEVICE = device(device_type)
 # Random seed (it can be set to None)
 randdom_seed = 1714

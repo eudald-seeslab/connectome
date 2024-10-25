@@ -11,11 +11,11 @@ logging.basicConfig(level=logging.INFO)
 
 GENERAL_CONFIG = {
     # so that we can create more images without the names clashing with the previous
-    "version_tag": "v3",
+    "version_tag": "",
     "colour_1": "yellow",
     "colour_2": "blue",
     "boundary_width": 5,
-    "background_colour": "#000000", # for gray: #808080
+    "background_colour": "#000000",  # for gray: #808080
     "yellow": "#fffe04",
     "blue": "#0003f9",
     "min_point_radius": 20,
@@ -24,7 +24,7 @@ GENERAL_CONFIG = {
     "mode": "RGB",
     # these are per colour
     "min_point_num": 1,
-    "max_point_num": 5,
+    "max_point_num": 10,
     "attempts_limit": 1000,
 }
 
@@ -36,8 +36,8 @@ HARD_RATIOS = [
     7 / 8,
     8 / 9,
     9 / 10,
-#    10 / 11,
-#    11 / 12,
+    #    10 / 11,
+    #    11 / 12,
 ]
 
 
@@ -107,10 +107,10 @@ class ImageGenerator:
     def create_and_save_once(self, name, n1, n2, equalized):
         img = self.create_image(n1, n2, equalized)
         img.save(
-        os.path.join(
-            self.config["IMG_DIR"],
-            self.config["colour_1"] if n1 > n2 else self.config["colour_2"],
-            name,
+            os.path.join(
+                self.config["IMG_DIR"],
+                self.config["colour_1"] if n1 > n2 else self.config["colour_2"],
+                name,
             )
         )
 
@@ -165,10 +165,10 @@ def get_config():
         help="Directory to save images.",
     )
     parser.add_argument(
-        "--easy", action='store_true', help="Use easier ratios between colours."
+        "--easy", action="store_true", help="Use easier ratios between colours."
     )
     parser.add_argument(
-        "--one_colour", action='store_true', help="Use only one colour."
+        "--one_colour", action="store_true", help="Use only one colour."
     )
     args = parser.parse_args()
 

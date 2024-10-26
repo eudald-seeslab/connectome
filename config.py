@@ -23,6 +23,7 @@ patience = 2
 # Checkpoint
 # None if you want to start from scratch
 resume_checkpoint = None # "m_2024-07-10 18:08_1tn2z4xj.pth"
+
 save_every_checkpoint = False
 
 # Model architecture and biological parameters
@@ -53,7 +54,7 @@ filtered_celltypes = []
 # None if you don't want to filter
 filtered_fraction = None
 # Updated synaptic data taking into account the excitatory or inhibitory nature of the synapse
-refined_synaptic_data = False
+refined_synaptic_data = True
 # Do you want to clip the weights of the connectome, so that they are between 0 and 1?
 synaptic_limit = True
 # droputs: there is a dropout for the neuron activations to simulate that, for some reason
@@ -79,13 +80,13 @@ rational_cell_types = original_rational
 
 # CUDA stuff
 device_type = "cuda" if cuda.is_available() else "cpu"
-# device_type = "cpu"
+device_type = "cpu"
 DEVICE = device(device_type)
 # Random seed (it can be set to None)
 randdom_seed = 1714
 
 # Debugging and logging
-debugging = False
+debugging = True
 debug_length = 2
 small_length = None
 validation_length = 400

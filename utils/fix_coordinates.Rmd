@@ -14,6 +14,8 @@ library(plotly)
 library(readr)
 library(stringr)
 library(glue)
+library(scales)
+library(deldir)
 side_ <- "right"
 ```
 
@@ -55,7 +57,9 @@ fig
 ```
 
 ```{r}
-library(deldir)
+# Step 1: Subset the data into two groups (R1-6 and R7/R8)
+r1_6_data <- vis_cla |> filter(cell_type == "R1-6")
+r7_8_data <- vis_cla |> filter(cell_type %in% c("R7", "R8"))
 
 # Step 1: Perform PCA on the R1-6 neurons
 pca_r1_6 <- r1_6_data |> 
@@ -113,10 +117,24 @@ assign_to_voronoi <- function(neuron_data, voronoi_centers) {
   return(neuron_data)
 }
 
-# Perform PCA on R7 and R8 neurons (they will be placed inside the Voronoi cells)
+# Step 4: Project R7 and R8 neurons using the same PCA as R1-6
+
+# Select the position columns (x, y, z) for R7 and R8 neurons
+r7_8_data <- vis_cla |> 
+  filter(cell_type %in% c("R7", "R8"))
+
+# Use the PCA model fitted on R1-6 neurons to project the R7 and R8 neurons
+r7_8_projected <- predict(pca_r1_6, newdata = r7_8_data |> select(x, y, z))
+
+# Add the PCA projection (PC1, PC2) to the R7 and R8 data
 r7_8_data <- r7_8_data |> 
-  mutate(PC1_rescaled = rescale(PC1_rescaled, to = c(0, 1)),
-         PC2_rescaled = rescale(PC2_rescaled, to = c(0, 1)))
+  mutate(PC1 = r7_8_projected[, 1],
+         PC2 = r7_8_projected[, 2])
+
+# Rescale the PCA-projected positions for R7 and R8 neurons to match the [0, 1] range
+r7_8_data <- r7_8_data |> 
+  mutate(PC1_rescaled = rescale(PC1, to = c(0, 1)),
+         PC2_rescaled = rescale(PC2, to = c(0, 1)))
 
 # Initialize assignment status for each ommatidium (none are occupied at the start)
 centers_r1_6 <- centers_r1_6 |> mutate(occupied_r7 = FALSE, occupied_r8 = FALSE)
@@ -141,18 +159,34 @@ ggplot() +
 ```
 
 ```{r}
-bind_rows(r1_6_data, r7_data, r8_data) |>
+r1_6_data |> 
+  mutate(assigned_x = PC1, assigned_y = PC2) |>
+  bind_rows(r7_data, r8_data) |>
   select(root_id, cell_type, x, y, z, PC1, PC2, x_axis = assigned_x, y_axis = assigned_y) |>
+  # rescale x and y axis to go from 0 to 512
+  mutate(x_axis = (x_axis - min(x_axis)) / (max(x_axis) - min(x_axis)) * 512,
+         y_axis = (y_axis - min(y_axis)) / (max(y_axis) - min(y_axis)) * 512) |>
   write_csv(glue("new_data/{side_}_visual_positions_all_neurons.csv"))
 
 
-bind_rows(r1_6_data, r7_data, r8_data) |>
+r1_6_data |> 
+  mutate(assigned_x = PC1, assigned_y = PC2) |>
+  bind_rows(r7_data, r8_data) |>
   select(root_id, cell_type, x, y, z, PC1, PC2, x_axis = assigned_x, y_axis = assigned_y) |>
   filter(abs(x_axis) <= 1.5 & abs(y_axis) <= 1.5) |>
+    # rescale x and y axis to go from 0 to 512
+  mutate(x_axis = (x_axis - min(x_axis)) / (max(x_axis) - min(x_axis)) * 512,
+         y_axis = (y_axis - min(y_axis)) / (max(y_axis) - min(y_axis)) * 512) |>
   write_csv(glue("new_data/{side_}_visual_positions_selected_neurons.csv"))
 ```
 
-```{r}
+Clean neuron information and create a file to be used for classification
 
+```{r}
+read_tsv("new_data/neuron_annotations.tsv",
+                col_select = c(root_id, cell_type, side),
+                col_types = "ccc"
+                ) |> 
+  write_csv("new_data/classification.csv")
 ```
 

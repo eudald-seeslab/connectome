@@ -3,7 +3,6 @@ import torch
 import numpy as np
 from tqdm import tqdm
 from graph_models_helpers import store_intermediate_output
-from plots import guess_your_plots, plot_results
 from utils import (
     clean_model_outputs,
     get_image_paths,
@@ -30,6 +29,8 @@ def correct_test_results(test_results):
 def manifold_test(model, data_processor, criterion, device, u_config):
     batch_size = u_config.batch_size
 
+    # The hook is in the decision making dropout layer because it is the last layer
+    #  before the final layer, and the hook applies _after_ the layer you apply it to
     hook = model.decision_making_dropout.register_forward_hook(
         store_intermediate_output
     )

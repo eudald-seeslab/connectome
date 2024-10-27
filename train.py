@@ -21,10 +21,12 @@ from utils import (
     update_config_with_sweep,
     update_results_df,
     update_running_loss,
+    UserInterruptException,
 )
 from data_processing import CompleteModelsDataProcessor
 from graph_models import FullGraphModel
 from utils import clean_model_outputs
+import streamlit as st
 
 from wandb_logger import WandBLogger
 
@@ -36,8 +38,7 @@ warnings.filterwarnings(
 )
 
 
-
-def main(wandb_logger, sweep_config=None):
+def main(wandb_logger, sweep_config=None, stop_flag=None):
 
     u_config = update_config_with_sweep(config, sweep_config)
 
@@ -86,6 +87,10 @@ def main(wandb_logger, sweep_config=None):
             already_selected = []
             running_loss, total_correct, total = 0, 0, 0
             for i in tqdm(range(iterations)):
+
+                if stop_flag:
+                    raise UserInterruptException("Training interrupted by user via streamlit.")
+
                 batch_files, already_selected = select_random_images(
                     training_images, batch_size, already_selected
                 )
@@ -96,7 +101,7 @@ def main(wandb_logger, sweep_config=None):
                 if i % u_config.wandb_images_every == 0:
                     p, title = data_processor.plot_input_images(images[0])
                     wandb_logger.log_image(p, basename(batch_files[0]), title)
-                    
+
                 inputs, labels = data_processor.process_batch(images, labels)
 
                 optimizer.zero_grad()
@@ -132,7 +137,7 @@ def main(wandb_logger, sweep_config=None):
                 logger.info("Early stopping activated. Continuing to testing.")
                 break
 
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, UserInterruptException):
         logger.warning("Training interrupted by user. Continuing to testing.")
 
     # test

@@ -6,9 +6,9 @@ from PIL import Image
 from debug_utils import debugger_is_active
 
 # Data
-data_type = "one_to_ten"
-TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
-TESTING_DATA_DIR = os.path.join("images", data_type, "test")
+data_dir = "one_to_ten"
+TRAINING_DATA_DIR = os.path.join("images", data_dir, "train")
+TESTING_DATA_DIR = os.path.join("images", data_dir, "test")
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 # get one sample of one class to get the image size
 sample_image = os.listdir(os.path.join(TRAINING_DATA_DIR, CLASSES[0]))[0]
@@ -93,7 +93,7 @@ validation_length = 400
 wandb_ = True
 wandb_images_every = 400
 wandb_project = "no_synaptic_limit"
-wandb_group = data_type     # you can put something else here
+wandb_group = data_dir     # you can put something else here
 
 # Plots
 # "radius", "contingency", "distance", "point_num", "stripes", "weber", "colour"

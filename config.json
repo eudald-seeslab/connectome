@@ -1,0 +1,14 @@
+{
+    "data_dir": "one_to_ten",
+    "train_edges": false,
+    "train_neurons": true,
+    "refined_synaptic_data": true,
+    "synaptic_limit": true,
+    "wandb_project": "no_synaptic_limit",
+    "device_type": "cpu",
+    "NUM_CONNECTOME_PASSES": 4,
+    "batch_size": 8,
+    "resume_checkpoint": null,
+    "random_synapses": false,
+    "debugging": false
+}

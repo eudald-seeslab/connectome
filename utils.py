@@ -222,3 +222,9 @@ def process_warnings(u_config, logger):
         logger.warning(
             f"Using only {u_config.num_decision_making_neurons} neurons for decision making."
         )
+
+
+class UserInterruptException(Exception):
+    """Custom exception to handle user interrupt via streamlit."""
+
+    pass

@@ -221,7 +221,7 @@ class CompleteModelsDataProcessor:
             classification["root_id"].isin(connections["pre_root_id"])
             | classification["root_id"].isin(connections["post_root_id"])
         ]
-        # pandas is really bad:
+        # pandas is terrible:
         return neurons.reset_index(drop=True).reset_index()[["root_id", "index"]].rename(columns={"index": "index_id"})
 
     def _get_neurons(self, filtered_celltpyes=None, filtered_fraction=None, side=None, new_connectome=False):
@@ -241,7 +241,7 @@ class CompleteModelsDataProcessor:
             ]
 
         if filtered_fraction is not None:
-            # We can't filter neurons in the retina or decision making neurons
+            # We can't filter neurons in the retina or decision-making neurons
             # so we separate these first
             protected_neurons = all_neurons[
                 all_neurons["cell_type"].isin(self.protected_cell_types)
@@ -287,5 +287,5 @@ class CompleteModelsDataProcessor:
     def _check_filtered_neurons(self, filtered_cell_types):
         if not set(filtered_cell_types).isdisjoint(self.protected_cell_types):
             raise ValueError(
-                f"You can't fitler out any of the following cell types: {', '.join(self.forbidden_cell_types)}"
+                f"You can't filter out any of the following cell types: {', '.join(self.forbidden_cell_types)}"
             )

@@ -1,4 +1,74 @@
-# connectome
+# Connectome Project
+
+## Environment Setup
+
+This guide will help you set up the Python environment required to run this project.
+
+### Prerequisites
+
+- Python 3.10
+- CUDA 12.4 (if using GPU)
+
+### Setting up the Virtual Environment
+
+1. Clone the repository and navigate to the project directory:
+```bash
+cd connectome
+```
+
+2. Create and activate a new virtual environment:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+3. Install the required packages:
+```bash
+# Install PyTorch first
+pip install -r requirements
+
+# torch-scatter is a bit special
+pip install torch-scatter -f https://data.pyg.org/whl/torch-2.5.0+cu124.html
+```
+
+### Verifying the Installation
+
+You can verify your installation by running:
+```bash
+python -c "import torch; print('PyTorch version:', torch.__version__); print('CUDA available:', torch.cuda.is_available())"
+python -c "import torch_scatter; print('torch_scatter imported successfully')"
+```
+
+### Common Issues
+
+- If you get permission errors when creating the virtual environment, ensure you have the required packages:
+  ```bash
+  sudo apt-get update
+  sudo apt-get install python3-venv python3-pip
+  ```
+
+- Make sure to match the CUDA version exactly when installing torch-scatter. Using incorrect CUDA versions can lead to undefined symbol errors.
+
+### Create training data
+
+ANS:
+```bash
+python create_input_images/points_creator.py --img_dir images/one_to_ten/train --easy
+python create_input_images/points_creator.py --img_dir images/one_to_ten/test --easy
+```
+
+Shapes:
+```bash
+python create_input_images/shapes_creator.py --shapes
+```
+Colors:
+
+```bash
+python create_input_images/shapes_creator.py --colors
+```
+
+--------------------
+
 
 Instructions for when cuda breaks
 

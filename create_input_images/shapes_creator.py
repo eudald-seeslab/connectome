@@ -5,7 +5,6 @@ import random
 from PIL import Image, ImageDraw
 import numpy as np
 from tqdm import tqdm
-import data_config as config
 
 random.seed(1714)
 
@@ -18,6 +17,13 @@ COLOUR_MAP = {
     "green": "#00ff00",
 }
 
+TRAIN_NUM = 200
+TEST_NUM = 200
+MIN_RADIUS = 80
+MAX_RADIUS = 110
+JITTER = True
+COLOR_TASK_BASE_SHAPE = "circle"
+
 
 class ShapesGenerator:
     """
@@ -25,41 +31,56 @@ class ShapesGenerator:
 
     Attributes:
         shape (str): The shape of the geometric objects.
-        train_num (int): The number of training images to generate.
-        test_num (int): The number of test images to generate.
-        min_radius (int): The minimum radius of the shapes.
-        max_radius (int): The maximum radius of the shapes.
-        jitter (bool): Whether to add jitter to the shapes.
         colours (list): The colours of the shapes.
+        task_type (str): The type of task to generate images for.
     """
 
-    background_colour = "#000000"  # #808080 for gray
+    background_colour = "#000000"
     boundary_width = 5
     img_paths = {}
 
-    def __init__(self, shape, train_num, test_num, min_radius, max_radius, jitter, colours=["blue", "yellow"]):
-        self.img_dir = (
-            f"images/{shape}_{min_radius}_{max_radius}{'_jitter' if jitter else ''}"
-        )
-        try:
-            self.colours = {col: COLOUR_MAP[col] for col in colours}
-        except KeyError:
-            raise ValueError(f"One or more of your colours are not implemented. Choices are {', '.join(COLOUR_MAP.keys())}.")
+    def __init__(
+        self,
+        shapes,
+        colors,
+        task_type=None,
+    ):
+        self.shapes = shapes if isinstance(shapes, list) else [shapes]
+        self.colors = {col: COLOUR_MAP[col] for col in colors}
+        self.task_type = task_type
 
-        self.shape = shape
-        self.train_num = train_num
-        self.test_num = test_num
-        self.min_radius = min_radius
-        self.max_radius = max_radius
-        self.jitter = jitter
+        # Set directory based on task
+        if task_type == "two_shapes":
+            self.img_dir = "images/two_shapes"
+        elif task_type == "two_colors":
+            self.img_dir = "images/two_colors"
+        else:
+            self.img_dir = f"images/{'_'.join(shapes)}_{'_'.join(colors)}"
+
+        self.train_num = TRAIN_NUM
+        self.test_num = TEST_NUM
+        self.min_radius = MIN_RADIUS
+        self.max_radius = MAX_RADIUS
+        self.jitter = JITTER
+        self.img_paths = {}
 
     def create_dirs(self):
-        """Creates necessary directories to store generated images."""
+        """Creates class directories for train and test sets."""
         for t in ["train", "test"]:
-            for i, col in enumerate(self.colours.keys()):
-                self.img_paths[f"{t}_{i + 1}"] = os.path.join(self.img_dir, t, col)
+            if self.task_type == "two_shapes":
+                classes = self.shapes  # classes are shapes
+            elif self.task_type == "two_colors":
+                classes = self.colors.keys()  # classes are colors
+            else:
+                # For custom, each shape-color combination is a class
+                classes = [
+                    f"{shape}_{color}" for shape in self.shapes for color in self.colors
+                ]
 
-        [os.makedirs(p, exist_ok=True) for p in self.img_paths.values()]
+            for class_name in classes:
+                path_key = f"{t}_{class_name}"
+                self.img_paths[path_key] = os.path.join(self.img_dir, t, class_name)
+                os.makedirs(self.img_paths[path_key], exist_ok=True)
 
     def get_vertices(self, shape: str, center: tuple, radius: int) -> list:
         """Calculate vertices of the shapes based on the given parameters."""
@@ -128,102 +149,147 @@ class ShapesGenerator:
 
         return image, distance, angle
 
-    def save_image(self, image, radius, dist_from_center, angle, it, path):
+    def save_image(self, image, shape, radius, dist_from_center, angle, it, path):
         file_path = os.path.join(
             path,
-            f"{self.shape}_{radius}_{dist_from_center}_{angle}_{it}_v2.png",
+            f"{shape}_{radius}_{dist_from_center}_{angle}_{it}_v2.png",
         )
         image.save(file_path)
 
     def generate_images(self):
-        """Generate sets of training and test images."""
-        min_radius, max_radius = self.min_radius, self.max_radius
-        shape = self.shape
-        jitter = self.jitter
-
+        """Generate all images for training and testing."""
         self.create_dirs()
-        radius_range = max_radius - min_radius
-        print(
-            f"Creating images for {shape} with {radius_range * self.train_num} "
-            f"training images and {radius_range * self.test_num} test images."
-        )
 
-        for i in tqdm(range(self.train_num)):
-            for r in range(min_radius, max_radius):
-                for i, col in enumerate(self.colours.values()):
-                    image, dist, angle = self.draw_shape(shape, r, col, jitter)
-                    self.save_image(
-                        image, r, dist, angle, i, self.img_paths[f"train_{i + 1}"]
-                    )
+        for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
+            for i in tqdm(range(num_images)):
+                for radius in range(self.min_radius, self.max_radius):
+                    if self.task_type == "two_shapes":
+                        # For shape recognition: each shape in yellow is a class
+                        for shape in self.shapes:
+                            image, dist, angle = self.draw_shape(shape, radius, self.colors['yellow'], self.jitter)
+                            self.save_image(image, shape, radius, dist, angle, i, self.img_paths[f"{phase}_{shape}"])
+                    elif self.task_type == "two_colors":
+                        # For color recognition: circle in each color is a class
+                        for color_name, color_code in self.colors.items():
+                            image, dist, angle = self.draw_shape(
+                                COLOR_TASK_BASE_SHAPE, radius, color_code, self.jitter
+                            )
+                            self.save_image(
+                                image,
+                                COLOR_TASK_BASE_SHAPE,
+                                radius,
+                                dist,
+                                angle,
+                                i,
+                                self.img_paths[f"{phase}_{color_name}"],
+                            )
+                    else:
+                        # For custom: each shape-color combination is a class
+                        for shape in self.shapes:
+                            for color_name, color_code in self.colors.items():
+                                image, dist, angle = self.draw_shape(shape, radius, color_code, self.jitter)
+                                class_name = f"{shape}_{color_name}"
+                                self.save_image(
+                                    image,
+                                    shape,
+                                    radius,
+                                    dist,
+                                    angle,
+                                    i,
+                                    self.img_paths[f"{phase}_{class_name}"],
+                                )
 
-        for i in tqdm(range(self.test_num)):
-            for r in range(min_radius, max_radius):
-                for i, col in enumerate(self.colours.values()):
-                    image, dist, angle = self.draw_shape(shape, r, col, jitter)
-                    self.save_image(
-                        image, r, dist, angle, i, self.img_paths[f"test_{i + 1}"]
-                    )
 
-    def create_dirs_all_classes(self):
-        """Create directories for all classes of shapes."""
-        for t in ["train", "test"]:
-            for i, cl in enumerate(config.CLASSES):
-                self.img_paths[f"{t}_{i}"] = os.path.join(self.img_dir, t, cl)
-        [os.makedirs(p, exist_ok=True) for p in self.img_paths.values()]
+def parse_arguments():
+    parser = argparse.ArgumentParser(
+        description="Generate shapes for training visual models."
+    )
 
-    def generate_all_classes(self):
-        """Generate all classes of shapes."""
-        jitter = self.jitter
-        min_radius, max_radius = self.min_radius, self.max_radius
-        shapes = config.CLASSES
-        colour = self.colours[list(self.colours.keys())[0]]
+    # Create mutually exclusive group for the two main use cases
+    task_group = parser.add_mutually_exclusive_group(required=True)
+    task_group.add_argument(
+        "--shape_recognition",
+        action="store_true",
+        help="Generate dataset for shape recognition (circles and stars in yellow)",
+    )
+    task_group.add_argument(
+        "--color_recognition",
+        action="store_true",
+        help="Generate dataset for color recognition (circles in yellow and blue)",
+    )
+    task_group.add_argument(
+        "--custom",
+        action="store_true",
+        help="Generate custom dataset with specified shapes and colors",
+    )
 
-        self.create_dirs_all_classes()
+    # Custom options for advanced users
+    parser.add_argument(
+        "--shapes",
+        nargs="+",
+        choices=["circle", "star", "triangle", "square"],
+        help="Shapes to generate (only used with --custom)",
+    )
+    parser.add_argument(
+        "--colors",
+        nargs="+",
+        choices=["yellow", "blue", "red", "green"],
+        help="Colors to use (only used with --custom)",
+    )
 
-        radius_range = max_radius - min_radius
-        print(
-            f"Creating images for {', '.join(shapes)} with {len(shapes) * radius_range * self.train_num} "
-            f"training images and {len(shapes) * radius_range * self.test_num} test images."
-        )
-        for i in tqdm(range(self.train_num)):
-            for j, shape in enumerate(shapes):
-                for r in range(min_radius, max_radius):
-                    image, dist, angle = self.draw_shape(shape, r, colour, jitter)
-                    self.save_image(
-                        image, r, dist, angle, i, self.img_paths[f"train_{j}"]
-                    )
-
-        for i in tqdm(range(self.test_num)):
-            for j, shape in enumerate(shapes):
-                for r in range(min_radius, max_radius):
-                    image, dist, angle = self.draw_shape(shape, r, colour, jitter)
-                    self.save_image(
-                        image, r, dist, angle, i, self.img_paths[f"test_{j}"]
-                    )
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
-        description="Generate shapes."
+        description="Generate shapes for training visual models."
+    )
+
+    # Main task selection
+    task_group = parser.add_mutually_exclusive_group(required=True)
+    task_group.add_argument(
+        "--shapes", action="store_true", help="Generate circles and stars in yellow"
+    )
+    task_group.add_argument(
+        "--colors", action="store_true", help="Generate circles in yellow and blue"
+    )
+    task_group.add_argument(
+        "--custom",
+        action="store_true",
+        help="Generate custom combination of shapes and colors",
+    )
+
+    # Custom options
+    parser.add_argument(
+        "--custom_shapes",
+        nargs="+",
+        choices=["circle", "star", "triangle", "square"],
+        help="Shapes to generate (only used with --custom)",
     )
     parser.add_argument(
-        "--all_shapes",
-        action='store_true',
-        help="Are we trying to differentiate among several shapes?",
+        "--custom_colors",
+        nargs="+",
+        choices=["yellow", "blue", "red", "green"],
+        help="Colors to use (only used with --custom)",
     )
+
     args = parser.parse_args()
 
-    img_gen = ShapesGenerator(
-        shape=config.SHAPE,
-        train_num=config.TRAIN_NUM,
-        test_num=config.TEST_NUM,
-        min_radius=config.MIN_RADIUS,
-        max_radius=config.MAX_RADIUS,
-        jitter=config.JITTER,
-        colours=config.COLOURS,
-    )
-    if args.all_shapes:
-        img_gen.generate_all_classes()
-    else:
-        img_gen.generate_images()
+    if args.shapes:
+        img_gen = ShapesGenerator(
+            shapes=["circle", "star"], colors=["yellow"], task_type="two_shapes"
+        )
+    elif args.colors:
+        img_gen = ShapesGenerator(
+            shapes=["circle"], colors=["yellow", "blue"], task_type="two_colors"
+        )
+    else:  # custom
+        if not args.custom_shapes or not args.custom_colors:
+            raise ValueError(
+                "Must specify both --custom_shapes and --custom_colors with --custom"
+            )
+        img_gen = ShapesGenerator(
+            shapes=args.custom_shapes, colors=args.custom_colors, task_type="custom"
+        )
+
+    img_gen.generate_images()

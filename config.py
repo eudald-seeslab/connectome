@@ -9,7 +9,7 @@ from debug_utils import debugger_is_active
 data_type = "two_shapes"
 train_edges = True
 train_neurons = False
-refined_synaptic_data = False
+refined_synaptic_data = True
 synaptic_limit = True
 
 # Other often changing vars

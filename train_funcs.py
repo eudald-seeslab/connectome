@@ -86,7 +86,7 @@ def get_activation_from_cell_type(row):
             return row["r"]
         case _:
             raise ValueError("Invalid cell type")
-        
+
 
 def apply_inhibitory_r7_r8(neuron_activations):
     mask = neuron_activations["b"] > neuron_activations[["r", "g"]].max(axis=1)
@@ -133,8 +133,20 @@ def construct_synaptic_matrix(neuron_classification, connections, root_ids):
         suffixes=("_pre", "_post"),
     )
 
-    return coo_matrix(
-        (ix_conns["syn_count"], (ix_conns["index_id_pre"], ix_conns["index_id_post"])),
+    # Sum duplicate connections
+    grouped = (
+        ix_conns.groupby(["index_id_pre", "index_id_post"])["syn_count"]
+        .sum()
+        .reset_index()
+    )
+
+    matrix = coo_matrix(
+        (grouped["syn_count"], (grouped["index_id_pre"], grouped["index_id_post"])),
         shape=(len(root_ids), len(root_ids)),
         dtype=np.int32,
     )
+
+    # Force the matrix to sum duplicates and sort indices
+    matrix.sum_duplicates()
+
+    return matrix

@@ -5,8 +5,24 @@ from torch.nn.functional import leaky_relu
 from PIL import Image
 from debug_utils import debugger_is_active
 
+# Paper variables
+data_type = "two_shapes"
+train_edges = True
+train_neurons = False
+refined_synaptic_data = False
+synaptic_limit = True
+
+# Other often changing vars
+batch_size = 8
+resume_checkpoint = None # "m_2024-12-26_10:41_kvnrw9t1.pth"
+NUM_CONNECTOME_PASSES = 4
+random_synapses = True
+device_type = "cuda" if cuda.is_available() else "cpu"
+# device_type = "cpu"
+debugging = True
+wandb_project = "cell_killer"
+
 # Data
-data_type = "one_to_ten"
 TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
 TESTING_DATA_DIR = os.path.join("images", data_type, "test")
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
@@ -16,23 +32,13 @@ image_size = Image.open(os.path.join(TRAINING_DATA_DIR, CLASSES[0], sample_image
 
 # Training configuration
 num_epochs = 100
-batch_size = 16
 base_lr = 0.0003
 patience = 2
-
-# Checkpoint
-# None if you want to start from scratch
-resume_checkpoint = None # "m_2024-07-10 18:08_1tn2z4xj.pth"
-
 save_every_checkpoint = False
 
 # Model architecture and biological parameters
-NUM_CONNECTOME_PASSES = 3
 neurons = "all"  # "selected" or "all"
 voronoi_criteria = "R7"  #  "R7" or "all"
-random_synapses = False
-train_edges = False
-train_neurons = True
 final_layer = "mean"  # "mean" or "nn"
 # Some papers use a subset of neurons to compute the final decision (e.g. https://www-science.org/doi/full/10.1126/sciadv.abq7592)
 # If None, all neurons are used
@@ -47,16 +53,12 @@ lambda_func = leaky_relu  # any torch activation function
 neuron_normalization = "min_max"  # "log1p" or "min_max"
 # Shut off some neurons based on their cell_type
 # You can find all the cell types in adult_data/cell_types.csv
-filtered_celltypes = []
+filtered_celltypes = ["L1", "L2", "L3", "L4", "L5"]
 # You can also filter a fraction of the neurons
 # Note: it's a fraction of the number of neurons after filtering by cell type
 # and also after removing the protected cell types (R1-6, R7, R8, and the rational cell types)
 # None if you don't want to filter
 filtered_fraction = None
-# Updated synaptic data taking into account the excitatory or inhibitory nature of the synapse
-refined_synaptic_data = True
-# Do you want to clip the weights of the connectome, so that they are between 0 and 1?
-synaptic_limit = True
 # droputs: there is a dropout for the neuron activations to simulate that, for some reason
 #  (oscillations, the neuron having fired too recently, etc) the neuron does not fire
 neuron_dropout = 0
@@ -79,20 +81,17 @@ original_rational = ["KCapbp-m", "KCapbp-ap2", "KCapbp-ap1"]
 rational_cell_types = original_rational
 
 # CUDA stuff
-device_type = "cuda" if cuda.is_available() else "cpu"
-device_type = "cpu"
 DEVICE = device(device_type)
 # Random seed (it can be set to None)
 randdom_seed = 1714
 
 # Debugging and logging
-debugging = True
+
 debug_length = 2
 small_length = None
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400
-wandb_project = "no_synaptic_limit"
 wandb_group = data_type     # you can put something else here
 
 # Plots

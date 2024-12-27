@@ -127,11 +127,11 @@ def log_results(results, type, shuffled=False):
     acc = 1 - acc if acc < 0.5 else acc
     wandb.log({f"{type}{s_char}_acc": acc})
 
-def get_data():
+def get_data(main_dir="adult_data"):
     # horrible data stuff
     connections = (
         pd.read_csv(
-            "adult_data/connections.csv",
+            os.path.join(main_dir, "connections.csv"),
             dtype={
                 "pre_root_id": "string",
                 "post_root_id": "string",
@@ -142,13 +142,14 @@ def get_data():
         .sum("syn_count")
         .reset_index()
     )
-    # set weights to 1 because we are not training 
+    # set weights to 1 because we are not training
     connections["weight"] = 1
     # reshuffle column post_rood_id of the dataframe connections
     shuffled_connections = connections.copy()
     shuffled_connections["post_root_id"] = np.random.permutation(
         connections["post_root_id"]
     )
+    # NOTE: this is the same for both and it's in adult_data for historical reasons
     right_root_ids = pd.read_csv("adult_data/root_id_to_index.csv")
     all_neurons = (
         pd.read_csv("adult_data/classification_clean.csv")
@@ -156,9 +157,10 @@ def get_data():
         .fillna("Unknown")
     )
     neuron_data = pd.read_csv(
-        "adult_data/right_visual_positions_selected_neurons.csv",
+        os.path.join(main_dir, "right_visual_positions_selected_neurons.csv"),
         dtype={"root_id": "string"},
     ).drop(columns=["x", "y", "z", "PC1", "PC2"])
+    # NOTE: this is the same for both and it's in adult_data for historical reasons
     all_coords = pd.read_csv(
         "adult_data/all_coords_clean.csv", dtype={"root_id": "string"}
     )
@@ -175,13 +177,13 @@ def get_data():
     return connections, shuffled_connections, all_neurons, neuron_data, all_coords
 
 
-def main(points, shapes):
+def main(points, shapes, main_dir="adult_data"):
 
     if not points and not shapes:
         print("Please select at least one of the two options.")
         return
-    
-    connections, shuffled_connections, all_neurons, neuron_data, all_coords = get_data()
+
+    connections, shuffled_connections, all_neurons, neuron_data, all_coords = get_data(main_dir)
 
     blue_yellow = ["#FFD700", "#0000FF"]
     sns.set_palette(blue_yellow)

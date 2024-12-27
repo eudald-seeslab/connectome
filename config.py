@@ -19,7 +19,7 @@ NUM_CONNECTOME_PASSES = 4
 random_synapses = True
 device_type = "cuda" if cuda.is_available() else "cpu"
 # device_type = "cpu"
-debugging = True
+debugging = False
 wandb_project = "cell_killer"
 
 # Data

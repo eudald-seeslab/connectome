@@ -134,13 +134,13 @@ def main(wandb_logger, sweep_config=None):
             )
             torch.cuda.empty_cache()
 
+            accuracy = total_correct / total
             logger.info(
                 f"Finished epoch {ep + 1} with loss {running_loss / total} "
-                f"and accuracy {total_correct / total}."
+                f"and accuracy {accuracy}."
             )
-
-            if early_stopping.should_stop(running_loss):
-                logger.info("Early stopping activated. Continuing to testing.")
+            if early_stopping.should_stop(running_loss, accuracy):
+                logger.info("Early stopping activated - either perfect accuracy reached or no improvement in loss.")
                 break
 
     except KeyboardInterrupt:

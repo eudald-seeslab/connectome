@@ -46,21 +46,28 @@ def normalize_non_zero(x, batch, epsilon=1e-5):
 
 
 class EarlyStopping:
-    def __init__(self, patience=10, min_delta=0):
+    def __init__(self, patience=10, min_delta=0, target_accuracy=1.0):
         """
         Args:
             patience (int): How many epochs to wait after last time validation loss improved.
                             Default: 10
             min_delta (float): Minimum change in the monitored quantity to qualify as an improvement.
                                Default: 0
+            target_accuracy (float): Target accuracy to stop training at.
+                                    Default: 1.0
         """
         self.patience = patience
         self.min_delta = min_delta
+        self.target_accuracy = target_accuracy
         self.counter = 0
         self.best_loss = None
         self.early_stop = False
 
-    def _update_stopper(self, loss):
+    def _update_stopper(self, loss, accuracy=None):
+        if accuracy is not None and accuracy >= self.target_accuracy:
+            self.early_stop = True
+            return
+
         if self.best_loss is None:
             self.best_loss = loss
         elif self.best_loss - loss > self.min_delta:
@@ -71,8 +78,8 @@ class EarlyStopping:
             if self.counter >= self.patience:
                 self.early_stop = True
 
-    def should_stop(self, loss):
-        self._update_stopper(loss)
+    def should_stop(self, loss, accuracy=None):
+        self._update_stopper(loss, accuracy)
         return self.early_stop
 
 

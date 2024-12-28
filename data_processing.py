@@ -35,7 +35,7 @@ class DataProcessor:
         np.random.seed(config_.random_seed)
         torch.manual_seed(config_.random_seed)
         random.seed(config_.random_seed)
-        
+
         rational_cell_types = self.get_rational_cell_types(config_.rational_cell_types)
         self.protected_cell_types = self.retinal_cells + rational_cell_types
         self._check_filtered_neurons(config_.filtered_celltypes)
@@ -252,11 +252,8 @@ class DataProcessor:
         side=None,
         new_connectome=False,
     ):
-        # For deterministic results
-        pd.options.mode.chained_assignment = None
-        pd.options.mode.use_inf_as_na = True
-        
         data_dir = "new_data" if new_connectome else "adult_data"
+
         all_neurons = pd.read_csv(
             os.path.join(data_dir, "classification.csv"),
             usecols=["root_id", "cell_type", "side"],
@@ -264,60 +261,53 @@ class DataProcessor:
         ).fillna("Unknown")
 
         if filtered_celltpyes is not None and len(filtered_celltpyes) > 0:
-            # If it's not a list, make it so
-            if not isinstance(filtered_celltpyes, list):
-                filtered_celltpyes = [filtered_celltpyes]
-            all_neurons = all_neurons[
-                ~all_neurons["cell_type"].isin(filtered_celltpyes)
-            ]
+            before_filter = len(all_neurons)
+            all_neurons = all_neurons[~all_neurons["cell_type"].isin(filtered_celltpyes)]
 
         if filtered_fraction is not None:
-            # We can't filter neurons in the retina or decision-making neurons
-            # so we separate these first
             protected_neurons = all_neurons[
                 all_neurons["cell_type"].isin(self.protected_cell_types)
             ]
             non_protected_neurons = all_neurons[
                 ~all_neurons["cell_type"].isin(self.protected_cell_types)
             ]
-            # We filter the non-protected neurons
+
             non_protected_neurons = non_protected_neurons.sample(
                 frac=filtered_fraction, random_state=1714
             )
-            # And put everything back together
             all_neurons = pd.concat([protected_neurons, non_protected_neurons])
 
         if side is not None:
             all_neurons = all_neurons[all_neurons["side"] == side]
 
-        # check that we have neurons
-        if all_neurons.empty:
-            raise ValueError("No neurons found with the given criteria.")
-
         return all_neurons
+
 
     @staticmethod
     def _get_connections(refined_synaptic_data=False, new_connectome=False):
-        # For deterministic results
-        pd.options.mode.chained_assignment = None
-        pd.options.mode.use_inf_as_na = True
-
         file_char = "_refined" if refined_synaptic_data else ""
         dir_name = "new_data" if new_connectome else "adult_data"
-        return (
-            pd.read_csv(
-                os.path.join(dir_name, f"connections{file_char}.csv"),
-                dtype={
-                    "pre_root_id": "string",
-                    "post_root_id": "string",
-                    "syn_count": np.int32,
-                },
-                index_col=0,
-            )
-            .groupby(["pre_root_id", "post_root_id"])
+
+        filename = os.path.join(dir_name, f"connections{file_char}.csv")
+        connections = pd.read_csv(
+            filename,
+            dtype={
+                "pre_root_id": "string",
+                "post_root_id": "string",
+                "syn_count": np.int32,
+            },
+            index_col=0,
+        )
+
+        grouped = (
+            connections.groupby(["pre_root_id", "post_root_id"])
             .sum("syn_count")
             .reset_index()
         )
+
+        sorted_conns = grouped.sort_values(["pre_root_id", "post_root_id"])
+
+        return sorted_conns
 
     def _check_filtered_neurons(self, filtered_cell_types):
         if not set(filtered_cell_types).isdisjoint(self.protected_cell_types):

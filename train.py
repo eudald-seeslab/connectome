@@ -1,8 +1,10 @@
 import datetime
 import os
 from os.path import basename
+import random
 import traceback
 import warnings
+import numpy as np
 import torch
 from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
@@ -41,7 +43,9 @@ def main(wandb_logger, sweep_config=None):
     u_config = update_config_with_sweep(config, sweep_config)
 
     random_generator = torch.Generator(device=u_config.DEVICE)
-    random_generator.manual_seed(u_config.randdom_seed)
+    random_generator.manual_seed(u_config.random_seed)
+    np.random.seed(u_config.random_seed)
+    random.seed(u_config.random_seed)
 
     # if it's not a sweep, we need to initialize wandb
     if sweep_config is None:

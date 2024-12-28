@@ -1,4 +1,5 @@
 import os
+import random
 from matplotlib import pyplot as plt
 import matplotlib
 
@@ -31,6 +32,10 @@ class DataProcessor:
     retinal_cells = ["R1-6", "R7", "R8"]
 
     def __init__(self, config_, data_dir=None):
+        np.random.seed(config_.random_seed)
+        torch.manual_seed(config_.random_seed)
+        random.seed(config_.random_seed)
+        
         rational_cell_types = self.get_rational_cell_types(config_.rational_cell_types)
         self.protected_cell_types = self.retinal_cells + rational_cell_types
         self._check_filtered_neurons(config_.filtered_celltypes)
@@ -247,6 +252,10 @@ class DataProcessor:
         side=None,
         new_connectome=False,
     ):
+        # For deterministic results
+        pd.options.mode.chained_assignment = None
+        pd.options.mode.use_inf_as_na = True
+        
         data_dir = "new_data" if new_connectome else "adult_data"
         all_neurons = pd.read_csv(
             os.path.join(data_dir, "classification.csv"),
@@ -289,6 +298,10 @@ class DataProcessor:
 
     @staticmethod
     def _get_connections(refined_synaptic_data=False, new_connectome=False):
+        # For deterministic results
+        pd.options.mode.chained_assignment = None
+        pd.options.mode.use_inf_as_na = True
+
         file_char = "_refined" if refined_synaptic_data else ""
         dir_name = "new_data" if new_connectome else "adult_data"
         return (

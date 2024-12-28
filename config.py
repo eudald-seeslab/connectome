@@ -14,7 +14,7 @@ synaptic_limit = True
 
 # Other often changing vars
 batch_size = 8
-resume_checkpoint = None # "m_2024-12-26_10:41_kvnrw9t1.pth"
+resume_checkpoint = None  # "m_2024-12-26_10:41_kvnrw9t1.pth"
 NUM_CONNECTOME_PASSES = 4
 random_synapses = True
 device_type = "cuda" if cuda.is_available() else "cpu"
@@ -28,7 +28,9 @@ TESTING_DATA_DIR = os.path.join("images", data_type, "test")
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 # get one sample of one class to get the image size
 sample_image = os.listdir(os.path.join(TRAINING_DATA_DIR, CLASSES[0]))[0]
-image_size = Image.open(os.path.join(TRAINING_DATA_DIR, CLASSES[0], sample_image)).size[0]
+image_size = Image.open(os.path.join(TRAINING_DATA_DIR, CLASSES[0], sample_image)).size[
+    0
+]
 
 # Training configuration
 num_epochs = 100
@@ -53,7 +55,48 @@ lambda_func = leaky_relu  # any torch activation function
 neuron_normalization = "min_max"  # "log1p" or "min_max"
 # Shut off some neurons based on their cell_type
 # You can find all the cell types in adult_data/cell_types.csv
-filtered_celltypes = ["L1", "L2", "L3", "L4", "L5"]
+filtered_celltypes = [
+    "T2a",
+    "Tm3",
+    "T4c",
+    "T3",
+    "T4d",
+    "Tm1",
+    "T5c",
+    "Tm2",
+    "T5b",
+    "T4b",
+    "Tm9",
+    "Tm4",
+    "Tm20",
+    "T5a",
+    "T5d",
+    "T4a",
+    "T2",
+    "T1",
+    "Tm6",
+    "TmY18",
+    "TmY5a",
+    "Tm5Y",
+    "TmY3",
+    "TmY9",
+    "Tm12",
+    "Tm5c",
+    "Tm5a",
+    "TmY4",
+    "TmY11",
+    "TmY14",
+    "Tm16",
+    "TmYem1",
+    "TmY20",
+    "Tm8",
+    "TmY15",
+    "TmY16",
+    "Tlp1",
+    "Tlp4",
+    "TPMN",
+    "Tlp6",
+]
 # You can also filter a fraction of the neurons
 # Note: it's a fraction of the number of neurons after filtering by cell type
 # and also after removing the protected cell types (R1-6, R7, R8, and the rational cell types)
@@ -74,16 +117,65 @@ inhibitory_r7_r8 = False
 new_connectome = True
 # You can choose the cell types used to compute the final decision
 # If None, the ones in adult_data/rational_cell_types.csv will be used
-cluster1 = ["Tm16", "Mi4", "Pm13", "TmY10", "TmY11", "Pm14", "Li11", "Tm36", "MLt2", "Sm04", "Sm32", "Li03", "Li13", "Li23", "Li28", "Li27", "Tm7", "LLPt", "Li32", "Li29", 
-            "Tm5f", "Mlt5", "Tm34", "Sm13", "Tm7", "Li02", "Li30", "Li05", "Li06", "Tm35", "Tm8b", "Li07", "Li04", "Li33", "TmY31", "Tm5c", "Tm20", "Tm33", "Li01", "Tm37", "Tm8a", "Li10",
-            "Tm5d", "Tm32", "Tm31", "Tm5b", "Tm5a", "Sm31", "Li09", "Li12"]
+cluster1 = [
+    "Tm16",
+    "Mi4",
+    "Pm13",
+    "TmY10",
+    "TmY11",
+    "Pm14",
+    "Li11",
+    "Tm36",
+    "MLt2",
+    "Sm04",
+    "Sm32",
+    "Li03",
+    "Li13",
+    "Li23",
+    "Li28",
+    "Li27",
+    "Tm7",
+    "LLPt",
+    "Li32",
+    "Li29",
+    "Tm5f",
+    "Mlt5",
+    "Tm34",
+    "Sm13",
+    "Tm7",
+    "Li02",
+    "Li30",
+    "Li05",
+    "Li06",
+    "Tm35",
+    "Tm8b",
+    "Li07",
+    "Li04",
+    "Li33",
+    "TmY31",
+    "Tm5c",
+    "Tm20",
+    "Tm33",
+    "Li01",
+    "Tm37",
+    "Tm8a",
+    "Li10",
+    "Tm5d",
+    "Tm32",
+    "Tm31",
+    "Tm5b",
+    "Tm5a",
+    "Sm31",
+    "Li09",
+    "Li12",
+]
 original_rational = ["KCapbp-m", "KCapbp-ap2", "KCapbp-ap1"]
 rational_cell_types = original_rational
 
 # CUDA stuff
 DEVICE = device(device_type)
 # Random seed (it can be set to None)
-randdom_seed = 1714
+random_seed = 1714
 
 # Debugging and logging
 
@@ -92,7 +184,7 @@ small_length = None
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400
-wandb_group = data_type     # you can put something else here
+wandb_group = data_type  # you can put something else here
 
 # Plots
 # "radius", "contingency", "distance", "point_num", "stripes", "weber", "colour"

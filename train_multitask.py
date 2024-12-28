@@ -21,7 +21,7 @@ from utils import (
     update_results_df,
     update_running_loss,
 )
-from data_processing import CompleteModelsDataProcessor
+from data_processing import DataProcessor
 from graph_models import FullGraphModel
 from utils import clean_model_outputs
 from wandb_logger import WandBLogger
@@ -59,10 +59,8 @@ def main(wandb_logger):
 
     for data_dir in data_dirs_config:
         training_data_dir = data_dir["TRAINING_DATA_DIR"]
-        training_images.append(
-            get_image_paths(training_data_dir, config.small_length)
-        )
-        data_processors.append(CompleteModelsDataProcessor(config, data_dir=training_data_dir))
+        training_images.append(get_image_paths(training_data_dir, config.small_length))
+        data_processors.append(DataProcessor(config, data_dir=training_data_dir))
         criterions.append(CrossEntropyLoss())
         early_stoppings.append(EarlyStopping(patience=config.patience, min_delta=0))
 

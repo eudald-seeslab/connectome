@@ -25,7 +25,7 @@ from voronoi_cells import VoronoiCells
 from utils import paths_to_labels
 
 
-class CompleteModelsDataProcessor:
+class DataProcessor:
 
     tesselated_neurons = None
     retinal_cells = ["R1-6", "R7", "R8"]
@@ -35,11 +35,14 @@ class CompleteModelsDataProcessor:
         self.protected_cell_types = self.retinal_cells + rational_cell_types
         self._check_filtered_neurons(config_.filtered_celltypes)
         neuron_classification = self._get_neurons(
-            config_.filtered_celltypes, config_.filtered_fraction, side=None, new_connectome=config_.new_connectome
-            )
+            config_.filtered_celltypes,
+            config_.filtered_fraction,
+            side=None,
+            new_connectome=config_.new_connectome,
+        )
         connections = self._get_connections(
             config_.refined_synaptic_data, config_.new_connectome
-            )
+        )
         self.root_ids = self._get_root_ids(neuron_classification, connections)
         self.synaptic_matrix = construct_synaptic_matrix(
             neuron_classification, connections, self.root_ids
@@ -68,7 +71,9 @@ class CompleteModelsDataProcessor:
         self.dtype = config_.dtype
         self.device = config_.DEVICE
         # This is somewhat convoluted to be compatible with the multitask training
-        self.classes = sorted(os.listdir(data_dir)) if data_dir is not None else config_.CLASSES
+        self.classes = (
+            sorted(os.listdir(data_dir)) if data_dir is not None else config_.CLASSES
+        )
 
         self.edges = torch.tensor(
             np.array([self.synaptic_matrix.row, self.synaptic_matrix.col]),
@@ -83,7 +88,7 @@ class CompleteModelsDataProcessor:
 
     def process_batch(self, imgs, labels):
         """
-        Preprocesses a batch of images and labels. This includes reshaping and colouring the images if necessary, 
+        Preprocesses a batch of images and labels. This includes reshaping and colouring the images if necessary,
         tesselating it according to the voronoi cells from the connectome, and getting the neuron activations for each
         cell. Finally, it constructs the graphs of this batch with the appropriate activations.
 
@@ -140,7 +145,12 @@ class CompleteModelsDataProcessor:
 
     def calculate_neuron_activations(self, voronoi_averages):
         neuron_activations = pd.concat(
-            [get_neuron_activations(self.tesselated_neurons, a, self.inhibitory_r7_r8) for a in voronoi_averages],
+            [
+                get_neuron_activations(
+                    self.tesselated_neurons, a, self.inhibitory_r7_r8
+                )
+                for a in voronoi_averages
+            ],
             axis=1,
         )
         neuron_activations.index = neuron_activations.index.astype("string")
@@ -159,7 +169,9 @@ class CompleteModelsDataProcessor:
         fig, axes = plt.subplots(1, 3, figsize=(15, 5))
         self.voronoi_cells.plot_input_image(img, axes[0])
         self.plot_neuron_activations(img, axes[1])
-        self.voronoi_cells.plot_voronoi_cells_with_neurons(self.tesselated_neurons, axes[2])
+        self.voronoi_cells.plot_voronoi_cells_with_neurons(
+            self.tesselated_neurons, axes[2]
+        )
         plt.tight_layout()
         plt.close("all")
 
@@ -222,9 +234,19 @@ class CompleteModelsDataProcessor:
             | classification["root_id"].isin(connections["post_root_id"])
         ]
         # pandas is terrible:
-        return neurons.reset_index(drop=True).reset_index()[["root_id", "index"]].rename(columns={"index": "index_id"})
+        return (
+            neurons.reset_index(drop=True)
+            .reset_index()[["root_id", "index"]]
+            .rename(columns={"index": "index_id"})
+        )
 
-    def _get_neurons(self, filtered_celltpyes=None, filtered_fraction=None, side=None, new_connectome=False):
+    def _get_neurons(
+        self,
+        filtered_celltpyes=None,
+        filtered_fraction=None,
+        side=None,
+        new_connectome=False,
+    ):
         data_dir = "new_data" if new_connectome else "adult_data"
         all_neurons = pd.read_csv(
             os.path.join(data_dir, "classification.csv"),
@@ -277,7 +299,7 @@ class CompleteModelsDataProcessor:
                     "post_root_id": "string",
                     "syn_count": np.int32,
                 },
-                index_col=0
+                index_col=0,
             )
             .groupby(["pre_root_id", "post_root_id"])
             .sum("syn_count")

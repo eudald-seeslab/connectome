@@ -22,7 +22,7 @@ from utils import (
     update_results_df,
     update_running_loss,
 )
-from data_processing import CompleteModelsDataProcessor
+from data_processing import DataProcessor
 from graph_models import FullGraphModel
 from utils import clean_model_outputs
 
@@ -30,11 +30,10 @@ from wandb_logger import WandBLogger
 
 warnings.filterwarnings(
     "ignore",
-    message="invalid value encountered in cast", 
+    message="invalid value encountered in cast",
     category=RuntimeWarning,
     module="wandb.sdk.data_types.image",
 )
-
 
 
 def main(wandb_logger, sweep_config=None):
@@ -62,8 +61,10 @@ def main(wandb_logger, sweep_config=None):
 
     # get data and prepare model
     training_images = get_image_paths(u_config.TRAINING_DATA_DIR, u_config.small_length)
-    data_processor = CompleteModelsDataProcessor(u_config)
-    model = FullGraphModel(data_processor, u_config, random_generator).to(u_config.DEVICE)
+    data_processor = DataProcessor(u_config)
+    model = FullGraphModel(data_processor, u_config, random_generator).to(
+        u_config.DEVICE
+    )
     optimizer = torch.optim.Adam(model.parameters(), lr=u_config.base_lr)
     criterion = CrossEntropyLoss()
     early_stopping = EarlyStopping(patience=u_config.patience, min_delta=0)
@@ -96,7 +97,7 @@ def main(wandb_logger, sweep_config=None):
                 if i % u_config.wandb_images_every == 0:
                     p, title = data_processor.plot_input_images(images[0])
                     wandb_logger.log_image(p, basename(batch_files[0]), title)
-                    
+
                 inputs, labels = data_processor.process_batch(images, labels)
 
                 optimizer.zero_grad()
@@ -120,7 +121,13 @@ def main(wandb_logger, sweep_config=None):
                     raise TrainingError("Loss is constant. Training will stop.")
 
             # If epoch is None, it will overwrite the previous checkpoint
-            save_checkpoint(model, optimizer, model_name, u_config, epoch=ep if u_config.save_every_checkpoint else None)
+            save_checkpoint(
+                model,
+                optimizer,
+                model_name,
+                u_config,
+                epoch=ep if u_config.save_every_checkpoint else None,
+            )
             torch.cuda.empty_cache()
 
             logger.info(
@@ -182,7 +189,9 @@ if __name__ == "__main__":
 
     logger = get_logger("ct", config.debugging)
 
-    wandb_logger = WandBLogger(config.wandb_project, config.wandb_, config.wandb_images_every)
+    wandb_logger = WandBLogger(
+        config.wandb_project, config.wandb_, config.wandb_images_every
+    )
     try:
         main(wandb_logger)
 

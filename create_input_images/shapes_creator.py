@@ -19,8 +19,8 @@ COLOUR_MAP = {
 
 TRAIN_NUM = 200
 TEST_NUM = 200
-MIN_RADIUS = 80
-MAX_RADIUS = 110
+MIN_SURFACE = 10000
+MAX_SURFACE = 20000
 JITTER = True
 COLOR_TASK_BASE_SHAPE = "circle"
 
@@ -51,7 +51,7 @@ class ShapesGenerator:
 
         # Set directory based on task
         if task_type == "two_shapes":
-            self.img_dir = "images/two_shapes"
+            self.img_dir = "images/two_shapes2"
         elif task_type == "two_colors":
             self.img_dir = "images/two_colors"
         else:
@@ -59,8 +59,8 @@ class ShapesGenerator:
 
         self.train_num = TRAIN_NUM
         self.test_num = TEST_NUM
-        self.min_radius = MIN_RADIUS
-        self.max_radius = MAX_RADIUS
+        self.min_surface = MIN_SURFACE
+        self.max_surface = MAX_SURFACE
         self.jitter = JITTER
         self.img_paths = {}
 
@@ -81,6 +81,44 @@ class ShapesGenerator:
                 path_key = f"{t}_{class_name}"
                 self.img_paths[path_key] = os.path.join(self.img_dir, t, class_name)
                 os.makedirs(self.img_paths[path_key], exist_ok=True)
+
+    @staticmethod
+    def get_radius_from_surface(shape: str, surface: float) -> float:
+        """
+        Calculate the radius needed to achieve a specific surface area for different shapes.
+        
+        Args:
+            shape (str): The shape type ('circle', 'triangle', 'square', or 'star')
+            surface (float): The desired surface area
+            
+        Returns:
+            float: The radius needed to achieve the specified surface area
+        """
+        if shape == "circle":
+            # A = πr²
+            return math.sqrt(surface / math.pi)
+
+        elif shape == "square":
+            # A = (2r)² = 4r²
+            # where r is half the side length
+            return math.sqrt(surface / 4)
+
+        elif shape == "triangle":
+            # For an equilateral triangle:
+            # A = (√3/4) * (2r)² = √3 * r²
+            # where r is the distance from center to any vertex
+            return math.sqrt(surface / math.sqrt(3))
+
+        elif shape == "star":
+            # For a 5-pointed star with inner_radius = radius/2
+            # Total area = 5 * area of each point
+            # Each point is a triangle formed by outer radius (R) and inner radius (R/2)
+            # Area = 5 * R² * (sin(72°)/4 - sin(36°)/8)
+            k = 5 / 2 * math.sin(math.pi / 5)
+            return math.sqrt(surface / k)
+
+        else:
+            raise ValueError(f"Shape {shape} not implemented.")
 
     def get_vertices(self, shape: str, center: tuple, radius: int) -> list:
         """Calculate vertices of the shapes based on the given parameters."""
@@ -125,11 +163,13 @@ class ShapesGenerator:
         else:
             raise ValueError(f"Shape {shape} not implemented.")
 
-    def draw_shape(self, shape: str, radius: int, colour: str, jitter: bool = False):
+    def draw_shape(self, shape: str, surface: int, colour: str, jitter: bool = False):
         """Draws a single shape on an image and saves it to the appropriate directory."""
         pixels_x, pixels_y = 512, 512
         image = Image.new("RGB", (pixels_x, pixels_y), color=self.background_colour)
         draw = ImageDraw.Draw(image)
+
+        radius = int(self.get_radius_from_surface(shape, surface))
 
         x_space = int(pixels_x / 2 - radius) if jitter else 0
         y_space = int(pixels_y / 2 - radius) if jitter else 0
@@ -149,10 +189,10 @@ class ShapesGenerator:
 
         return image, distance, angle
 
-    def save_image(self, image, shape, radius, dist_from_center, angle, it, path):
+    def save_image(self, image, shape, surface, dist_from_center, angle, it, path):
         file_path = os.path.join(
             path,
-            f"{shape}_{radius}_{dist_from_center}_{angle}_{it}_v2.png",
+            f"{shape}_{surface}_{dist_from_center}_{angle}_{it}_v2.png",
         )
         image.save(file_path)
 
@@ -162,22 +202,33 @@ class ShapesGenerator:
 
         for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
             for i in tqdm(range(num_images)):
-                for radius in range(self.min_radius, self.max_radius):
+                # FIXME: we should specify how many we want and compute the step from this
+                for surface in range(self.min_surface, self.max_surface, 100):
                     if self.task_type == "two_shapes":
                         # For shape recognition: each shape in yellow is a class
                         for shape in self.shapes:
-                            image, dist, angle = self.draw_shape(shape, radius, self.colors['yellow'], self.jitter)
-                            self.save_image(image, shape, radius, dist, angle, i, self.img_paths[f"{phase}_{shape}"])
+                            image, dist, angle = self.draw_shape(
+                                shape, surface, self.colors["yellow"], self.jitter
+                            )
+                            self.save_image(
+                                image,
+                                shape,
+                                surface,
+                                dist,
+                                angle,
+                                i,
+                                self.img_paths[f"{phase}_{shape}"],
+                            )
                     elif self.task_type == "two_colors":
                         # For color recognition: circle in each color is a class
                         for color_name, color_code in self.colors.items():
                             image, dist, angle = self.draw_shape(
-                                COLOR_TASK_BASE_SHAPE, radius, color_code, self.jitter
+                                COLOR_TASK_BASE_SHAPE, surface, color_code, self.jitter
                             )
                             self.save_image(
                                 image,
                                 COLOR_TASK_BASE_SHAPE,
-                                radius,
+                                surface,
                                 dist,
                                 angle,
                                 i,
@@ -187,12 +238,14 @@ class ShapesGenerator:
                         # For custom: each shape-color combination is a class
                         for shape in self.shapes:
                             for color_name, color_code in self.colors.items():
-                                image, dist, angle = self.draw_shape(shape, radius, color_code, self.jitter)
+                                image, dist, angle = self.draw_shape(
+                                    shape, surface, color_code, self.jitter
+                                )
                                 class_name = f"{shape}_{color_name}"
                                 self.save_image(
                                     image,
                                     shape,
-                                    radius,
+                                    surface,
                                     dist,
                                     angle,
                                     i,

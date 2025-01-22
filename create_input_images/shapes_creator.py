@@ -110,15 +110,36 @@ class ShapesGenerator:
             return math.sqrt(surface / math.sqrt(3))
 
         elif shape == "star":
-            # For a 5-pointed star with inner_radius = radius/2
-            # Total area = 5 * area of each point
-            # Each point is a triangle formed by outer radius (R) and inner radius (R/2)
-            # Area = 5 * R² * (sin(72°)/4 - sin(36°)/8)
-            k = 5 / 2 * math.sin(math.pi / 5)
-            return math.sqrt(surface / k)
+            return np.sqrt(2 / 5 * surface * 1 / np.sqrt((25 - 11 * np.sqrt(5)) / 2))
 
         else:
             raise ValueError(f"Shape {shape} not implemented.")
+
+    @staticmethod
+    def create_star_vertices(center, radius):
+        inner_radius = 1 / 1.014 * radius * np.sin(np.pi / 10) / np.sin(7 * np.pi / 10)
+
+        vertices = []
+        for i in range(5):
+            # Outer vertices (points of the star)
+            angle_rad = -np.pi/2 + i * 2 * np.pi / 5  # Start from top (-pi/2) and go clockwise
+            vertices.append(
+                (
+                    center[0] + radius * np.cos(angle_rad),
+                    center[1] + radius * np.sin(angle_rad),
+                )
+            )
+
+            # Inner vertices
+            angle_rad += np.pi / 5  # Rotate by 36 degrees (π/5 radians)
+            vertices.append(
+                (
+                    center[0] + inner_radius * np.cos(angle_rad),
+                    center[1] + inner_radius * np.sin(angle_rad),
+                )
+            )
+
+        return vertices
 
     def get_vertices(self, shape: str, center: tuple, radius: int) -> list:
         """Calculate vertices of the shapes based on the given parameters."""
@@ -141,25 +162,7 @@ class ShapesGenerator:
                 (center[0] - radius, center[1] + radius),
             ]
         elif shape == "star":
-            vertices = []
-            for i in range(5):
-                angle_deg = -90 + (i * 72)  # 72 degrees between each point
-                angle_rad = math.radians(angle_deg)
-                vertices.append(
-                    (
-                        center[0] + radius * math.cos(angle_rad),
-                        center[1] + radius * math.sin(angle_rad),
-                    )
-                )
-                angle_deg += 36  # Repeat for inner vertices
-                angle_rad = math.radians(angle_deg)
-                vertices.append(
-                    (
-                        center[0] + (radius / 2) * math.cos(angle_rad),
-                        center[1] + (radius / 2) * math.sin(angle_rad),
-                    )
-                )
-            return vertices
+            return self.create_star_vertices(center, radius)
         else:
             raise ValueError(f"Shape {shape} not implemented.")
 
@@ -192,7 +195,7 @@ class ShapesGenerator:
     def save_image(self, image, shape, surface, dist_from_center, angle, it, path):
         file_path = os.path.join(
             path,
-            f"{shape}_{surface}_{dist_from_center}_{angle}_{it}_v2.png",
+            f"{shape}_{surface}_{dist_from_center}_{angle}_{it}.png",
         )
         image.save(file_path)
 

@@ -6,21 +6,21 @@ from PIL import Image
 from debug_utils import debugger_is_active
 
 # Paper variables
-data_type = "two_shapes"
+data_type = "two_shapes2"
 train_edges = True
 train_neurons = False
-refined_synaptic_data = True
+refined_synaptic_data = False
 synaptic_limit = True
 
 # Other often changing vars
 batch_size = 8
-resume_checkpoint = None  # "m_2024-12-26_10:41_kvnrw9t1.pth"
+resume_checkpoint = None # "m_2024-12-28 18:42_n3l481jr.pth"
 NUM_CONNECTOME_PASSES = 4
-random_synapses = True
+random_synapses = False
 device_type = "cuda" if cuda.is_available() else "cpu"
-# device_type = "cpu"
+device_type = "cpu"
 debugging = False
-wandb_project = "cell_killer"
+wandb_project = "equalized_shapes"
 
 # Data
 TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
@@ -55,48 +55,7 @@ lambda_func = leaky_relu  # any torch activation function
 neuron_normalization = "min_max"  # "log1p" or "min_max"
 # Shut off some neurons based on their cell_type
 # You can find all the cell types in adult_data/cell_types.csv
-filtered_celltypes = [
-    "T2a",
-    "Tm3",
-    "T4c",
-    "T3",
-    "T4d",
-    "Tm1",
-    "T5c",
-    "Tm2",
-    "T5b",
-    "T4b",
-    "Tm9",
-    "Tm4",
-    "Tm20",
-    "T5a",
-    "T5d",
-    "T4a",
-    "T2",
-    "T1",
-    "Tm6",
-    "TmY18",
-    "TmY5a",
-    "Tm5Y",
-    "TmY3",
-    "TmY9",
-    "Tm12",
-    "Tm5c",
-    "Tm5a",
-    "TmY4",
-    "TmY11",
-    "TmY14",
-    "Tm16",
-    "TmYem1",
-    "TmY20",
-    "Tm8",
-    "TmY15",
-    "TmY16",
-    "Tlp1",
-    "Tlp4",
-    "TPMN",
-    "Tlp6",
-]
+filtered_celltypes = []
 # You can also filter a fraction of the neurons
 # Note: it's a fraction of the number of neurons after filtering by cell type
 # and also after removing the protected cell types (R1-6, R7, R8, and the rational cell types)

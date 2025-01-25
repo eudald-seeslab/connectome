@@ -51,7 +51,7 @@ class ShapesGenerator:
 
         # Set directory based on task
         if task_type == "two_shapes":
-            self.img_dir = "images/two_shapes2"
+            self.img_dir = "images/two_shapes3"
         elif task_type == "two_colors":
             self.img_dir = "images/two_colors"
         else:
@@ -174,10 +174,11 @@ class ShapesGenerator:
 
         radius = int(self.get_radius_from_surface(shape, surface))
 
-        x_space = int(pixels_x / 2 - radius) if jitter else 0
-        y_space = int(pixels_y / 2 - radius) if jitter else 0
-        dist_x = random.randint(-x_space, x_space)
-        dist_y = random.randint(-y_space, y_space)
+        # More than that and it's easier to fit a circle than a star
+        max_jitter = 124 if jitter else 0
+
+        dist_x = random.randint(-max_jitter, max_jitter)
+        dist_y = random.randint(-max_jitter, max_jitter)
         center = (int(pixels_x / 2) + dist_x, int(pixels_y / 2) + dist_y)
 
         # for bookkeeping

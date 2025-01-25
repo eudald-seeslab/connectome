@@ -6,19 +6,19 @@ from PIL import Image
 from debug_utils import debugger_is_active
 
 # Paper variables
-data_type = "two_shapes2"
-train_edges = True
+data_type = "two_shapes3"
+train_edges = False
 train_neurons = False
-refined_synaptic_data = False
+refined_synaptic_data = True
 synaptic_limit = True
 
 # Other often changing vars
-batch_size = 8
+batch_size = 16
 resume_checkpoint = None # "m_2024-12-28 18:42_n3l481jr.pth"
 NUM_CONNECTOME_PASSES = 4
 random_synapses = False
 device_type = "cuda" if cuda.is_available() else "cpu"
-device_type = "cpu"
+# device_type = "cpu"
 debugging = False
 wandb_project = "equalized_shapes"
 

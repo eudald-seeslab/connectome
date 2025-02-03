@@ -267,3 +267,4 @@ data/cell_type_rational.csv
 # new data stuff
 *.feather
 new_data
+supplementary_data/*

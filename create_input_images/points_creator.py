@@ -25,7 +25,7 @@ GENERAL_CONFIG = {
     # these are per colour
     "min_point_num": 1,
     "max_point_num": 10,
-    "attempts_limit": 1000,
+    "attempts_limit": 2000,
 }
 
 

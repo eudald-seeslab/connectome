@@ -170,19 +170,19 @@ class DataProcessor:
 
         return torch.tensor(activation_df.values, dtype=self.dtype)
 
-    def plot_input_images(self, img):
+    def plot_input_images(self, img, voronoi_colour="orange", voronoi_width=1):
         fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-        self.voronoi_cells.plot_input_image(img, axes[0])
-        self.plot_neuron_activations(img, axes[1])
         self.voronoi_cells.plot_voronoi_cells_with_neurons(
-            self.tesselated_neurons, axes[2]
+            self.tesselated_neurons, axes[0], voronoi_colour, voronoi_width
         )
+        self.plot_neuron_activations(img, axes[1], voronoi_colour, voronoi_width)
+        self.voronoi_cells.plot_input_image(img, axes[2])
         plt.tight_layout()
         plt.close("all")
 
-        return fig, "Original -> Voronoi <- Activations"
+        return fig, "Activations -> Voronoi <- Input image"
 
-    def plot_neuron_activations(self, img, ax):
+    def plot_neuron_activations(self, img, ax, voronoi_colour, voronoi_width):
         # This is repeated in process_batch, but it's the cleanest way to get the plots
         img = preprocess_images(np.expand_dims(img, 0))
         processed_img = process_images(img, self.voronoi_indices)
@@ -206,7 +206,9 @@ class DataProcessor:
         neuron_activations["activation"] = neuron_activations.apply(
             get_activation_from_cell_type, axis=1
         )
-        return self.voronoi_cells.plot_neuron_activations(neuron_activations, ax)
+        return self.voronoi_cells.plot_neuron_activations(
+            neuron_activations, ax, voronoi_colour, voronoi_width
+        )
 
     @staticmethod
     def shuffle_synaptic_matrix(synaptic_matrix):
@@ -281,7 +283,6 @@ class DataProcessor:
             all_neurons = all_neurons[all_neurons["side"] == side]
 
         return all_neurons
-
 
     @staticmethod
     def _get_connections(refined_synaptic_data=False, new_connectome=False):

@@ -99,7 +99,9 @@ def main(wandb_logger, sweep_config=None):
                     data_processor.recreate_voronoi_cells()
                 images, labels = data_processor.get_data_from_paths(batch_files)
                 if i % u_config.wandb_images_every == 0:
-                    p, title = data_processor.plot_input_images(images[0])
+                    p, title = data_processor.plot_input_images(
+                        images[0], u_config.voronoi_colour, u_config.voronoi_width
+                        )
                     wandb_logger.log_image(p, basename(batch_files[0]), title)
 
                 inputs, labels = data_processor.process_batch(images, labels)

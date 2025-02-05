@@ -250,9 +250,9 @@ connections_refined.csv
 # input data
 /images
 /videos
-data/custom_stimuli/RenderedData_0000/_meta.yaml
-data/custom_stimuli/RenderedData_0000/sequences.h5
-data/cell_type_rational.csv
+deprecated/data/custom_stimuli/RenderedData_0000/_meta.yaml
+deprecated/data/custom_stimuli/RenderedData_0000/sequences.h5
+deprecated/data/cell_type_rational.csv
 
 # drafts
 *draft.py

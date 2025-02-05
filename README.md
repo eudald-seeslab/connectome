@@ -74,16 +74,18 @@ python input_data_creation/shapes_creator.py --colors
 ```
 
 You can also place your custom input data in the images directory. The structure of directories needs to be:
+```
 images/
-|-- your_directory
-|   |-- train
-|   |   |-- class 1
-|   |   |-- class 2
-|   |   |-- class n
-|   |-- test
-|   |   |-- class 1
-|   |   |-- class 2
-|   |   |-- class n
+├── your_directory/
+    ├── train/
+    │   ├── class_1/
+    │   ├── class_2/
+    │   └── class_n/
+    └── test/
+        ├── class_1/
+        ├── class_2/
+        └── class_n/
+```
 
 And the model will automatically pick the number of output classes it needs to train on.
 

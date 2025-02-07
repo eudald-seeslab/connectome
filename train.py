@@ -1,8 +1,10 @@
 import datetime
 import os
 from os.path import basename
+import random
 import traceback
 import warnings
+import numpy as np
 import torch
 from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
@@ -22,7 +24,7 @@ from utils import (
     update_results_df,
     update_running_loss,
 )
-from data_processing import CompleteModelsDataProcessor
+from data_processing import DataProcessor
 from graph_models import FullGraphModel
 from utils import clean_model_outputs
 
@@ -30,11 +32,10 @@ from wandb_logger import WandBLogger
 
 warnings.filterwarnings(
     "ignore",
-    message="invalid value encountered in cast", 
+    message="invalid value encountered in cast",
     category=RuntimeWarning,
     module="wandb.sdk.data_types.image",
 )
-
 
 
 def main(wandb_logger, sweep_config=None):
@@ -42,7 +43,9 @@ def main(wandb_logger, sweep_config=None):
     u_config = update_config_with_sweep(config, sweep_config)
 
     random_generator = torch.Generator(device=u_config.DEVICE)
-    random_generator.manual_seed(u_config.randdom_seed)
+    random_generator.manual_seed(u_config.random_seed)
+    np.random.seed(u_config.random_seed)
+    random.seed(u_config.random_seed)
 
     # if it's not a sweep, we need to initialize wandb
     if sweep_config is None:
@@ -62,11 +65,13 @@ def main(wandb_logger, sweep_config=None):
 
     # get data and prepare model
     training_images = get_image_paths(u_config.TRAINING_DATA_DIR, u_config.small_length)
-    data_processor = CompleteModelsDataProcessor(u_config)
-    model = FullGraphModel(data_processor, u_config, random_generator).to(u_config.DEVICE)
+    data_processor = DataProcessor(u_config)
+    model = FullGraphModel(data_processor, u_config, random_generator).to(
+        u_config.DEVICE
+    )
     optimizer = torch.optim.Adam(model.parameters(), lr=u_config.base_lr)
     criterion = CrossEntropyLoss()
-    early_stopping = EarlyStopping(patience=u_config.patience, min_delta=0)
+    early_stopping = EarlyStopping(patience=u_config.patience, min_delta=0, target_accuracy=0.99)
 
     if u_config.resume_checkpoint is not None:
         checkpoint_path = os.path.join("models", u_config.resume_checkpoint)
@@ -94,9 +99,11 @@ def main(wandb_logger, sweep_config=None):
                     data_processor.recreate_voronoi_cells()
                 images, labels = data_processor.get_data_from_paths(batch_files)
                 if i % u_config.wandb_images_every == 0:
-                    p, title = data_processor.plot_input_images(images[0])
+                    p, title = data_processor.plot_input_images(
+                        images[0], u_config.voronoi_colour, u_config.voronoi_width
+                        )
                     wandb_logger.log_image(p, basename(batch_files[0]), title)
-                    
+
                 inputs, labels = data_processor.process_batch(images, labels)
 
                 optimizer.zero_grad()
@@ -120,16 +127,22 @@ def main(wandb_logger, sweep_config=None):
                     raise TrainingError("Loss is constant. Training will stop.")
 
             # If epoch is None, it will overwrite the previous checkpoint
-            save_checkpoint(model, optimizer, model_name, u_config, epoch=ep if u_config.save_every_checkpoint else None)
+            save_checkpoint(
+                model,
+                optimizer,
+                model_name,
+                u_config,
+                epoch=ep if u_config.save_every_checkpoint else None,
+            )
             torch.cuda.empty_cache()
 
+            accuracy = total_correct / total
             logger.info(
                 f"Finished epoch {ep + 1} with loss {running_loss / total} "
-                f"and accuracy {total_correct / total}."
+                f"and accuracy {accuracy}."
             )
-
-            if early_stopping.should_stop(running_loss):
-                logger.info("Early stopping activated. Continuing to testing.")
+            if early_stopping.should_stop(running_loss, accuracy):
+                logger.info("Early stopping activated - either perfect accuracy reached or no improvement in loss.")
                 break
 
     except KeyboardInterrupt:
@@ -182,7 +195,9 @@ if __name__ == "__main__":
 
     logger = get_logger("ct", config.debugging)
 
-    wandb_logger = WandBLogger(config.wandb_project, config.wandb_, config.wandb_images_every)
+    wandb_logger = WandBLogger(
+        config.wandb_project, config.wandb_, config.wandb_images_every
+    )
     try:
         main(wandb_logger)
 

@@ -6,21 +6,21 @@ from PIL import Image
 from debug_utils import debugger_is_active
 
 # Paper variables
-data_type = "two_shapes"
+data_type = "two_shapes3"
 train_edges = True
 train_neurons = False
-refined_synaptic_data = True
+refined_synaptic_data = False
 synaptic_limit = True
 
 # Other often changing vars
-batch_size = 8
-resume_checkpoint = None # "m_2024-12-26_10:41_kvnrw9t1.pth"
+batch_size = 16
+resume_checkpoint = None # "m_2024-12-28 18:42_n3l481jr.pth"
 NUM_CONNECTOME_PASSES = 4
 random_synapses = True
 device_type = "cuda" if cuda.is_available() else "cpu"
-# device_type = "cpu"
+device_type = "cpu"
 debugging = False
-wandb_project = "cell_killer"
+wandb_project = "equalized_shapes"
 
 # Data
 TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
@@ -28,7 +28,9 @@ TESTING_DATA_DIR = os.path.join("images", data_type, "test")
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 # get one sample of one class to get the image size
 sample_image = os.listdir(os.path.join(TRAINING_DATA_DIR, CLASSES[0]))[0]
-image_size = Image.open(os.path.join(TRAINING_DATA_DIR, CLASSES[0], sample_image)).size[0]
+image_size = Image.open(os.path.join(TRAINING_DATA_DIR, CLASSES[0], sample_image)).size[
+    0
+]
 
 # Training configuration
 num_epochs = 100
@@ -53,7 +55,7 @@ lambda_func = leaky_relu  # any torch activation function
 neuron_normalization = "min_max"  # "log1p" or "min_max"
 # Shut off some neurons based on their cell_type
 # You can find all the cell types in adult_data/cell_types.csv
-filtered_celltypes = ["L1", "L2", "L3", "L4", "L5"]
+filtered_celltypes = []
 # You can also filter a fraction of the neurons
 # Note: it's a fraction of the number of neurons after filtering by cell type
 # and also after removing the protected cell types (R1-6, R7, R8, and the rational cell types)
@@ -74,31 +76,30 @@ inhibitory_r7_r8 = False
 new_connectome = True
 # You can choose the cell types used to compute the final decision
 # If None, the ones in adult_data/rational_cell_types.csv will be used
-cluster1 = ["Tm16", "Mi4", "Pm13", "TmY10", "TmY11", "Pm14", "Li11", "Tm36", "MLt2", "Sm04", "Sm32", "Li03", "Li13", "Li23", "Li28", "Li27", "Tm7", "LLPt", "Li32", "Li29", 
-            "Tm5f", "Mlt5", "Tm34", "Sm13", "Tm7", "Li02", "Li30", "Li05", "Li06", "Tm35", "Tm8b", "Li07", "Li04", "Li33", "TmY31", "Tm5c", "Tm20", "Tm33", "Li01", "Tm37", "Tm8a", "Li10",
-            "Tm5d", "Tm32", "Tm31", "Tm5b", "Tm5a", "Sm31", "Li09", "Li12"]
 original_rational = ["KCapbp-m", "KCapbp-ap2", "KCapbp-ap1"]
 rational_cell_types = original_rational
 
 # CUDA stuff
 DEVICE = device(device_type)
 # Random seed (it can be set to None)
-randdom_seed = 1714
+random_seed = 1714
 
 # Debugging and logging
-
 debug_length = 2
 small_length = None
 validation_length = 400
 wandb_ = True
 wandb_images_every = 400
-wandb_group = data_type     # you can put something else here
+wandb_group = data_type  # you can put something else here
 
 # Plots
-# "radius", "contingency", "distance", "point_num", "stripes", "weber", "colour"
+# Plot types: "radius", "contingency", "distance", "point_num", "stripes", "weber", "colour"
 # if empty list, I will try to guess the plots from the classes
 # If None, no plots will be generated
 plot_types = []
+# Plot details
+voronoi_colour = "#ff9933"
+voronoi_width=1
 
 # sparse stuff is generaly not implemented in half
 dtype = torch.float32

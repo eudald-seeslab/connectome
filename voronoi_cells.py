@@ -74,34 +74,71 @@ class VoronoiCells:
         coords[:, 1] = pixel_num - 1 - coords[:, 1]
         return coords
 
-    def _plot_voronoi_cells(self, ax, show_points=False):
+    def _plot_voronoi_cells(self, ax, show_points=False, line_color="orange", line_width=1):
         voronoi_plot_2d(
             self.voronoi,
             ax=ax,
             show_points=show_points,
             show_vertices=False,
-            line_colors="orange",
-            line_width=1,
-            line_alpha=0.6,
+            line_colors=line_color,
+            line_width=line_width,
+            line_alpha=0.8,
             point_size=2,
         )
 
-    def plot_voronoi_cells_with_neurons(self, neuron_data, ax):
+    def plot_voronoi_cells_with_neurons(self, neuron_data, ax, voronoi_color, voronoi_width):
+    # Set black background
+        ax.set_facecolor("black")
 
-        neuron_data["color"] = neuron_data["cell_type"].apply(lambda x: self.color_map[x])
+        # Modern color palette that pops on black:
+        self.color_map = {
+            "R1-6": "#ffffff",  # Bright mint
+            "R7": "#1e90ff",  # Bright rose
+            "R8p": "#50ff50",  # Bright gold
+            "R8y": "#ff4d4d",  # Bright cyan
+        }
 
-        self._plot_voronoi_cells(ax)
+        plot_data = neuron_data.copy()
 
-        # reverse the y-axis
-        neuron_data["y_axis"] = self.pixel_num - 1 - neuron_data["y_axis"]
+        # The R7 and R8 neurons are in the exact same position, so we need
+        # to jitter them to make them visible
+        jitter_size = 4
+        non_r1_6_mask = plot_data["cell_type"] != "R1-6"
 
-        # Visual neurons (complicated because we want the legend and matplotlib is stupid)
+        # Generate random choices between x and y jitter for each point
+        x_choice = np.random.choice([-jitter_size, jitter_size], size=len(plot_data))
+
+        # Where xy_choice is 0, make yx_choice ±2
+        y_choice = np.random.choice([-jitter_size, jitter_size], size=len(plot_data))
+
+        # Apply jitter only to non-R1-6 neurons
+        plot_data.loc[non_r1_6_mask, "x_axis"] += x_choice[non_r1_6_mask]
+        plot_data.loc[non_r1_6_mask, "y_axis"] += y_choice[non_r1_6_mask]
+
+        plot_data["color"] = plot_data["cell_type"].apply(lambda x: self.color_map[x])
+
+        self._plot_voronoi_cells(ax, line_color=voronoi_color, line_width=voronoi_width)
+
+        plot_data["y_axis"] = self.pixel_num - 1 - plot_data["y_axis"]
+
+        # Plot neurons with improved visibility
         for cell_type, color in self.color_map.items():
-            points = neuron_data[neuron_data["cell_type"] == cell_type]
+            points = plot_data[plot_data["cell_type"] == cell_type]
             ax.scatter(
-                points["x_axis"], points["y_axis"], color=color, s=3, label=cell_type
+                points["x_axis"],
+                points["y_axis"],
+                color=color,
+                s= 1 if cell_type == "R1-6" else 5,  
+                alpha=0.8 if cell_type == "R1-6" else 1, 
+                label=cell_type,
             )
-        ax.legend(title="", loc="lower left")
+
+        # Legend with white text
+        legend = ax.legend(title="Cell Types", loc="lower right", frameon=True)
+        legend.get_frame().set_facecolor("black")
+        legend.get_frame().set_edgecolor("white")
+        plt.setp(legend.get_texts(), color="white")
+        plt.setp(legend.get_title(), color="white")
 
         self.clip_image(ax)
 
@@ -118,12 +155,16 @@ class VoronoiCells:
 
         ax.imshow(image, extent=[0, self.pixel_num, 0, self.pixel_num])
 
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
 
-    def plot_neuron_activations(self, n_acts, ax):
+    def plot_neuron_activations(self, n_acts, ax, voronoi_color="orange", volonoi_width=1):
 
         ax.set_facecolor("black")
 
-        self._plot_voronoi_cells(ax)
+        self._plot_voronoi_cells(ax, line_color=voronoi_color, line_width=volonoi_width)
 
         rgb_values = (
             n_acts.loc[:, ["voronoi_indices", "cell_type", "activation"]]
@@ -168,7 +209,7 @@ class VoronoiCells:
         ax.collections[-1].set_linewidth(0.5)
 
         # Tight layout to remove any extra white space
-        plt.tight_layout()
+        # plt.tight_layout()
 
     @staticmethod
     def get_colour_average(values, colour):

@@ -121,7 +121,6 @@ def get_side_decision_making_vector(root_ids, rational_cell_types, neurons, side
 
 
 def construct_synaptic_matrix(neuron_classification, connections, root_ids):
-
     all_neurons = neuron_classification.merge(root_ids, on="root_id").fillna("Unknown")
 
     ix_conns = connections.merge(
@@ -133,20 +132,29 @@ def construct_synaptic_matrix(neuron_classification, connections, root_ids):
         suffixes=("_pre", "_post"),
     )
 
-    # Sum duplicate connections
+    # Sort and group
+    ix_conns = ix_conns.sort_values(["index_id_pre", "index_id_post"])
     grouped = (
-        ix_conns.groupby(["index_id_pre", "index_id_post"])["syn_count"]
+        ix_conns.groupby(["index_id_pre", "index_id_post"], sort=True)["syn_count"]
         .sum()
         .reset_index()
     )
 
+    # Round any values very close to zero to exactly zero
+    grouped["syn_count"] = np.where(
+        np.abs(grouped["syn_count"]) < 1e-10, 0, grouped["syn_count"]
+    )
+
     matrix = coo_matrix(
-        (grouped["syn_count"], (grouped["index_id_pre"], grouped["index_id_post"])),
+        (
+            grouped["syn_count"].values,
+            (grouped["index_id_pre"].values, grouped["index_id_post"].values),
+        ),
         shape=(len(root_ids), len(root_ids)),
         dtype=np.int32,
     )
 
-    # Force the matrix to sum duplicates and sort indices
     matrix.sum_duplicates()
+    matrix.eliminate_zeros()
 
     return matrix

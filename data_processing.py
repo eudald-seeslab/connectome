@@ -1,4 +1,5 @@
 import os
+import random
 from matplotlib import pyplot as plt
 import matplotlib
 
@@ -25,21 +26,28 @@ from voronoi_cells import VoronoiCells
 from utils import paths_to_labels
 
 
-class CompleteModelsDataProcessor:
+class DataProcessor:
 
     tesselated_neurons = None
     retinal_cells = ["R1-6", "R7", "R8"]
 
     def __init__(self, config_, data_dir=None):
+        np.random.seed(config_.random_seed)
+        torch.manual_seed(config_.random_seed)
+        random.seed(config_.random_seed)
+
         rational_cell_types = self.get_rational_cell_types(config_.rational_cell_types)
         self.protected_cell_types = self.retinal_cells + rational_cell_types
         self._check_filtered_neurons(config_.filtered_celltypes)
         neuron_classification = self._get_neurons(
-            config_.filtered_celltypes, config_.filtered_fraction, side=None, new_connectome=config_.new_connectome
-            )
+            config_.filtered_celltypes,
+            config_.filtered_fraction,
+            side=None,
+            new_connectome=config_.new_connectome,
+        )
         connections = self._get_connections(
             config_.refined_synaptic_data, config_.new_connectome
-            )
+        )
         self.root_ids = self._get_root_ids(neuron_classification, connections)
         self.synaptic_matrix = construct_synaptic_matrix(
             neuron_classification, connections, self.root_ids
@@ -68,7 +76,9 @@ class CompleteModelsDataProcessor:
         self.dtype = config_.dtype
         self.device = config_.DEVICE
         # This is somewhat convoluted to be compatible with the multitask training
-        self.classes = sorted(os.listdir(data_dir)) if data_dir is not None else config_.CLASSES
+        self.classes = (
+            sorted(os.listdir(data_dir)) if data_dir is not None else config_.CLASSES
+        )
 
         self.edges = torch.tensor(
             np.array([self.synaptic_matrix.row, self.synaptic_matrix.col]),
@@ -83,7 +93,7 @@ class CompleteModelsDataProcessor:
 
     def process_batch(self, imgs, labels):
         """
-        Preprocesses a batch of images and labels. This includes reshaping and colouring the images if necessary, 
+        Preprocesses a batch of images and labels. This includes reshaping and colouring the images if necessary,
         tesselating it according to the voronoi cells from the connectome, and getting the neuron activations for each
         cell. Finally, it constructs the graphs of this batch with the appropriate activations.
 
@@ -140,7 +150,12 @@ class CompleteModelsDataProcessor:
 
     def calculate_neuron_activations(self, voronoi_averages):
         neuron_activations = pd.concat(
-            [get_neuron_activations(self.tesselated_neurons, a, self.inhibitory_r7_r8) for a in voronoi_averages],
+            [
+                get_neuron_activations(
+                    self.tesselated_neurons, a, self.inhibitory_r7_r8
+                )
+                for a in voronoi_averages
+            ],
             axis=1,
         )
         neuron_activations.index = neuron_activations.index.astype("string")
@@ -155,17 +170,19 @@ class CompleteModelsDataProcessor:
 
         return torch.tensor(activation_df.values, dtype=self.dtype)
 
-    def plot_input_images(self, img):
+    def plot_input_images(self, img, voronoi_colour="orange", voronoi_width=1):
         fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-        self.voronoi_cells.plot_input_image(img, axes[0])
-        self.plot_neuron_activations(img, axes[1])
-        self.voronoi_cells.plot_voronoi_cells_with_neurons(self.tesselated_neurons, axes[2])
+        self.voronoi_cells.plot_voronoi_cells_with_neurons(
+            self.tesselated_neurons, axes[0], voronoi_colour, voronoi_width
+        )
+        self.plot_neuron_activations(img, axes[1], voronoi_colour, voronoi_width)
+        self.voronoi_cells.plot_input_image(img, axes[2])
         plt.tight_layout()
         plt.close("all")
 
-        return fig, "Original -> Voronoi <- Activations"
+        return fig, "Activations -> Voronoi <- Input image"
 
-    def plot_neuron_activations(self, img, ax):
+    def plot_neuron_activations(self, img, ax, voronoi_colour, voronoi_width):
         # This is repeated in process_batch, but it's the cleanest way to get the plots
         img = preprocess_images(np.expand_dims(img, 0))
         processed_img = process_images(img, self.voronoi_indices)
@@ -189,7 +206,9 @@ class CompleteModelsDataProcessor:
         neuron_activations["activation"] = neuron_activations.apply(
             get_activation_from_cell_type, axis=1
         )
-        return self.voronoi_cells.plot_neuron_activations(neuron_activations, ax)
+        return self.voronoi_cells.plot_neuron_activations(
+            neuron_activations, ax, voronoi_colour, voronoi_width
+        )
 
     @staticmethod
     def shuffle_synaptic_matrix(synaptic_matrix):
@@ -222,10 +241,21 @@ class CompleteModelsDataProcessor:
             | classification["root_id"].isin(connections["post_root_id"])
         ]
         # pandas is terrible:
-        return neurons.reset_index(drop=True).reset_index()[["root_id", "index"]].rename(columns={"index": "index_id"})
+        return (
+            neurons.reset_index(drop=True)
+            .reset_index()[["root_id", "index"]]
+            .rename(columns={"index": "index_id"})
+        )
 
-    def _get_neurons(self, filtered_celltpyes=None, filtered_fraction=None, side=None, new_connectome=False):
+    def _get_neurons(
+        self,
+        filtered_celltpyes=None,
+        filtered_fraction=None,
+        side=None,
+        new_connectome=False,
+    ):
         data_dir = "new_data" if new_connectome else "adult_data"
+
         all_neurons = pd.read_csv(
             os.path.join(data_dir, "classification.csv"),
             usecols=["root_id", "cell_type", "side"],
@@ -233,35 +263,24 @@ class CompleteModelsDataProcessor:
         ).fillna("Unknown")
 
         if filtered_celltpyes is not None and len(filtered_celltpyes) > 0:
-            # If it's not a list, make it so
-            if not isinstance(filtered_celltpyes, list):
-                filtered_celltpyes = [filtered_celltpyes]
-            all_neurons = all_neurons[
-                ~all_neurons["cell_type"].isin(filtered_celltpyes)
-            ]
+            before_filter = len(all_neurons)
+            all_neurons = all_neurons[~all_neurons["cell_type"].isin(filtered_celltpyes)]
 
         if filtered_fraction is not None:
-            # We can't filter neurons in the retina or decision-making neurons
-            # so we separate these first
             protected_neurons = all_neurons[
                 all_neurons["cell_type"].isin(self.protected_cell_types)
             ]
             non_protected_neurons = all_neurons[
                 ~all_neurons["cell_type"].isin(self.protected_cell_types)
             ]
-            # We filter the non-protected neurons
+
             non_protected_neurons = non_protected_neurons.sample(
                 frac=filtered_fraction, random_state=1714
             )
-            # And put everything back together
             all_neurons = pd.concat([protected_neurons, non_protected_neurons])
 
         if side is not None:
             all_neurons = all_neurons[all_neurons["side"] == side]
-
-        # check that we have neurons
-        if all_neurons.empty:
-            raise ValueError("No neurons found with the given criteria.")
 
         return all_neurons
 
@@ -269,20 +288,27 @@ class CompleteModelsDataProcessor:
     def _get_connections(refined_synaptic_data=False, new_connectome=False):
         file_char = "_refined" if refined_synaptic_data else ""
         dir_name = "new_data" if new_connectome else "adult_data"
-        return (
-            pd.read_csv(
-                os.path.join(dir_name, f"connections{file_char}.csv"),
-                dtype={
-                    "pre_root_id": "string",
-                    "post_root_id": "string",
-                    "syn_count": np.int32,
-                },
-                index_col=0
-            )
-            .groupby(["pre_root_id", "post_root_id"])
+
+        filename = os.path.join(dir_name, f"connections{file_char}.csv")
+        connections = pd.read_csv(
+            filename,
+            dtype={
+                "pre_root_id": "string",
+                "post_root_id": "string",
+                "syn_count": np.int32,
+            },
+            index_col=0,
+        )
+
+        grouped = (
+            connections.groupby(["pre_root_id", "post_root_id"])
             .sum("syn_count")
             .reset_index()
         )
+
+        sorted_conns = grouped.sort_values(["pre_root_id", "post_root_id"])
+
+        return sorted_conns
 
     def _check_filtered_neurons(self, filtered_cell_types):
         if not set(filtered_cell_types).isdisjoint(self.protected_cell_types):

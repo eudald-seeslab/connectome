@@ -7,18 +7,18 @@ from debug_utils import debugger_is_active
 
 # Paper variables
 data_type = "two_shapes3"
-train_edges = False
+train_edges = True
 train_neurons = False
-refined_synaptic_data = True
+refined_synaptic_data = False
 synaptic_limit = True
 
 # Other often changing vars
 batch_size = 16
 resume_checkpoint = None # "m_2024-12-28 18:42_n3l481jr.pth"
 NUM_CONNECTOME_PASSES = 4
-random_synapses = False
+random_synapses = True
 device_type = "cuda" if cuda.is_available() else "cpu"
-# device_type = "cpu"
+device_type = "cpu"
 debugging = False
 wandb_project = "equalized_shapes"
 

@@ -31,11 +31,14 @@ class DataProcessor:
     tesselated_neurons = None
     retinal_cells = ["R1-6", "R7", "R8"]
 
-    def __init__(self, config_, data_dir=None):
+    def __init__(self, config_, input_images_dir=None):
+        # TODO: this init does too many things, and they depend on each other. It should be refactored
+        
         np.random.seed(config_.random_seed)
         torch.manual_seed(config_.random_seed)
         random.seed(config_.random_seed)
 
+        self.data_dir = "new_data" if config_.new_connectome else "adult_data"
         rational_cell_types = self.get_rational_cell_types(config_.rational_cell_types)
         self.protected_cell_types = self.retinal_cells + rational_cell_types
         self._check_filtered_neurons(config_.filtered_celltypes)
@@ -43,11 +46,8 @@ class DataProcessor:
             config_.filtered_celltypes,
             config_.filtered_fraction,
             side=None,
-            new_connectome=config_.new_connectome,
         )
-        connections = self._get_connections(
-            config_.refined_synaptic_data, config_.new_connectome
-        )
+        connections = self._get_connections(config_.refined_synaptic_data)
         self.root_ids = self._get_root_ids(neuron_classification, connections)
         self.synaptic_matrix = construct_synaptic_matrix(
             neuron_classification, connections, self.root_ids
@@ -77,7 +77,9 @@ class DataProcessor:
         self.device = config_.DEVICE
         # This is somewhat convoluted to be compatible with the multitask training
         self.classes = (
-            sorted(os.listdir(data_dir)) if data_dir is not None else config_.CLASSES
+            sorted(os.listdir(input_images_dir))
+            if input_images_dir is not None
+            else config_.CLASSES
         )
 
         self.edges = torch.tensor(
@@ -252,18 +254,15 @@ class DataProcessor:
         filtered_celltpyes=None,
         filtered_fraction=None,
         side=None,
-        new_connectome=False,
     ):
-        data_dir = "new_data" if new_connectome else "adult_data"
 
         all_neurons = pd.read_csv(
-            os.path.join(data_dir, "classification.csv"),
+            os.path.join(self.data_dir, "classification.csv"),
             usecols=["root_id", "cell_type", "side"],
             dtype={"root_id": "string"},
         ).fillna("Unknown")
 
         if filtered_celltpyes is not None and len(filtered_celltpyes) > 0:
-            before_filter = len(all_neurons)
             all_neurons = all_neurons[~all_neurons["cell_type"].isin(filtered_celltpyes)]
 
         if filtered_fraction is not None:
@@ -284,12 +283,10 @@ class DataProcessor:
 
         return all_neurons
 
-    @staticmethod
-    def _get_connections(refined_synaptic_data=False, new_connectome=False):
+    def _get_connections(self, refined_synaptic_data=False):
         file_char = "_refined" if refined_synaptic_data else ""
-        dir_name = "new_data" if new_connectome else "adult_data"
 
-        filename = os.path.join(dir_name, f"connections{file_char}.csv")
+        filename = os.path.join(self.data_dir, f"connections{file_char}.csv")
         connections = pd.read_csv(
             filename,
             dtype={

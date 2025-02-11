@@ -36,6 +36,32 @@ warnings.filterwarnings(
 torch.manual_seed(1234)
 
 
+def get_multitask_batch_data(
+    config_,
+    wandb_logger,
+    batch_size,
+    training_images,
+    data_processor,
+    already_selected,
+    i,
+    task,
+):
+    batch_files, already_selected = select_random_images(
+        training_images, batch_size, already_selected
+    )
+    if config_.voronoi_criteria == "all":
+        # create voronoi cells each batch so they are different
+        data_processor.recreate_voronoi_cells()
+    inputs, labels = data_processor.get_data_from_paths(batch_files)
+    if i % config_.wandb_images_every == 0:
+        p, title = data_processor.plot_input_images(inputs[0])
+        wandb_logger.log_image(p, basename(batch_files[0]), title, task)
+
+    inputs, labels = data_processor.process_batch(inputs, labels)
+
+    return batch_files, inputs, labels, already_selected
+
+
 def main(wandb_logger):
     logger = get_logger("ct", config.debugging)
     process_warnings(config, logger)
@@ -60,7 +86,9 @@ def main(wandb_logger):
     for data_dir in data_dirs_config:
         training_data_dir = data_dir["TRAINING_DATA_DIR"]
         training_images.append(get_image_paths(training_data_dir, config.small_length))
-        data_processors.append(DataProcessor(config, data_dir=training_data_dir))
+        data_processors.append(
+            DataProcessor(config, input_images_dir=training_data_dir)
+        )
         criterions.append(CrossEntropyLoss())
         early_stoppings.append(EarlyStopping(patience=config.patience, min_delta=0))
 
@@ -85,7 +113,7 @@ def main(wandb_logger):
 
             for i in tqdm(range(iterations)):
                 inputs_labels = [
-                    get_batch_data(
+                    get_multitask_batch_data(
                         config,
                         wandb_logger,
                         batch_size,
@@ -179,7 +207,7 @@ def main(wandb_logger):
     with torch.no_grad():
         for _ in tqdm(range(iterations)):
             batch_data = [
-                get_batch_data(
+                get_multitask_batch_data(
                     config,
                     wandb_logger,
                     batch_size,
@@ -235,32 +263,6 @@ def main(wandb_logger):
                 f"Finished testing with loss {running_losses[idx] / totals[idx]} and "
                 f"accuracy {total_correct[idx] / totals[idx]}."
             )
-
-
-def get_batch_data(
-    config_,
-    wandb_logger,
-    batch_size,
-    training_images,
-    data_processor,
-    already_selected,
-    i,
-    task,
-):
-    batch_files, already_selected = select_random_images(
-        training_images, batch_size, already_selected
-    )
-    if config_.voronoi_criteria == "all":
-        # create voronoi cells each batch so they are different
-        data_processor.recreate_voronoi_cells()
-    inputs, labels = data_processor.get_data_from_paths(batch_files)
-    if i % config_.wandb_images_every == 0:
-        p, title = data_processor.plot_input_images(inputs[0])
-        wandb_logger.log_image(p, basename(batch_files[0]), title, task)
-
-    inputs, labels = data_processor.process_batch(inputs, labels)
-
-    return batch_files, inputs, labels, already_selected
 
 
 if __name__ == "__main__":

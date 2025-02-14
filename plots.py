@@ -7,14 +7,29 @@ from matplotlib import pyplot as plt
 pd.options.mode.chained_assignment = None
 
 
-def plot_weber_fraction(results_df: pd.DataFrame) -> plt.Figure:
-    # Calculate the percentage of correct answers for each Weber ratio
+def plot_weber_fraction(results_df: pd.DataFrame, save_path: str = None) -> plt.Figure:
+    """
+    Create a publication-quality plot showing classification accuracy by Weber ratio.
+
+    Args:
+        results_df (pd.DataFrame): DataFrame containing the experimental results
+        save_path (str, optional): Path to save the figure
+
+    Returns:
+        plt.Figure: The generated figure object
+    """
+
+    font_size = 12
+
+    # Data preparation
     results_df["yellow"] = results_df["Image"].apply(
         lambda x: os.path.basename(x).split("_")[1]
     )
     results_df["blue"] = results_df["Image"].apply(
         lambda x: os.path.basename(x).split("_")[2]
     )
+
+    # Calculate Weber ratio with error handling
     try:
         results_df["weber_ratio"] = results_df.apply(
             lambda row: max(int(row["yellow"]), int(row["blue"]))
@@ -23,26 +38,76 @@ def plot_weber_fraction(results_df: pd.DataFrame) -> plt.Figure:
         )
     except ZeroDivisionError:
         results_df["weber_ratio"] = 0
+
     results_df["equalized"] = results_df["Image"].apply(
         lambda x: "equalized" in os.path.basename(x).lower()
     )
 
+    # Calculate mean and standard error
     correct_percentage = (
-        results_df.groupby(["weber_ratio", "equalized"])["Is correct"].mean() * 100
+        results_df.groupby(["weber_ratio", "equalized"])["Is correct"]
+        .agg(["mean", "std", "count"])
+        .reset_index()
     )
-    correct_percentage = correct_percentage.reset_index()
-    # because matplotlib is very stupid:
+    correct_percentage["mean"] *= 100
+    correct_percentage["std"] *= 100
+    correct_percentage["se"] = correct_percentage["std"] / np.sqrt(
+        correct_percentage["count"]
+    )
     correct_percentage["weber_ratio"] = correct_percentage["weber_ratio"].round(3)
 
-    # Plot
-    fig = plt.figure(figsize=(10, 6))
-    sns.barplot(
-        x="weber_ratio", y="Is correct", hue="equalized", data=correct_percentage
-    )
-    plt.xlabel("Weber Ratio")
-    plt.ylabel("Percentage of Correct Answers")
-    plt.title("Correct Classification by Weber Ratio and Image Equalization")
+    # Set style for publication
+    plt.style.use("seaborn-v0_8-white")
+
+    # Create figure with Nature-compatible dimensions
+    # Nature requires figures to be 89 mm or 183 mm wide
+    width_mm = 183
+    width_inches = width_mm / 25.4
+    height_inches = width_inches * 0.75  # Using golden ratio
+    fig, ax = plt.subplots(figsize=(width_inches, height_inches), dpi=300)
+
+    # Plot data points and error bars
+    conditions = [False, True]
+    labels = ["Non-equalized", "Surface-equalized"]
+    colors = ["#2166AC", "#B2182B"]  # Colorblind-friendly palette
+
+    for condition, label, color in zip(conditions, labels, colors):
+        data = correct_percentage[correct_percentage["equalized"] == condition]
+        ax.errorbar(
+            data["weber_ratio"],
+            data["mean"],
+            yerr=data["se"],
+            label=label,
+            color=color,
+            marker="o",
+            markersize=5,
+            capsize=3,
+            capthick=1,
+            linewidth=1.5,
+            linestyle="-",
+        )
+
+    # Customize appearance
+    ax.set_xlabel("Weber Ratio", fontsize=font_size)
+    ax.set_ylabel("Classification Accuracy (%)", fontsize=font_size)
+    ax.tick_params(axis="both", which="major", labelsize=font_size)
+    ax.spines[["right", "top"]].set_visible(False)
+
+    # Add legend
+    ax.legend(fontsize=font_size, frameon=False, loc="lower right")
+
+    # Set y-axis limits with some padding
+    ax.set_ylim(40, 105)
+
+    # Add grid
+    ax.yaxis.grid(True, linestyle="--", alpha=0.3)
+
+    # Adjust layout
     plt.tight_layout()
+
+    # Save if path provided
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches="tight")
 
     return fig
 

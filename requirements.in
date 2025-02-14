@@ -1,0 +1,15 @@
+torch>=2.0.0
+torch-geometric>=2.4.0
+torch-scatter
+torch-sparse
+wandb
+numpy>=1.26.0
+pandas
+scipy>=1.11.4
+pillow>=10.2.0
+matplotlib>=3.8.2
+networkx>=3.2.1
+tqdm
+plotly
+dash
+seaborn>=0.13.2

@@ -3,7 +3,7 @@ import torch
 from torch.nn import Module, Parameter, ParameterList, functional as F
 from scipy.sparse import csr_matrix
 
-from graph_models import DROPOUT
+from connectome import DROPOUT
 
 
 class PermutationLayer(torch.nn.Module):

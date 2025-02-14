@@ -5,14 +5,14 @@ from torch import device, cuda
 from torch.nn import BCEWithLogitsLoss
 from tqdm import tqdm
 
-import config
-from utils import (
+from configs import config
+from connectome import (
     initialize_results_df,
     select_random_images,
     update_results_df,
     update_running_loss,
 )
-from utils import (
+from connectome import (
     clean_model_outputs,
 )
 from deprecated.adult_models import FullAdultModel

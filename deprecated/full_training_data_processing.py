@@ -6,7 +6,7 @@ import torch
 from scipy.sparse import load_npz
 from torch_geometric.data import Data, Batch
 
-import config
+from configs import config
 import flyvision
 from flyvision.utils.activity_utils import LayerActivity
 from deprecated.from_image_to_video import image_paths_to_sequences
@@ -17,7 +17,7 @@ from deprecated.from_retina_to_connectome_funcs import (
 from deprecated.from_retina_to_connectome_utils import (
     vector_to_one_hot,
 )
-from utils import get_image_paths, paths_to_labels
+from connectome import get_image_paths, paths_to_labels
 
 
 class FullModelsDataProcessor:

@@ -249,22 +249,16 @@ connections_refined.csv
 
 # input data
 /images
-/videos
-data/custom_stimuli/RenderedData_0000/_meta.yaml
-data/custom_stimuli/RenderedData_0000/sequences.h5
-data/cell_type_rational.csv
 
 # drafts
 *draft.py
 *draft.ipynb
 
-# R stuff
+# IDEs
 .Rproj.user
+.vscode
 
-# pycharm stuff
-.idea
-
-# new data stuff
+# data stuff
 *.feather
 new_data
 supplementary_data/*

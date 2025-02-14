@@ -4,7 +4,7 @@ import torch.nn as nn
 
 from deprecated.adult_models_helpers import scipy_coo_to_torch_compressed_sparse
 from deprecated.custom_torch_sparse_layer import CompressedSparseMatrixMul, SparseMatrixMul
-from graph_models import RetinaConnectionLayer
+from connectome import RetinaConnectionLayer
 
 
 class AdultConnectome(nn.Module):

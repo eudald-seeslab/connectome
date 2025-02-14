@@ -4,14 +4,14 @@ import torch
 from torch.nn import BCEWithLogitsLoss
 from tqdm import tqdm
 
-import config
+from configs import config
 from deprecated.from_retina_to_connectome_utils import (
     get_decision_making_neurons,
 )
 from full_training_data_processing import FullModelsDataProcessor
-from graph_models import FullGraphModel
-from plots import plot_weber_fraction
-from utils import (
+from connectome import FullGraphModel
+from connectome.visualization.plots import plot_weber_fraction
+from connectome import (
     clean_model_outputs,
     initialize_results_df,
     select_random_images,

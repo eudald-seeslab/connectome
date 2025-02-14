@@ -1,6 +1,6 @@
 import wandb
 from wandb import AlertLevel
-from utils import module_to_clean_dict
+from connectome.core.utils import module_to_clean_dict
 
 
 class WandBLogger:

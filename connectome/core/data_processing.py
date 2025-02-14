@@ -11,7 +11,7 @@ import torch
 from scipy.sparse import coo_matrix
 from torch_geometric.data import Data, Batch
 
-from train_funcs import (
+from connectome.core.train_funcs import (
     apply_inhibitory_r7_r8,
     construct_synaptic_matrix,
     get_activation_from_cell_type,
@@ -22,7 +22,7 @@ from train_funcs import (
     preprocess_images,
     process_images,
 )
-from voronoi_cells import VoronoiCells
+from connectome.core.voronoi_cells import VoronoiCells
 from connectome.core.utils import paths_to_labels
 
 

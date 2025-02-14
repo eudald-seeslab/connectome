@@ -10,10 +10,10 @@ from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
 
 from connectome.core.debug_utils import get_logger, model_summary
-from connectome import EarlyStopping, TrainingError
+from connectome.core.graph_models_helpers import EarlyStopping, TrainingError
 from configs import config
 from connectome.visualization.plots import guess_your_plots, plot_results
-from connectome import (
+from connectome.core.utils import (
     get_image_paths,
     get_iteration_number,
     initialize_results_df,
@@ -23,11 +23,10 @@ from connectome import (
     update_config_with_sweep,
     update_results_df,
     update_running_loss,
+    clean_model_outputs
 )
-from connectome import DataProcessor
-from connectome import FullGraphModel
-from connectome import clean_model_outputs
-
+from connectome.core.data_processing import DataProcessor
+from connectome.core.graph_models import FullGraphModel
 from connectome.tools.wandb_logger import WandBLogger
 
 warnings.filterwarnings(

@@ -1,8 +1,9 @@
 import torch
 from torch.nn import Parameter
-from graph_models_helpers import log_norm, min_max_norm
 from torch_geometric.nn import MessagePassing
 from torch import nn
+
+from connectome.core.graph_models_helpers import log_norm, min_max_norm
 
 
 class Connectome(MessagePassing):

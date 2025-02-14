@@ -4,6 +4,7 @@ from torch import cuda, device
 from torch.nn.functional import leaky_relu
 from PIL import Image
 from connectome.core.debug_utils import debugger_is_active
+from paths import PROJECT_ROOT
 
 # Paper variables
 data_type = "two_shapes3"
@@ -18,13 +19,13 @@ resume_checkpoint = None # "m_2024-12-28 18:42_n3l481jr.pth"
 NUM_CONNECTOME_PASSES = 4
 random_synapses = False
 device_type = "cuda" if cuda.is_available() else "cpu"
-# device_type = "cpu"
+device_type = "cpu"
 debugging = True
 wandb_project = "equalized_shapes"
 
 # Data
-TRAINING_DATA_DIR = os.path.join("images", data_type, "train")
-TESTING_DATA_DIR = os.path.join("images", data_type, "test")
+TRAINING_DATA_DIR = os.path.join(PROJECT_ROOT, "images", data_type, "train")
+TESTING_DATA_DIR = os.path.join(PROJECT_ROOT, "images", data_type, "test")
 CLASSES = sorted(os.listdir(TRAINING_DATA_DIR))
 # get one sample of one class to get the image size
 sample_image = os.listdir(os.path.join(TRAINING_DATA_DIR, CLASSES[0]))[0]

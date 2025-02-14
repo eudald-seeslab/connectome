@@ -6,7 +6,7 @@ import pandas as pd
 from scipy.sparse import coo_matrix
 import torch
 
-from debug_utils import model_summary
+from connectome.core.debug_utils import model_summary
 
 
 def get_files_from_directory(directory_path):

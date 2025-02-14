@@ -1,7 +1,7 @@
 import os
 
 
-data_dirs = ["one_to_five", "blue_yellow_80_110_jitter", "stripes"]
+data_dirs = ["one_to_ten", "two_shapes", "two_colors", "stripes"]
 
 
 data_dirs_config = [

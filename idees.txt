@@ -43,7 +43,7 @@ Idees
 [x] mirar manifolds sobre el test set
 [x] provar amb menys punts
 [x] amb xarxa entrenada amb un color, veure si també funciona per altres colors
-[-] transfer learning: entrenar a la vegada punts i símbols
+[-] multitasking: entrenar a la vegada punts i símbols
 [-] mnist
 [x] Neuron subselection for decision making
 [ ] Manifolds: see how neural representations evolve with training

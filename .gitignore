@@ -258,7 +258,7 @@ connections_refined.csv
 .Rproj.user
 .vscode
 
-# new data stuff
+# data stuff
 *.feather
 new_data
-supplementary_data
+supplementary_data/*

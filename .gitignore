@@ -261,3 +261,4 @@ connections_refined.csv
 # new data stuff
 *.feather
 new_data
+supplementary_data

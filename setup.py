@@ -13,14 +13,15 @@ INSTALL_REQUIRES = [
     "pillow>=10.2.0",
     "matplotlib>=3.8.2",
     "networkx>=3.2.1",
-    "tqdm",
+    "tqdm>=4.65.0",
+    "seaborn>=0.13.2",
+    "imageio>=2.34.1",
 ]
 
 # Optional dependencies for visualization
 VIZ_REQUIRES = [
     "plotly",
     "dash",
-    "seaborn>=0.13.2",
 ]
 
 # Development dependencies
@@ -32,7 +33,7 @@ DEV_REQUIRES = [
 
 setup(
     name="connectome",
-    version="0.1.0",
+    version="0.1.1",
     packages=find_packages(),
     python_requires=">=3.10",
     install_requires=INSTALL_REQUIRES,

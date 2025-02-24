@@ -1,4 +1,4 @@
-# Drosophila melanogaster's connectome models
+# _Drosophila melanogaster_'s connectome models
 
 This repository contains code for analyzing neural connectomes using machine learning techniques. 
 The work is associated with our paper [pending].
@@ -15,39 +15,32 @@ cd connectome
 
 ````bash
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  
+# On Windows: 
+# venv\Scripts\activate
 ````
 
 3. Install the packages
 
-Install options:
-
-Basic installation:
-
-Torch stuff is special
-
-```bash
-pip install torch torchvision torchaudio
-pip install torch-scatter torch-sparse
-```
+Basic install:
 
 ````bash
 pip install -e .
 ````
 
-With visualization tools
+With visualization tools:
 
 ```bash
 pip install .[viz]
 ```
 
-Development installation
+Development:
 
 ```bash
 pip install .[dev]
 ```
 
-Full installation:
+Full:
 
 ```bash
 pip install .[all]
@@ -57,7 +50,7 @@ pip install .[all]
 
 You can create input data using the scripts in 'input_data_creation', like such:
 
-ANS:
+Approximate Number System:
 ```bash
 python input_data_creation/points_creator.py --img_dir images/one_to_ten/train --easy
 python input_data_creation/points_creator.py --img_dir images/one_to_ten/test --easy
@@ -115,6 +108,10 @@ This project is in very early stages and highly unstable. If you would like to c
 me at eudald.correig@urv.cat and we'll see how to organize it.
 
 ## TODOs
+
+- Easier creation of ANS input images
+
+## Other
 
 These runs sometimes make cuda break (I don't know why). As a temporary patch, when this happens, run:
 

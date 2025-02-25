@@ -70,8 +70,7 @@ class DataProcessor:
             eye=config_.eye,
             neurons=self.neurons,
             voronoi_criteria=config_.voronoi_criteria,
-            new_connectome=config_.new_connectome,
-        )
+            )
         if config_.voronoi_criteria == "R7":
             self.tesselated_neurons = self.voronoi_cells.get_tesselated_neurons()
             self.voronoi_indices = self.voronoi_cells.get_image_indices()
@@ -226,10 +225,9 @@ class DataProcessor:
         synaptic_matrix.sum_duplicates()
         return synaptic_matrix
 
-    @staticmethod
-    def get_rational_cell_types_from_file():
+    def get_rational_cell_types_from_file(self):
         return pd.read_csv(
-            "../../adult_data/rational_cell_types.csv", index_col=0
+            os.path.join(self.data_dir, "rational_cell_types.csv"), index_col=0
         ).index.tolist()
 
     def get_rational_cell_types(self, rational_cell_types):

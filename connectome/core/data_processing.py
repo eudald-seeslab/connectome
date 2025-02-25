@@ -3,6 +3,8 @@ import random
 from matplotlib import pyplot as plt
 import matplotlib
 
+from paths import PROJECT_ROOT
+
 matplotlib.use("Agg")
 
 import numpy as np
@@ -38,7 +40,8 @@ class DataProcessor:
         torch.manual_seed(config_.random_seed)
         random.seed(config_.random_seed)
 
-        self.data_dir = "new_data" if config_.new_connectome else "adult_data"
+        data_dir_ = "new_data" if config_.new_connectome else "adult_data"
+        self.data_dir = os.path.join(PROJECT_ROOT, data_dir_)
         rational_cell_types = self.get_rational_cell_types(config_.rational_cell_types)
         self.protected_cell_types = self.retinal_cells + rational_cell_types
         self._check_filtered_neurons(config_.filtered_celltypes)
@@ -63,6 +66,7 @@ class DataProcessor:
         )
         self.neurons = config_.neurons
         self.voronoi_cells = VoronoiCells(
+            data_dir=self.data_dir,
             eye=config_.eye,
             neurons=self.neurons,
             voronoi_criteria=config_.voronoi_criteria,

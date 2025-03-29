@@ -759,7 +759,7 @@ def create_nature_style_projection(
 
 
 def create_activation_comparison_plot(
-    propagation_dfs, labels, colors=None, fig_width=183, dpi=300
+    propagation_dict, colors=None, fig_width=183, dpi=300, activation_threshold=0
 ):
     """
     Create a Nature-style comparison plot showing percentage of active neurons,
@@ -830,7 +830,7 @@ def create_activation_comparison_plot(
     # Calculate activation metrics for each configuration
     all_metrics = []
 
-    for config_idx, (label, prop_df) in enumerate(zip(labels, propagation_dfs)):
+    for label, prop_df in propagation_dict.items():
         metrics = []
 
         # Calculate metrics for each activation step
@@ -841,8 +841,8 @@ def create_activation_comparison_plot(
             if activation_col not in prop_df.columns:
                 continue
 
-            # Count active neurons (activation > 0)
-            active_neurons = prop_df[prop_df[activation_col] > 0]
+            # Count active neurons 
+            active_neurons = prop_df[prop_df[activation_col] > activation_threshold]
             active_count = len(active_neurons)
             total_count = len(prop_df)
 
@@ -887,7 +887,7 @@ def create_activation_comparison_plot(
         y_col = title
 
         # Plot each configuration
-        for j, config in enumerate(labels):
+        for j, config in enumerate(propagation_dict.keys()):
             config_data = combined_metrics[combined_metrics["Configuration"] == config]
 
             # Plot line
@@ -1311,8 +1311,8 @@ def visualize_steps_separated_compact(
             if i == len(propagations_dict) - 1:  # Last row
                 ax.set_xlabel("X", labelpad=-10)
 
-            # Add Z label only for a subset
-            if step == 1 and i == 0:
+            # Add Z label for the left column only
+            if step == 1:
                 ax.set_zlabel("Z", labelpad=-10)
 
             # Get color for this step

@@ -7,10 +7,10 @@ from connectome.core.debug_utils import debugger_is_active
 from paths import PROJECT_ROOT
 
 # Paper variables
-data_type = "stripes"
+data_type = "one_to_ten"
 train_edges = True
 train_neurons = False
-refined_synaptic_data = False
+refined_synaptic_data = True
 synaptic_limit = True
 
 # Other often changing vars

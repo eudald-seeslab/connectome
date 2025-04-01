@@ -155,7 +155,7 @@ def get_config():
     parser.add_argument(
         "--img_set_num",
         type=int,
-        default=100,
+        default=60,
         help="Number of image sets to generate.",
     )
     parser.add_argument(

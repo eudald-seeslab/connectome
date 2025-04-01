@@ -261,6 +261,7 @@ connections_refined.csv
 # data stuff
 *.feather
 new_data
+adult_data
 supplementary_data/*
 
 # plots

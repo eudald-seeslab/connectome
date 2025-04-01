@@ -297,8 +297,13 @@ if __name__ == "__main__":
 
     connections, nc = load_data()
     total_length = compute_total_synapse_length(connections, nc)
-    
+
     connections_shuffled = shuffle_post_root_id(connections)
+    connections_shuffled.to_csv(
+        os.path.join(PROJECT_ROOT, "new_data", "connections_random_unconstrained.csv"),
+        index=False,
+    )
+
     scaled_random = match_wiring_length_with_syn_scale(
         connections_shuffled,
         nc,
@@ -316,7 +321,7 @@ if __name__ == "__main__":
     # remove objects to save memory
     del connections_shuffled
     del scaled_random
-    
+
     random_connections = create_length_preserving_random_network(
         connections, nc, bins=100, tolerance=0.05
     )

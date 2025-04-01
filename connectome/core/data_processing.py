@@ -50,7 +50,7 @@ class DataProcessor:
             config_.filtered_fraction,
             side=None,
         )
-        connections = self._get_connections(config_.refined_synaptic_data)
+        connections = self._get_connections(config_.refined_synaptic_data, config_.randomization_strategy)
         self.root_ids = self._get_root_ids(neuron_classification, connections)
         self.synaptic_matrix = construct_synaptic_matrix(
             neuron_classification, connections, self.root_ids
@@ -58,8 +58,6 @@ class DataProcessor:
 
         if config_.log_transform_weights:
             self.synaptic_matrix.data = np.log1p(self.synaptic_matrix.data)
-        if config_.random_synapses:
-            self.synaptic_matrix = self.shuffle_synaptic_matrix(self.synaptic_matrix)
 
         self.decision_making_vector = get_side_decision_making_vector(
             self.root_ids, rational_cell_types, neuron_classification
@@ -285,8 +283,10 @@ class DataProcessor:
 
         return all_neurons
 
-    def _get_connections(self, refined_synaptic_data=False):
+    def _get_connections(self, refined_synaptic_data=False, randomization_strategy=None):
         file_char = "_refined" if refined_synaptic_data else ""
+        if randomization_strategy is not None:
+            file_char += f"_random_{randomization_strategy}"
 
         filename = os.path.join(self.data_dir, f"connections{file_char}.csv")
         connections = pd.read_csv(

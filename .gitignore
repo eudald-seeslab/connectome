@@ -265,3 +265,6 @@ supplementary_data/*
 
 # plots
 plots/*
+
+# claude stuff
+CLAUDE.md

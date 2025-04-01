@@ -21,7 +21,7 @@ randomization_strategy = "pruned"  # None, "unconstrained", "pruned", "binned"
 device_type = "cuda" if cuda.is_available() else "cpu"
 # device_type = "cpu"
 debugging = False
-wandb_project = "equalized_shapes"
+wandb_project = "randomizations"
 
 # Data
 TRAINING_DATA_DIR = os.path.join(PROJECT_ROOT, "images", data_type, "train")

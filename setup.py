@@ -29,6 +29,7 @@ DEV_REQUIRES = [
     "black>=24.1.1",
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
+    "joblib>=1.2.0",
 ]
 
 setup(

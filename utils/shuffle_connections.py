@@ -294,7 +294,6 @@ def shuffle_within_bin(bin_group):
 
 
 if __name__ == "__main__":
-    np.random.seed(12345)
 
     connections, nc = load_data()
     total_length = compute_total_synapse_length(connections, nc)

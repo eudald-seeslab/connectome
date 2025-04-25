@@ -152,8 +152,7 @@ def reshuffle_connections(connections):
     return shuffled_connections
 
 
-def get_activation_dictionnary():
-    num_passes = 4
+def get_activation_dictionnary(num_passes=4):
     base_dir = os.path.join(project_root, "images", "one_to_ten", "train")
     sub_dirs = ["yellow", "blue"]
 

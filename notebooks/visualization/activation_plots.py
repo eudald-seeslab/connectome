@@ -1143,7 +1143,7 @@ import matplotlib.gridspec as gridspec
 
 
 def get_active_neuron_bounds(
-    propagations_dict, neuron_position_data, padding_percent=10
+    propagations_dict, neuron_position_data, padding_percent=10, num_steps=4
 ):
     """
     Calculate the bounds of active neurons across all configurations.
@@ -1174,7 +1174,7 @@ def get_active_neuron_bounds(
 
         # Collect positions of all active neurons (in any step)
         active_mask = merged_data["activation_1"] > 0
-        for step in range(2, 5):
+        for step in range(2, num_steps + 1):
             active_mask |= merged_data[f"activation_{step}"] > 0
 
         active_neurons = merged_data[active_mask]
@@ -1229,14 +1229,15 @@ def get_active_neuron_bounds(
 def visualize_steps_separated_compact(
     propagations_dict,
     neuron_position_data,
+    num_steps=4,
     max_neurons_per_step=1000,
     voxel_size=20,
     smoothing=1.0,
-    figsize=(16, 12),
+    figsize=(16, 16),
     padding_percent=10,
 ):
     """
-    Create a compact 4x4 grid of 3D visualizations with configurations as rows and steps as columns.
+    Create a compact 4xnum_steps grid of 3D visualizations with configurations as rows and steps as columns.
 
     Parameters:
     -----------
@@ -1258,11 +1259,11 @@ def visualize_steps_separated_compact(
     Returns:
     --------
     fig : matplotlib.figure.Figure
-        Figure with the 4x4 grid of visualizations
+        Figure with the 4xnum_steps grid of visualizations
     """
     # Get bounds of active neurons
     bounds = get_active_neuron_bounds(
-        propagations_dict, neuron_position_data, padding_percent
+        propagations_dict, neuron_position_data, padding_percent, num_steps
     )
     x_min, x_max = bounds["x_min"], bounds["x_max"]
     y_min, y_max = bounds["y_min"], bounds["y_max"]
@@ -1271,10 +1272,10 @@ def visualize_steps_separated_compact(
     # Nature-friendly colors for each step
     step_colors = ["#4878D0", "#6ACC64", "#EE854A", "#D65F5F"]
 
-    # Create a figure with 4x4 grid: rows=configurations, columns=steps
+    # Create a figure with 4xnum_steps grid: rows=configurations, columns=steps
     # Replace figure and GridSpec creation with:
     fig, axes = plt.subplots(
-        len(propagations_dict), 4, figsize=figsize, subplot_kw={"projection": "3d"}
+        len(propagations_dict), num_steps, figsize=figsize, subplot_kw={"projection": "3d"}
     )
 
     # Process each configuration (rows)
@@ -1283,7 +1284,7 @@ def visualize_steps_separated_compact(
         merged_data = pd.merge(prop_df, neuron_position_data, on="root_id")
 
         # Process each activation step (columns)
-        for step in range(1, 5):
+        for step in range(1, num_steps + 1):
             # Get subplot position
             if len(propagations_dict) > 1:
                 ax = axes[i, step - 1]
@@ -1410,7 +1411,7 @@ def visualize_steps_separated_compact(
             # Sample individual neurons for overlay
             if len(step_data) > max_neurons_per_step:
                 neuron_sample = step_data.sample(
-                    max_neurons_per_step, random_state=step + 42
+                    max_neurons_per_step, random_state=step + 1234
                 )
             else:
                 neuron_sample = step_data

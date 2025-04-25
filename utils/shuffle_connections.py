@@ -1,8 +1,19 @@
-from joblib import Parallel, delayed
-import pandas as pd
-import numpy as np
+import logging
 import os
+
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
+
 from paths import PROJECT_ROOT
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 
 def load_data():
@@ -96,19 +107,23 @@ def match_wiring_length_with_syn_scale(
     tolerance=0.01,
 ):
     conns_scaled = connections.copy()
+    logger.info("Starting synapse count scaling to match wiring length...")
 
-    for _ in range(max_iter):
+    for i in tqdm(range(max_iter), desc="Scaling iterations"):
         mid = 0.5 * (scale_low + scale_high)
         conns_scaled["syn_count"] = connections["syn_count"] * mid
         length_est = compute_total_synapse_length(conns_scaled, nc)
 
         ratio = length_est / real_length
+        logger.info(f"Iteration {i+1}/{max_iter}: scale={mid:.4f}, length={length_est:.2f}, ratio={ratio:.3f}")
+        
         if length_est < real_length:
             scale_low = mid
         else:
             scale_high = mid
 
         if abs(ratio - 1.0) < tolerance:
+            logger.info("Target ratio achieved within tolerance")
             break
 
     final_scale = 0.5 * (scale_low + scale_high)
@@ -117,62 +132,10 @@ def match_wiring_length_with_syn_scale(
     # final check that we are within tolerance
     final_length = compute_total_synapse_length(conns_scaled, nc)
     dif_ratio = abs(final_length - real_length) / real_length
-    print(f"Pruned: ratio of final length to real length: {dif_ratio}")
+    logger.info(f"Final ratio of length to real length: {dif_ratio:.4f}")
     assert dif_ratio < tolerance, "Final length does not match real length"
 
     return conns_scaled
-
-
-def create_length_preserving_random_network_parallel(
-    connections, neurons, bins=10, tolerance=0.1
-):
-    # Bins > 30 or so kill your memory
-    connections = connections.copy()
-    neurons = neurons.copy()
-
-    # Perform type conversions once
-    connections = connections.astype(
-        {"pre_root_id": int, "post_root_id": int, "syn_count": int}
-    )
-    neurons = neurons.astype({"root_id": int})
-
-    pre_neurons = neurons[["root_id", "soma_x", "soma_y", "soma_z"]].copy()
-    pre_neurons.columns = ["pre_root_id", "pre_x", "pre_y", "pre_z"]
-
-    post_neurons = neurons[["root_id", "soma_x", "soma_y", "soma_z"]].copy()
-    post_neurons.columns = ["post_root_id", "post_x", "post_y", "post_z"]
-
-    randomizable_with_coords = connections.merge(
-        pre_neurons, on="pre_root_id"
-    ).merge(post_neurons, on="post_root_id")
-
-    pre_coords = randomizable_with_coords[["pre_x", "pre_y", "pre_z"]].to_numpy()
-    post_coords = randomizable_with_coords[["post_x", "post_y", "post_z"]].to_numpy()
-    distances = np.linalg.norm(pre_coords - post_coords, axis=1)
-    randomizable_with_coords["distance"] = distances
-
-    randomizable_with_coords["bin"] = pd.qcut(
-        randomizable_with_coords["distance"], bins, labels=False
-    )
-
-    # Parallelize bin shuffling
-    shuffled_randomizable = Parallel(n_jobs=-1)(
-        delayed(shuffle_within_bin)(
-            randomizable_with_coords[randomizable_with_coords["bin"] == bin_id]
-        )
-        for bin_id in range(bins)
-    )
-    final_connections = pd.concat(shuffled_randomizable)
-
-    # Check whether we are within tolerance
-    real_length = compute_total_synapse_length(connections, neurons)
-    final_length = compute_total_synapse_length(final_connections, neurons)
-    dif_ratio = abs(final_length - real_length) / real_length
-
-    print(f"Binned: ratio of final length to real length: {dif_ratio}")
-    assert dif_ratio < tolerance, "Final length does not match real length"
-
-    return final_connections
 
 
 def create_length_preserving_random_network(
@@ -182,12 +145,9 @@ def create_length_preserving_random_network(
     Create a randomized network that preserves the total wiring length.
     Process bin by bin to reduce memory usage.
     """
-    import pandas as pd
-    import numpy as np
-    from tqdm import tqdm
-
     connections = connections.copy()
     neurons = neurons.copy()
+    logger.info("Starting length-preserving network randomization...")
 
     # Perform type conversions once
     connections = connections.astype(
@@ -203,7 +163,7 @@ def create_length_preserving_random_network(
     post_neurons.columns = ["post_root_id", "post_x", "post_y", "post_z"]
 
     # Add distance column to connections
-    print("Calculating distances...")
+    logger.info("Calculating distances between neurons...")
     connections_with_coords = connections.merge(pre_neurons, on="pre_root_id").merge(
         post_neurons, on="post_root_id"
     )
@@ -214,11 +174,11 @@ def create_length_preserving_random_network(
     connections_with_coords["distance"] = distances
 
     # Get bin edges for consistent binning
-    print(f"Creating {bins} distance bins...")
+    logger.info(f"Creating {bins} distance bins...")
     bin_edges = pd.qcut(connections_with_coords["distance"], bins, retbins=True)[1]
 
     # Process each bin separately to reduce memory usage
-    print("Shuffling connections within bins...")
+    logger.info("Shuffling connections within bins...")
     shuffled_connections = []
 
     # Create bins based on distance
@@ -230,7 +190,7 @@ def create_length_preserving_random_network(
     )
 
     # Process each bin
-    for bin_idx in tqdm(range(bins)):
+    for bin_idx in tqdm(range(bins), desc="Processing bins"):
         # Get only connections in current bin
         bin_mask = connections_with_coords["bin"] == bin_idx
         if not np.any(bin_mask):
@@ -258,21 +218,21 @@ def create_length_preserving_random_network(
         shuffled_connections.append(bin_result)
 
     # Combine all shuffled bins
-    print("Combining results...")
+    logger.info("Combining results from all bins...")
     final_connections = pd.concat(shuffled_connections, ignore_index=True)
 
     # Only keep the necessary columns
     final_connections = final_connections[["pre_root_id", "post_root_id", "syn_count"]]
 
     # Recalculate distances and check if within tolerance
-    print("Validating total wiring length...")
+    logger.info("Validating total wiring length...")
     real_length = compute_total_synapse_length(connections, neurons)
     final_length = compute_total_synapse_length(final_connections, neurons)
     dif_ratio = abs(final_length - real_length) / real_length
 
-    print(f"Original wiring length: {real_length}")
-    print(f"Randomized wiring length: {final_length}")
-    print(f"Difference ratio: {dif_ratio:.4f} (should be < {tolerance})")
+    logger.info(f"Original wiring length: {real_length:.2f}")
+    logger.info(f"Randomized wiring length: {final_length:.2f}")
+    logger.info(f"Difference ratio: {dif_ratio:.4f} (should be < {tolerance})")
 
     assert (
         dif_ratio < 1 + tolerance
@@ -281,29 +241,21 @@ def create_length_preserving_random_network(
     return final_connections
 
 
-def shuffle_within_bin(bin_group):
-    """Shuffle post_root_id values within a distance bin."""
-    if len(bin_group) <= 1:
-        return bin_group
-
-    result = bin_group.copy()
-    shuffled_post_ids = np.random.permutation(bin_group["post_root_id"].values)
-    result["post_root_id"] = shuffled_post_ids
-
-    return result
-
-
 if __name__ == "__main__":
-
+    logger.info("Loading data...")
     connections, nc = load_data()
     total_length = compute_total_synapse_length(connections, nc)
+    logger.info(f"Total wiring length of original network: {total_length:.2f}")
 
+    logger.info("Starting unconstrained randomization...")
     connections_shuffled = shuffle_post_root_id(connections)
     connections_shuffled.to_csv(
         os.path.join(PROJECT_ROOT, "new_data", "connections_random_unconstrained.csv"),
         index=False,
     )
+    logger.info("Unconstrained randomization completed")
 
+    logger.info("Starting synapse count scaling...")
     scaled_random = match_wiring_length_with_syn_scale(
         connections_shuffled,
         nc,
@@ -318,10 +270,13 @@ if __name__ == "__main__":
         os.path.join(PROJECT_ROOT, "new_data", "connections_random_pruned.csv"),
         index=False,
     )
+    logger.info("Synapse count scaling completed")
+    
     # remove objects to save memory
     del connections_shuffled
     del scaled_random
 
+    logger.info("Starting length-preserving randomization...")
     random_connections = create_length_preserving_random_network(
         connections, nc, bins=100, tolerance=0.05
     )
@@ -329,3 +284,4 @@ if __name__ == "__main__":
         os.path.join(PROJECT_ROOT, "new_data", "connections_random_binned.csv"),
         index=False,
     )
+    logger.info("Length-preserving randomization completed")

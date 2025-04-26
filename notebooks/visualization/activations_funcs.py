@@ -47,8 +47,7 @@ def load_connections(file_name):
             "pre_root_id": "string",
             "post_root_id": "string",
             "syn_count": np.int32,
-        },
-        index_col=0,
+        }
     )
     grouped = (
         temp.groupby(["pre_root_id", "post_root_id"]).sum("syn_count").reset_index()
@@ -152,7 +151,16 @@ def reshuffle_connections(connections):
     return shuffled_connections
 
 
-def get_activation_dictionnary(num_passes=4):
+def get_all_connections():
+    return {
+        "Biological": load_connections("connections.csv"),
+        "Random unconstrained": load_connections("connections_random_unconstrained.csv"),
+        "Random pruned": load_connections("connections_random_pruned.csv"),
+        "Random bin-wise": load_connections("connections_random_binned.csv"),
+    }
+
+
+def get_activation_dictionnary(connections_dict, num_passes=4):
     base_dir = os.path.join(project_root, "images", "one_to_ten", "train")
     sub_dirs = ["yellow", "blue"]
 
@@ -163,31 +171,34 @@ def get_activation_dictionnary(num_passes=4):
     activated_data = neuron_data_from_image(img, visual_neuron_data)
 
     # Real connectome
-    connections = load_connections("connections.csv")
-    propagation = propagate_through_connectome(activated_data, connections, num_passes)
+    connections = connections_dict["Biological"]
+    propagation_original = propagate_through_connectome(activated_data, connections, num_passes)
 
     # Shuffled connectome
-    shuffled_connections = reshuffle_connections(connections)
-    propagation2 = propagate_through_connectome(
-        activated_data, shuffled_connections, num_passes
+    random_unconstrained = connections_dict["Random unconstrained"]
+    propagation_unconstrained = propagate_through_connectome(
+        activated_data, random_unconstrained, num_passes
     )
 
     # Random pruned connectome
-    random_equalized_connections = load_connections("connections_random_pruned.csv")
-    propagation3 = propagate_through_connectome(
-        activated_data, random_equalized_connections, num_passes
+    random_pruned = connections_dict["Random pruned"]
+    propagation_pruned = propagate_through_connectome(
+        activated_data, random_pruned, num_passes
     )
 
     # Random bin-wise connectome
-    shuffled_connections_3 = load_connections("connections_random_binned.csv")
-    propagation4 = propagate_through_connectome(
-        activated_data, shuffled_connections_3, num_passes
+    random_binned = connections_dict["Random bin-wise"]
+    propagation_binned = propagate_through_connectome(
+        activated_data, random_binned, num_passes
     )
 
     # Return all propagations for further use
     return {
-        "Original": propagation,
-        "Random unconstrained": propagation2,
-        "Random pruned": propagation3,
-        "Random bin-wise": propagation4,
+        "Biological": propagation_original,
+        "Random unconstrained": propagation_unconstrained,
+        "Random pruned": propagation_pruned,
+        "Random bin-wise": propagation_binned,
     }
+
+def split_title(title, max_length=15):
+    return title.replace(" ", "\n") if len(title) > max_length else title

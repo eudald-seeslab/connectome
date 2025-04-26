@@ -9,6 +9,8 @@ import seaborn as sns
 from scipy.ndimage import gaussian_filter
 from matplotlib.colors import to_rgba
 
+from notebooks.visualization.activations_funcs import split_title
+
 
 def visualize_connectome_activation(
     propagation, neuron_position_data, input_value=None, bin_size=50
@@ -1225,19 +1227,22 @@ def get_active_neuron_bounds(
         "z_max": z_max,
     }
 
+
+
 ########## THIS IS THE ONE ##########
 def visualize_steps_separated_compact(
     propagations_dict,
     neuron_position_data,
     num_steps=4,
-    max_neurons_per_step=1000,
-    voxel_size=20,
-    smoothing=1.0,
-    figsize=(16, 16),
+    max_neurons_percentage=5,
+    voxel_size=None,
+    smoothing=None,
+    figsize=(20, 16),
     padding_percent=10,
 ):
     """
-    Create a compact 4xnum_steps grid of 3D visualizations with configurations as rows and steps as columns.
+    Create a compact 4x(num_steps+1) grid of 3D visualizations with configurations as rows 
+    and steps as columns, including a first column for input visualization.
 
     Parameters:
     -----------
@@ -1245,8 +1250,8 @@ def visualize_steps_separated_compact(
         Dictionary with configuration names (keys) and propagation dataframes (values)
     neuron_position_data : pandas.DataFrame
         DataFrame with columns 'root_id', 'pos_x', 'pos_y', 'pos_z'
-    max_neurons_per_step : int
-        Maximum number of neurons to plot per step (for performance)
+    max_neurons_percentage : int
+        Maximum percentage of active neurons to plot per step (for performance)
     voxel_size : int
         Size of voxels for density calculation
     smoothing : float
@@ -1259,8 +1264,15 @@ def visualize_steps_separated_compact(
     Returns:
     --------
     fig : matplotlib.figure.Figure
-        Figure with the 4xnum_steps grid of visualizations
+        Figure with the 4x(num_steps+1) grid of visualizations
     """
+
+    # Stop if voxel_size is None and smoothing is not None or vice versa
+    if voxel_size is None and smoothing is not None:
+        raise ValueError("voxel_size must be provided if smoothing is provided")
+    if voxel_size is not None and smoothing is None:
+        raise ValueError("smoothing must be provided if voxel_size is provided")
+
     # Get bounds of active neurons
     bounds = get_active_neuron_bounds(
         propagations_dict, neuron_position_data, padding_percent, num_steps
@@ -1271,90 +1283,75 @@ def visualize_steps_separated_compact(
 
     # Nature-friendly colors for each step
     step_colors = ["#4878D0", "#6ACC64", "#EE854A", "#D65F5F"]
+    input_color = "#8A2BE2"  # A distinct purple color for input visualization
 
-    # Create a figure with 4xnum_steps grid: rows=configurations, columns=steps
-    # Replace figure and GridSpec creation with:
+    # Create a figure with 4x(num_steps+1) grid: rows=configurations, columns=input + steps
     fig, axes = plt.subplots(
-        len(propagations_dict), num_steps, figsize=figsize, subplot_kw={"projection": "3d"}
+        len(propagations_dict), num_steps + 1, figsize=figsize, subplot_kw={"projection": "3d"}
     )
 
     # Process each configuration (rows)
     for i, (config_name, prop_df) in enumerate(propagations_dict.items()):
+
+        config_name = split_title(config_name)
+
         # Merge with position data
         merged_data = pd.merge(prop_df, neuron_position_data, on="root_id")
+        
+        # First column: Input visualization
+        if len(propagations_dict) > 1:
+            ax = axes[i, 0]
+        else:
+            ax = axes[0]
+            
+        # Style the subplot for input
+        ax.set_facecolor("white")
+        ax.grid(False)
+        ax.xaxis.pane.fill = False
+        ax.yaxis.pane.fill = False
+        ax.zaxis.pane.fill = False
+        ax.xaxis.pane.set_edgecolor("lightgray")
+        ax.yaxis.pane.set_edgecolor("lightgray")
+        ax.zaxis.pane.set_edgecolor("lightgray")
 
-        # Process each activation step (columns)
-        for step in range(1, num_steps + 1):
-            # Get subplot position
-            if len(propagations_dict) > 1:
-                ax = axes[i, step - 1]
-            else:
-                ax = axes[step - 1]
-
-            # Style the subplot
-            ax.set_facecolor("white")
-            ax.grid(False)
-            ax.xaxis.pane.fill = False
-            ax.yaxis.pane.fill = False
-            ax.zaxis.pane.fill = False
-            ax.xaxis.pane.set_edgecolor("lightgray")
-            ax.yaxis.pane.set_edgecolor("lightgray")
-            ax.zaxis.pane.set_edgecolor("lightgray")
-
-            # Remove tick labels
-            ax.set_xticklabels([])
-            ax.set_yticklabels([])
-            ax.set_zticklabels([])
-
-            # Add minimal axis labels only for the leftmost column and bottom row
-            if step == 1:  # First column
-                ax.set_ylabel("Y", labelpad=-10)
-            if i == len(propagations_dict) - 1:  # Last row
-                ax.set_xlabel("X", labelpad=-10)
-
-            # Add Z label for the left column only
-            if step == 1:
-                ax.set_zlabel("Z", labelpad=-10)
-
-            # Get color for this step
-            color = step_colors[step - 1]
-
-            # Filter data for this step
-            act_col = f"activation_{step}"
-            step_data = merged_data[merged_data[act_col] > 0].copy()
-
-            # Add title to the top row only
-            if i == 0:
-                ax.set_title(f"Step {step}", fontsize=12, fontweight="bold", pad=5)
-
-            # Add configuration label to the leftmost column only
-            if step == 1:
-                # Add y-axis label as configuration name
-                ax.text2D(
-                    -0.15,
-                    0.5,
-                    config_name,
-                    transform=ax.transAxes,
-                    va="center",
-                    ha="center",
-                    rotation=90,
-                    fontsize=12,
-                    fontweight="bold",
-                )
-
-            # Skip if no data
-            if len(step_data) == 0:
-                continue
-
+        # Remove tick labels
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.set_zticklabels([])
+        
+        # Add configuration label to the leftmost column only
+        ax.text2D(
+            -0.2,
+            0.5,
+            config_name,
+            transform=ax.transAxes,
+            va="center",
+            ha="center",
+            rotation=90,
+            fontsize=16,
+        )
+        
+        # Add title to the top row only
+        if i == 0:
+            ax.set_title("Input", pad=5)
+            
+        # Filter data for input
+        input_data = merged_data[merged_data["input"] > 0].copy()
+        
+        # Skip if no data
+        if len(input_data) == 0:
+            continue
+            
+        if voxel_size is not None:
             # Create 3D histogram for density visualization
             x_bins = np.linspace(x_min, x_max, voxel_size)
             y_bins = np.linspace(y_min, y_max, voxel_size)
             z_bins = np.linspace(z_min, z_max, voxel_size)
 
             H, edges = np.histogramdd(
-                step_data[["pos_x", "pos_y", "pos_z"]].values,
+                input_data[["pos_x", "pos_y", "pos_z"]].values,
                 bins=[x_bins, y_bins, z_bins],
-                weights=step_data[act_col].values,
+                weights=input_data["input"].values,
             )
 
             # Apply Gaussian smoothing
@@ -1396,7 +1393,7 @@ def visualize_steps_separated_compact(
             alphas = 0.3 + 0.4 * norm_values
 
             # Plot density as scatter with varying alpha
-            rgba_colors = np.array([to_rgba(color, alpha=a) for a in alphas])
+            rgba_colors = np.array([to_rgba(input_color, alpha=a) for a in alphas])
 
             ax.scatter(
                 x_coords,
@@ -1407,11 +1404,160 @@ def visualize_steps_separated_compact(
                 edgecolors="none",
                 depthshade=True,
             )
+        
+        # Sample individual neurons for overlay
+        total_neurons = len(input_data)
+        sample_size = int(total_neurons * (max_neurons_percentage / 100))
+        if sample_size < total_neurons:
+            neuron_sample = input_data.sample(
+                sample_size, random_state=1234
+            )
+        else:
+            neuron_sample = input_data
 
+        # Scale activation values for better visualization
+        max_activation = neuron_sample["input"].max()
+        if max_activation > 0:
+            normalized_activation = neuron_sample["input"] / max_activation
+        else:
+            normalized_activation = neuron_sample["input"]
+
+        # Calculate point sizes based on activation strength
+        neuron_sizes = 15 * normalized_activation + 3
+
+        # Plot individual neurons with higher opacity for emphasis
+        ax.scatter(
+            neuron_sample["pos_x"],
+            neuron_sample["pos_y"],
+            neuron_sample["pos_z"],
+            c=[input_color],
+            s=neuron_sizes,
+            alpha=0.7,
+            edgecolors="none",
+            depthshade=True,
+        )
+
+        # Set consistent view angle
+        ax.view_init(elev=30, azim=45)
+
+        # Set axis limits
+        ax.set_xlim(x_min, x_max)
+        ax.set_ylim(y_min, y_max)
+        ax.set_zlim(z_min, z_max)
+
+        # Process each activation step (columns)
+        for step in range(1, num_steps + 1):
+            # Get subplot position (shifted by 1 to account for input column)
+            if len(propagations_dict) > 1:
+                ax = axes[i, step]
+            else:
+                ax = axes[step]
+
+            # Style the subplot
+            ax.set_facecolor("white")
+            ax.grid(False)
+            ax.xaxis.pane.fill = False
+            ax.yaxis.pane.fill = False
+            ax.zaxis.pane.fill = False
+            ax.xaxis.pane.set_edgecolor("lightgray")
+            ax.yaxis.pane.set_edgecolor("lightgray")
+            ax.zaxis.pane.set_edgecolor("lightgray")
+
+            # Remove tick labels
+            ax.set_xticklabels([])
+            ax.set_yticklabels([])
+            ax.set_zticklabels([])
+
+            # Add axis labels only for the bottom-right plot
+            if i == len(propagations_dict) - 1 and step == num_steps:  # Bottom-right plot
+                ax.set_xlabel("X", labelpad=-10)
+                ax.set_ylabel("Y", labelpad=-10)
+                ax.set_zlabel("Z", labelpad=-10)
+
+            # Get color for this step
+            color = step_colors[step - 1]
+
+            # Filter data for this step
+            act_col = f"activation_{step}"
+            step_data = merged_data[merged_data[act_col] > 0].copy()
+
+            # Add title to the top row only
+            if i == 0:
+                ax.set_title(f"Step {step}", pad=5)
+
+            # Skip if no data
+            if len(step_data) == 0:
+                continue
+            
+            if voxel_size is not None:
+                # Create 3D histogram for density visualization
+                x_bins = np.linspace(x_min, x_max, voxel_size)
+                y_bins = np.linspace(y_min, y_max, voxel_size)
+                z_bins = np.linspace(z_min, z_max, voxel_size)
+
+                H, edges = np.histogramdd(
+                    step_data[["pos_x", "pos_y", "pos_z"]].values,
+                    bins=[x_bins, y_bins, z_bins],
+                    weights=step_data[act_col].values,
+                )
+
+                # Apply Gaussian smoothing
+                H_smooth = gaussian_filter(H, sigma=smoothing)
+
+                # Skip if all zeros
+                if H_smooth.max() == 0:
+                    continue
+
+                # Get voxel coordinates
+                x_centers = (x_bins[:-1] + x_bins[1:]) / 2
+                y_centers = (y_bins[:-1] + y_bins[1:]) / 2
+                z_centers = (z_bins[:-1] + z_bins[1:]) / 2
+
+                # Create meshgrid of voxel centers
+                X, Y, Z = np.meshgrid(x_centers, y_centers, z_centers, indexing="ij")
+
+                # Get non-zero voxels (above threshold of max value)
+                threshold = 0.25 * H_smooth.max()
+                mask = H_smooth > threshold
+
+                # Skip if nothing to plot
+                if not np.any(mask):
+                    continue
+
+                # Get coordinates and values of voxels above threshold
+                x_coords = X[mask]
+                y_coords = Y[mask]
+                z_coords = Z[mask]
+                values = H_smooth[mask]
+
+                # Normalize values for sizing
+                norm_values = values / values.max()
+
+                # Calculate sizes based on activation strength
+                sizes = 40 * norm_values + 5
+
+                # Calculate alpha values based on activation strength
+                alphas = 0.3 + 0.4 * norm_values
+
+                # Plot density as scatter with varying alpha
+                rgba_colors = np.array([to_rgba(color, alpha=a) for a in alphas])
+
+                ax.scatter(
+                    x_coords,
+                    y_coords,
+                    z_coords,
+                    c=rgba_colors,
+                    s=sizes,
+                    edgecolors="none",
+                    depthshade=True,
+                )
+            
             # Sample individual neurons for overlay
-            if len(step_data) > max_neurons_per_step:
+            total_neurons = len(step_data)
+            sample_size = int(total_neurons * (max_neurons_percentage / 100))
+            if sample_size < total_neurons:
                 neuron_sample = step_data.sample(
-                    max_neurons_per_step, random_state=step + 1234
+                    sample_size, random_state=step + 1234
                 )
             else:
                 neuron_sample = step_data
@@ -1446,7 +1592,7 @@ def visualize_steps_separated_compact(
             ax.set_ylim(y_min, y_max)
             ax.set_zlim(z_min, z_max)
 
-    plt.subplots_adjust(wspace=-0.6, hspace=-0.05)
+    plt.subplots_adjust(wspace=-0.5, hspace=-0.06)
 
     return fig
 
@@ -1545,13 +1691,3 @@ def plot_activation_statistics(propagations_dict, neuron_position_data):
 
     plt.tight_layout()
     return fig
-
-# Example usage:
-# propagations_dict = {
-#     "Original": original_df,
-#     "Randomized": random_df,
-#     "Shuffled": shuffled_df,
-# }
-# fig = plot_activation_statistics(propagations_dict, neuron_position_data)
-# plt.savefig('activation_statistics.tiff', dpi=300)
-# plt.show()

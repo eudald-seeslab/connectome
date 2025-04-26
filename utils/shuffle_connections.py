@@ -143,18 +143,19 @@ def add_coords(connections_df, coords_df):
 
 
 def match_wiring_length_with_syn_scale(connections, nc, real_length, scale_low=0.0, scale_high=2.0, 
-                                      max_iter=20, tolerance=0.01):
+                                      max_iter=20, tolerance=0.01, allow_zeros=False):
     """Match wiring length by scaling synapse counts with fine-tuned convergence."""
-    
     
     conns_scaled = connections.copy()
     logger.info("Starting synapse count scaling to match wiring length...")
 
     # PHASE 1: Binary search to get close to target
-    for i in tqdm(range(max_iter), desc="Coarse scaling"):
+    for i in range(max_iter):
         mid = 0.5 * (scale_low + scale_high)
-        # Use deterministic ceiling to avoid zeros during search
-        conns_scaled["syn_count"] = np.ceil(connections["syn_count"] * mid)
+        if allow_zeros:
+            conns_scaled["syn_count"] = np.round(connections["syn_count"] * mid)
+        else:
+            conns_scaled["syn_count"] = np.ceil(connections["syn_count"] * mid)
         length_est = compute_total_synapse_length(conns_scaled, nc)
 
         ratio = length_est / real_length
@@ -165,8 +166,7 @@ def match_wiring_length_with_syn_scale(connections, nc, real_length, scale_low=0
         else:
             scale_high = mid
 
-        # Using a looser tolerance for phase 1
-        if abs(ratio - 1.0) < 0.05:  # 5% tolerance for phase 1
+        if abs(ratio - 1.0) < 0.05:
             logger.info("Initial convergence achieved, moving to fine-tuning phase")
             break
     
@@ -261,6 +261,203 @@ def match_wiring_length_with_syn_scale(connections, nc, real_length, scale_low=0
     return conns_with_coords[["pre_root_id", "post_root_id", "syn_count"]]
 
 
+def match_wiring_length_with_random_pruning(connections, nc, real_length, scale_low=0.0, scale_high=2.0, 
+                                       max_coarse_iter=20, max_fine_iter=50, tolerance=0.01, allow_zeros=False):
+    """
+    Match wiring length by scaling synapse counts with random pruning, using fully vectorized operations.
+    
+    Parameters:
+    -----------
+    connections : DataFrame
+        DataFrame containing pre_root_id, post_root_id, and syn_count columns.
+    nc : DataFrame 
+        Neuron coordinates with root_id, x, y, z columns.
+    real_length : float
+        Target total wiring length to match.
+    scale_low, scale_high : float
+        Initial bounds for binary search.
+    max_coarse_iter : int
+        Maximum iterations for binary search.
+    max_fine_iter : int
+        Maximum iterations for fine-tuning.
+    tolerance : float
+        Acceptable relative error for the final result.
+    allow_zeros : bool
+        If True, allows connections to have zero synapses.
+        
+    Returns:
+    --------
+    DataFrame with pre_root_id, post_root_id, and adjusted syn_count columns.
+    """
+    import numpy as np
+    import pandas as pd
+    
+    conns_scaled = connections.copy()
+    logger.info("Starting synapse count scaling to match wiring length...")
+
+    # PHASE 1: Binary search to get close to target
+    for i in range(max_coarse_iter):
+        mid = 0.5 * (scale_low + scale_high)
+        if allow_zeros:
+            conns_scaled["syn_count"] = np.round(connections["syn_count"] * mid)
+        else:
+            conns_scaled["syn_count"] = np.ceil(connections["syn_count"] * mid).astype(int)
+        length_est = compute_total_synapse_length(conns_scaled, nc)
+
+        ratio = length_est / real_length
+        logger.info(f"Iteration {i+1}/{max_coarse_iter}: scale={mid:.4f}, length={length_est:.2f}, ratio={ratio:.3f}")
+        
+        if length_est < real_length:
+            scale_low = mid
+        else:
+            scale_high = mid
+
+        if abs(ratio - 1.0) < 0.05:
+            logger.info("Binary search phase converged, moving to randomized fine-tuning")
+            break
+    
+    # Get the best scale from binary search
+    best_scale = 0.5 * (scale_low + scale_high)
+    
+    # PHASE 2: Vectorized random fine-tuning
+    logger.info("Starting vectorized random fine-tuning...")
+    
+    # Add coordinate data and calculate distances vectorially
+    conns_with_coords = add_coords(connections, nc)
+    conns_with_coords["distance"] = np.sqrt(
+        (conns_with_coords["pre_x"] - conns_with_coords["post_x"])**2 +
+        (conns_with_coords["pre_y"] - conns_with_coords["post_y"])**2 +
+        (conns_with_coords["pre_z"] - conns_with_coords["post_z"])**2
+    )
+    
+    # Initialize synapse counts with rounded values from binary search
+    # We use ceiling to ensure we don't get zeros (unless allowed)
+    conns_with_coords["syn_count"] = np.ceil(connections["syn_count"] * best_scale).astype(int)
+    
+    # Set minimum synapse count if needed
+    if not allow_zeros:
+        conns_with_coords.loc[conns_with_coords["syn_count"] < 1, "syn_count"] = 1
+    
+    # Calculate current total length vectorially
+    current_length = compute_total_synapse_length(
+        conns_with_coords[["pre_root_id", "post_root_id", "syn_count"]], 
+        nc
+    )
+    
+    logger.info(f"Initial vectorized length: {current_length:.2f}")
+    logger.info(f"Target length: {real_length:.2f}")
+    logger.info(f"Initial ratio: {current_length/real_length:.4f}")
+    
+    # For each iteration, we'll randomly select connections to adjust
+    min_synapses = 0 if allow_zeros else 1
+    
+    # Create lookup arrays for faster vectorized operations
+    conn_indices = np.arange(len(conns_with_coords))
+    distances = conns_with_coords["distance"].values
+    syn_counts = conns_with_coords["syn_count"].values.copy()
+    
+    for i in range(max_fine_iter):
+        length_diff = current_length - real_length
+        ratio = current_length / real_length
+        
+        if abs(ratio - 1.0) < tolerance:
+            logger.info(f"Vectorized random fine-tuning converged after {i+1} iterations")
+            break
+        
+        # Determine if we need to add or remove synapses
+        if length_diff < 0:  # Need to add synapses
+            # Calculate how many synapses to add (estimate based on average distance)
+            avg_distance = np.sum(distances * syn_counts) / np.sum(syn_counts)
+            synapses_to_add = max(10, int(abs(length_diff) / avg_distance * 1.2))
+            
+            # Randomly select connection indices (with replacement is fine for this purpose)
+            selected_indices = np.random.choice(conn_indices, 
+                                               size=min(synapses_to_add, len(conn_indices)),
+                                               replace=True)
+            
+            # Count occurrences of each index (how many synapses to add per connection)
+            unique_indices, counts = np.unique(selected_indices, return_counts=True)
+            
+            # Vectorized update of synapse counts and total length
+            syn_counts[unique_indices] += counts
+            current_length += np.sum(distances[unique_indices] * counts)
+        
+        else:  # Need to remove synapses
+            # Identify connections that have more than minimum synapses
+            removable_mask = syn_counts > min_synapses
+            removable_indices = conn_indices[removable_mask]
+            
+            if len(removable_indices) == 0:
+                logger.warning("No more synapses can be removed while respecting constraints")
+                break
+            
+            # Calculate how many synapses to remove
+            avg_distance = np.sum(distances * syn_counts) / np.sum(syn_counts)
+            synapses_to_remove = max(10, int(abs(length_diff) / avg_distance))
+            
+            # Randomly select indices to remove synapses from
+            selected_indices = np.random.choice(
+                removable_indices, 
+                size=min(synapses_to_remove, len(removable_indices)),
+                replace=True
+            )
+            
+            # Count occurrences of each index
+            unique_indices, counts = np.unique(selected_indices, return_counts=True)
+            
+            # Vectorized update of synapse counts and total length
+            # First, calculate how many we can actually remove from each connection
+            max_removable = syn_counts[unique_indices] - min_synapses
+            actual_removals = np.minimum(counts, max_removable)
+            
+            # Update counts and length
+            syn_counts[unique_indices] -= actual_removals
+            current_length -= np.sum(distances[unique_indices] * actual_removals)
+        
+        # Log progress
+        total_synapses = np.sum(syn_counts)
+        logger.info(f"Random iter {i+1}: length={current_length:.2f}, " +
+                   f"ratio={current_length/real_length:.4f}, " +
+                   f"synapses={total_synapses}")
+    
+    # Update the DataFrame with the final counts
+    conns_with_coords["syn_count"] = syn_counts
+    
+    # Final results
+    final_synapses = np.sum(syn_counts)
+    logger.info(f"Final vectorized length: {current_length:.2f}")
+    logger.info(f"Target length: {real_length:.2f}")
+    logger.info(f"Final ratio: {current_length/real_length:.4f}")
+    logger.info(f"Total synapses: {final_synapses}")
+    
+    return conns_with_coords[["pre_root_id", "post_root_id", "syn_count"]]
+
+
+def compute_individual_synapse_lengths(connections, neuron_coords):
+    # use np linalg to compute the distance between the pre and post neurons
+    conns_with_coords = add_coords(connections, neuron_coords)
+    return np.linalg.norm(
+        conns_with_coords[["pre_x", "pre_y", "pre_z"]] - conns_with_coords[["post_x", "post_y", "post_z"]], 
+        axis=1
+        )
+
+def compute_total_synapse_length(connections, neuron_coords):
+    """
+    Compute the total wiring length of all synapses using compute_individual_synapse_lengths.    
+    Parameters:
+    -----------
+    connections : DataFrame
+        Contains pre_root_id, post_root_id, and syn_count columns
+    neuron_coords : DataFrame
+        Contains root_id, x, y, z coordinates for each neuron
+        
+    Returns:
+    --------
+    float: The total wiring length
+    """
+    return np.sum(compute_individual_synapse_lengths(connections, neuron_coords) * connections["syn_count"])
+
+
 def create_length_preserving_random_network(
     connections, neurons, bins=100, tolerance=0.1
 ):
@@ -339,6 +536,7 @@ def create_length_preserving_random_network(
         })
 
         shuffled_connections.append(bin_result)
+        logger.info(f"Processed bin {bin_idx + 1}/{bins}")
 
     # Combine all shuffled bins
     logger.info("Combining results from all bins...")
@@ -403,14 +601,16 @@ if __name__ == "__main__":
             connections_shuffled = shuffle_post_root_id(connections)
         
         logger.info("Starting synapse count scaling...")
-        scaled_random = match_wiring_length_with_syn_scale(
+        scaled_random = match_wiring_length_with_random_pruning(
             connections_shuffled,
             nc,
             total_length,
             scale_low=0.0,
             scale_high=2.0,
-            max_iter=20,
+            max_coarse_iter=20,
+            max_fine_iter=50,
             tolerance=0.01,
+            allow_zeros=True,
         )
         scaled_random["syn_count"] = np.round(scaled_random["syn_count"]).astype(np.int32)
         scaled_random.to_csv(

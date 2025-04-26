@@ -746,6 +746,8 @@ if __name__ == "__main__":
                       help='Generate pruned randomized network')
     parser.add_argument('--binned', action='store_true',
                       help='Generate binned randomized network')
+    parser.add_argument("--plot_results", action="store_true",
+                      help="Plot the results")
     args = parser.parse_args()
     
     # If no arguments provided, run all randomizations
@@ -803,9 +805,10 @@ if __name__ == "__main__":
         logger.info("Length-preserving randomization completed")
 
     # Plot synapse length distributions
-    plot_synapse_length_distributions(neuron_coordinates, {
-        "Original": connections,
-        "Random unconstrained": random_unconstrained,
-        "Random pruned": random_pruned,
-        "Random bin-wise": random_binned
-    })
+    if args.plot_results:
+        plot_synapse_length_distributions(neuron_coordinates, {
+            "Original": connections,
+            "Random unconstrained": random_unconstrained,
+            "Random pruned": random_pruned,
+            "Random bin-wise": random_binned
+        })

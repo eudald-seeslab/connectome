@@ -14,9 +14,9 @@ refined_synaptic_data = False
 synaptic_limit = True
 
 # Other often changing vars
-batch_size = 16
+batch_size = 24
 resume_checkpoint = None # "m_2024-12-28 18:42_n3l481jr.pth"
-NUM_CONNECTOME_PASSES = 4
+NUM_CONNECTOME_PASSES = 3
 randomization_strategy = "pruned"  # None, "unconstrained", "pruned", "binned"
 device_type = "cuda" if cuda.is_available() else "cpu"
 # device_type = "cpu"

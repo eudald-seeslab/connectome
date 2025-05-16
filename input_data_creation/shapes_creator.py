@@ -51,7 +51,7 @@ class ShapesGenerator:
 
         # Set directory based on task
         if task_type == "two_shapes":
-            self.img_dir = "images/two_shapes3"
+            self.img_dir = "images/two_shapes"
         elif task_type == "two_colors":
             self.img_dir = "images/two_colors"
         else:

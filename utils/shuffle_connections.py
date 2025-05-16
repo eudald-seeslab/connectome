@@ -2,12 +2,13 @@ import logging
 import os
 import argparse
 
-from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+from notebooks.visualization.activation_plots import plot_synapse_length_distributions
 from paths import PROJECT_ROOT
+from utils.helpers import add_coords, compute_total_synapse_length
 
 # Configure logging
 logging.basicConfig(
@@ -71,65 +72,6 @@ def shuffle_within_bin(bin_group):
     result = bin_group.copy()
     result['post_root_id'] = shuffled_post_ids
     return result
-
-
-def add_coords(connections_df, coords_df):
-    """Add pre and post neuron coordinates to connections dataframe"""
-
-    # If coords' columns are based on soma, rename them
-    if "soma_x" in coords_df.columns:
-        coords_df = coords_df.rename(
-            columns={
-                "soma_x": "pos_x",
-                "soma_y": "pos_y",
-                "soma_z": "pos_z",
-            }
-        )
-
-    # Make sure all root ids are strings
-    coords_df["root_id"] = coords_df["root_id"].astype(str)
-    connections_df["pre_root_id"] = connections_df["pre_root_id"].astype(str)
-    connections_df["post_root_id"] = connections_df["post_root_id"].astype(str)
-    
-    # Add pre-neuron coordinates
-    df = connections_df.merge(
-        coords_df[["root_id", "pos_x", "pos_y", "pos_z"]],
-        left_on="pre_root_id",
-        right_on="root_id",
-        how="left",
-        suffixes=("", "_pre"),
-    )
-    
-    # Remove unnecessary column
-    if "root_id" in df.columns:
-        df = df.drop("root_id", axis=1)
-    
-    # Add post-neuron coordinates
-    df = df.merge(
-        coords_df[["root_id", "pos_x", "pos_y", "pos_z"]],
-        left_on="post_root_id",
-        right_on="root_id",
-        how="left",
-        suffixes=("_pre", "_post"),
-    )
-    
-    # Remove unnecessary column
-    if "root_id" in df.columns:
-        df = df.drop("root_id", axis=1)
-
-    # Rename columns for clarity
-    df = df.rename(
-        columns={
-            "pos_x_pre": "pre_x",
-            "pos_y_pre": "pre_y",
-            "pos_z_pre": "pre_z",
-            "pos_x_post": "post_x",
-            "pos_y_post": "post_y",
-            "pos_z_post": "post_z",
-        }
-    )
-    
-    return df
 
 
 def match_wiring_length_with_syn_scale(connections, nc, real_length, scale_low=0.0, scale_high=2.0, 
@@ -461,36 +403,6 @@ def match_wiring_length_with_random_pruning_old(connections, nc, real_length,max
     return conns_with_coords[["pre_root_id", "post_root_id", "syn_count"]]
 
 
-def compute_individual_synapse_lengths(connections, neuron_coords):
-    """
-    Compute the length of each synapse.
-    """
-    conns_with_coords = add_coords(connections, neuron_coords)
-    return np.linalg.norm(
-        conns_with_coords[["pre_x", "pre_y", "pre_z"]].values -
-        conns_with_coords[["post_x", "post_y", "post_z"]].values,
-        axis=1
-    )
-
-def compute_total_synapse_length(connections, neuron_coords):
-    """
-    Compute the total wiring length of all synapses.
-    
-    Parameters:
-    -----------
-    connections : DataFrame
-        Contains pre_root_id, post_root_id, and syn_count columns
-    neuron_coords : DataFrame
-        Contains root_id, x, y, z coordinates for each neuron
-        
-    Returns:
-    --------
-    float: The total wiring length
-    """
-    
-    # Calculate total length by multiplying each connection distance by its synapse count
-    return np.sum(compute_individual_synapse_lengths(connections, neuron_coords) * connections["syn_count"])
-
 def match_wiring_length_with_random_pruning(
     connections: pd.DataFrame,
     nc: pd.DataFrame,
@@ -672,69 +584,184 @@ def create_length_preserving_random_network(
     return final_connections
 
 
-plots_dir = os.path.join(PROJECT_ROOT, "plots")
-def plot_synapse_length_distributions(neuron_coords, conns_dict, plots_dir=plots_dir, use_density=True):
-
-    titles  = conns_dict.keys()
-    colors  = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
-
-    # Pre-calculem distàncies per a cadascun dels quatre dataframes
-    dists   = {name: compute_individual_synapse_lengths(df, neuron_coords)
-               for name, df in conns_dict.items()}
-    weights = {name: df["syn_count"].to_numpy()
-               for name, df in conns_dict.items()}
-
-    # Binat com abans (99 % per treure extrems)
-    all_d   = np.concatenate(list(dists.values()))
-    max_len = np.percentile(all_d, 99)
-    bins    = np.linspace(0, max_len, 100)
-
-    # Primera passada per obtenir la y-max comuna
-    max_val = 0
-    for name in titles:
-        hist, _ = np.histogram(dists[name], bins=bins,
-                               weights=weights[name], density=use_density)
-        max_val = max(max_val, hist.max())
-    max_val *= 1.1        # petit marge
-
-    # ——— Figura ———
-    fig, axs = plt.subplots(4, 1, figsize=(8, 10), sharex=True,
-                            constrained_layout=True)
-
-    total_mm = {}             # mm totals per a l'annotació
-
-    for ax, title, col in zip(axs, titles, colors):
-        w  = weights[title]
-        L  = dists[title]
-        ax.hist(L, bins=bins, weights=w, density=use_density,
-                color=col, alpha=0.7)
-
-        # Mean (ponderat!)
-        mean_nm = np.average(L, weights=w)
-        ax.axvline(mean_nm, ls='--', c='k', lw=1)
-        ax.text(mean_nm*1.05, 0.8*max_val,
-                f"Mean: {mean_nm:,.2f} nm", fontsize=9)
-
-        # Total wiring length (mm)
-        tot_nm   = float(np.sum(L * w))
-        tot_mm   = tot_nm / 1e9
-        total_mm[title] = tot_mm
-        ax.text(0.95, 0.85, f"Total: {tot_mm:,.1f} mm",
-                transform=ax.transAxes, ha='right',
-                bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
-
-        ax.set_ylim(0, max_val)
-        ax.set_ylabel("Density" if use_density else "Count", fontsize=10)
-        ax.set_title(title, fontsize=12)
-
-    axs[-1].set_xlabel("Synapse Length (nm)", fontsize=12)
-
-    plt.savefig(os.path.join(plots_dir, "shuffling_distributions.png"),
-                dpi=300, bbox_inches="tight", transparent=True)
-    plt.savefig(os.path.join(plots_dir, "shuffling_distributions.pdf"),
-                bbox_inches="tight")
-
-    return fig, total_mm
+def match_wiring_length_with_connection_pruning(
+    connections: pd.DataFrame,
+    nc: pd.DataFrame,
+    real_length: float,
+    tolerance: float = 0.01,
+    max_iter: int = 100,
+    adaptive_batch: bool = True,
+    random_state: int | None = None,
+) -> pd.DataFrame:
+    """
+    Adjusts a set of connections to match a target wiring length by completely
+    removing entire connections with purely random selection (no bias toward
+    connection length).
+    
+    Parameters:
+    -----------
+    connections : DataFrame
+        Contains pre_root_id, post_root_id, and syn_count columns
+    nc : DataFrame
+        Contains root_id and position coordinates for each neuron
+    real_length : float
+        Target total wiring length to match
+    tolerance : float
+        Acceptable relative error for the final result
+    max_iter : int
+        Maximum number of iterations
+    adaptive_batch : bool
+        Whether to use adaptive batch sizing for faster convergence
+    random_state : int or None
+        Random seed for reproducibility
+        
+    Returns:
+    --------
+    DataFrame with pre_root_id, post_root_id, and syn_count columns
+    """
+    rng = np.random.default_rng(random_state)
+    conns = connections.copy()
+    
+    # Add coordinate data and calculate distances vectorially
+    conns_with_coords = add_coords(conns, nc)
+    distances = np.sqrt(
+        (conns_with_coords["pre_x"] - conns_with_coords["post_x"])**2 +
+        (conns_with_coords["pre_y"] - conns_with_coords["post_y"])**2 +
+        (conns_with_coords["pre_z"] - conns_with_coords["post_z"])**2
+    )
+    
+    # Calculate initial wiring length
+    syn_counts = conns["syn_count"].values
+    current_length = float(np.sum(distances * syn_counts))
+    
+    logger.info(f"[CONN_PRUNE] Initial length: {current_length:,.2f}")
+    logger.info(f"[CONN_PRUNE] Target length: {real_length:,.2f}")
+    
+    if current_length <= real_length:
+        logger.warning("[CONN_PRUNE] Initial length already <= target; no pruning needed.")
+        return conns[["pre_root_id", "post_root_id", "syn_count"]]
+    
+    # Create a mask to track which connections to keep (initially all True)
+    keep_mask = np.ones(len(conns), dtype=bool)
+    total_conns = len(conns)
+    
+    # Calculate connection contribution to total wiring length (for tracking only)
+    length_contributions = distances * syn_counts
+    
+    # Start with 0.5% of connections to remove in first iteration
+    if adaptive_batch:
+        # More aggressive initial batch size
+        initial_removal_proportion = min(0.02, 100000 / total_conns)
+    else:
+        initial_removal_proportion = 0.005  # Fixed 0.5%
+    
+    for iteration in range(1, max_iter + 1):
+        ratio = current_length / real_length
+        
+        # If we've reached the target length within tolerance, stop
+        if abs(ratio - 1.0) <= tolerance:
+            logger.info(f"[CONN_PRUNE] Converged with ratio {ratio:.4f}")
+            break
+            
+        # Adaptive batch sizing based on how far we are from target
+        if adaptive_batch:
+            # Adjust batch size based on ratio, but keep pure random selection
+            removal_proportion = min(
+                initial_removal_proportion * ratio,  # Linear scaling with ratio
+                0.2  # Don't remove more than 20% at once
+            )
+        else:
+            # Fixed proportion
+            removal_proportion = initial_removal_proportion
+        
+        # Calculate actual batch size (number of connections to remove)
+        current_batch_size = min(
+            int(total_conns * removal_proportion),  # Based on proportion
+            int(np.sum(keep_mask) * 0.1)  # Don't remove more than 10% of remaining
+        )
+        
+        # Ensure we're removing at least some connections
+        current_batch_size = max(current_batch_size, min(1000, int(np.sum(keep_mask) * 0.01)))
+        
+        # Make sure batch size isn't larger than remaining connections
+        current_batch_size = min(current_batch_size, int(np.sum(keep_mask)))
+        
+        if current_batch_size <= 0:
+            logger.warning("[CONN_PRUNE] No more connections can be removed.")
+            break
+            
+        # PURELY RANDOM selection of connections to remove
+        candidate_indices = np.where(keep_mask)[0]
+        to_remove_indices = rng.choice(
+            candidate_indices,
+            size=current_batch_size,
+            replace=False
+        )
+        
+        # Update the keep mask
+        keep_mask[to_remove_indices] = False
+        
+        # Update current length
+        length_reduction = np.sum(length_contributions[to_remove_indices])
+        current_length -= length_reduction
+        
+        # Log progress
+        remaining_conns = int(np.sum(keep_mask))
+        removed_pct = (total_conns - remaining_conns) / total_conns * 100
+        
+        logger.info(
+            f"[CONN_PRUNE] Iter {iteration:>2}: removed {len(to_remove_indices):,} connections, "
+            f"length = {current_length:,.2f}, "
+            f"ratio = {current_length/real_length:.4f}, "
+            f"remaining = {remaining_conns:,}/{total_conns:,} ({100-removed_pct:.1f}%)"
+        )
+        
+        # If we've gone below the target, restore some connections
+        if current_length < real_length:
+            logger.info("[CONN_PRUNE] Overshot target length, restoring connections randomly...")
+            
+            # Get all removed connections
+            removed_mask = ~keep_mask
+            removed_indices = np.where(removed_mask)[0]
+            
+            # If there are no removed connections, break
+            if len(removed_indices) == 0:
+                break
+            
+            # PURELY RANDOM shuffling of removed indices for unbiased restoration
+            shuffled_indices = rng.permutation(removed_indices)
+            
+            # Add connections back until we're above the target again
+            connections_restored = 0
+            for idx in shuffled_indices:
+                keep_mask[idx] = True
+                current_length += length_contributions[idx]
+                connections_restored += 1
+                
+                if current_length >= real_length:
+                    break
+                    
+            # Log the adjustment
+            remaining_conns = int(np.sum(keep_mask))
+            removed_pct = (total_conns - remaining_conns) / total_conns * 100
+            
+            logger.info(
+                f"[CONN_PRUNE] Randomly restored {connections_restored} connections: "
+                f"length = {current_length:,.2f}, "
+                f"ratio = {current_length/real_length:.4f}, "
+                f"remaining = {remaining_conns:,}/{total_conns:,} ({100-removed_pct:.1f}%)"
+            )
+    
+    # Create final pruned connections dataframe
+    pruned_conns = conns[keep_mask].copy()
+    
+    logger.info(
+        f"[CONN_PRUNE] FINAL: length = {current_length:,.2f}, "
+        f"ratio = {current_length/real_length:.4f}, "
+        f"connections = {len(pruned_conns):,}/{total_conns:,} ({len(pruned_conns)/total_conns*100:.1f}%)"
+    )
+    
+    return pruned_conns[["pre_root_id", "post_root_id", "syn_count"]]
 
 
 if __name__ == "__main__":
@@ -744,6 +771,8 @@ if __name__ == "__main__":
                       help='Generate unconstrained randomized network')
     parser.add_argument('--pruned', action='store_true',
                       help='Generate pruned randomized network')
+    parser.add_argument('--conn_pruned', action='store_true',
+                      help='Generate connection-pruned randomized network (removes entire connections)')
     parser.add_argument('--binned', action='store_true',
                       help='Generate binned randomized network')
     parser.add_argument("--plot_results", action="store_true",
@@ -751,7 +780,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # If no arguments provided, run all randomizations
-    run_all = not (args.unconstrained or args.pruned or args.binned)
+    run_all = not (args.unconstrained or args.pruned or args.conn_pruned or args.binned)
     
     # Load data
     logger.info("Loading data...")
@@ -772,7 +801,7 @@ if __name__ == "__main__":
     else:
         random_unconstrained = None
 
-    # Pruned randomization
+    # Pruned randomization (synapse count scaling)
     if run_all or args.pruned:
         if random_unconstrained is None and (args.pruned or run_all):
             logger.info("Starting unconstrained randomization for pruned version...")
@@ -791,6 +820,30 @@ if __name__ == "__main__":
             index=False,
         )
         logger.info("Synapse count scaling completed")
+    
+    # Connection-wise pruned randomization
+    if run_all or args.conn_pruned:
+        if random_unconstrained is None and (args.conn_pruned or run_all):
+            logger.info("Starting unconstrained randomization for connection-pruned version...")
+            random_unconstrained = shuffle_post_root_id(connections)
+        
+        logger.info("Starting connection-wise pruning...")
+        random_conn_pruned = match_wiring_length_with_connection_pruning(
+            random_unconstrained,
+            neuron_coordinates,
+            total_length,
+            tolerance=0.01,
+            max_iter=100,
+            adaptive_batch=True,
+            random_state=42
+        )
+        random_conn_pruned.to_csv(
+            os.path.join(PROJECT_ROOT, "new_data", "connections_random_conn_pruned.csv"),
+            index=False,
+        )
+        logger.info("Connection-wise pruning completed")
+    else:
+        random_conn_pruned = None
 
     # Binned randomization
     if run_all or args.binned:
@@ -803,12 +856,23 @@ if __name__ == "__main__":
             index=False,
         )
         logger.info("Length-preserving randomization completed")
+    else:
+        random_binned = None
 
     # Plot synapse length distributions
     if args.plot_results:
-        plot_synapse_length_distributions(neuron_coordinates, {
-            "Original": connections,
-            "Random unconstrained": random_unconstrained,
-            "Random pruned": random_pruned,
-            "Random bin-wise": random_binned
-        })
+        conns_to_plot = {"Original": connections}
+        if random_unconstrained is not None:
+            conns_to_plot["Random unconstrained"] = random_unconstrained
+        if args.pruned or run_all:
+            conns_to_plot["Random pruned"] = random_pruned
+        if args.conn_pruned or run_all:
+            conns_to_plot["Random conn. pruned"] = random_conn_pruned
+        if args.binned or run_all:
+            conns_to_plot["Random bin-wise"] = random_binned
+            
+        fig1, fig2 = plot_synapse_length_distributions(neuron_coordinates, conns_to_plot, use_density=False)
+        plots_path = os.path.join(PROJECT_ROOT, "utils", "plots")
+        os.makedirs(plots_path, exist_ok=True)
+        fig1.savefig(os.path.join(plots_path, "synapse_length_distributions.png"), dpi=300)
+        fig2.savefig(os.path.join(plots_path, "synapse_length_distributions_density.png"), dpi=300)

@@ -9,7 +9,7 @@ import matplotlib.patches as mpatches
 from matplotlib.patheffects import withStroke
 
 from notebooks.visualization.activations_funcs import split_title
-from utils.shuffle_connections import compute_individual_synapse_lengths, compute_total_synapse_length
+from utils.helpers import compute_individual_synapse_lengths, compute_total_synapse_length
 
 
 def plot_activation_statistics(
@@ -30,7 +30,8 @@ def plot_activation_statistics(
     Returns:
     --------
     tuple
-        Two matplotlib.figure.Figure objects: one for activation percentages and one for activation distances.
+        Three matplotlib.figure.Figure objects: one for activation percentages, one for activation distances,
+        and one for rational cell types activation percentages.
     """
     # Set Nature style parameters
     mpl.rcParams.update(
@@ -57,6 +58,15 @@ def plot_activation_statistics(
     configs = list(propagations_dict.keys())
     activation_percentages = {config: [] for config in configs}
     activation_distances = {config: [] for config in configs}
+    rational_percentages = {config: [] for config in configs}  # New metric
+
+    # Define rational cell types
+    rational_cell_types = ["KCapbp-m", "KCapbp-ap2", "KCapbp-ap1"]
+    
+    # Count total rational neurons
+    total_rational_neurons = neuron_position_data[
+        neuron_position_data['cell_type'].isin(rational_cell_types)
+    ]['root_id'].nunique()
 
     for config, prop_df in propagations_dict.items():
         # Calculate percentage of neurons active at each step
@@ -69,8 +79,20 @@ def plot_activation_statistics(
                 activation_percentages[config].append(
                     100 * active_neurons / total_neurons
                 )
+                
+                # Calculate percentage of rational cell types active
+                merged_rational = pd.merge(
+                    prop_df[prop_df[act_col] > 0],
+                    neuron_position_data[neuron_position_data['cell_type'].isin(rational_cell_types)],
+                    on="root_id"
+                )
+                active_rational_neurons = merged_rational["root_id"].nunique()
+                rational_percentages[config].append(
+                    100 * active_rational_neurons / total_rational_neurons if total_rational_neurons > 0 else 0
+                )
             else:
                 activation_percentages[config].append(0)
+                rational_percentages[config].append(0)
 
         # Merge prop_df with neuron_position_data to get positions
         merged = pd.merge(prop_df, neuron_position_data, on="root_id")
@@ -100,6 +122,9 @@ def plot_activation_statistics(
     # Convert mm to inches (1 mm = 0.0393701 inches)
     fig_width_in = fig_width * 0.0393701
     fig_height_in = fig_width_in / 1.4
+
+    # print the activation percentages
+    print(activation_percentages)
 
     # Create figure for activation percentages
     fig1, ax1 = plt.subplots(figsize=(fig_width_in, fig_height_in))
@@ -145,67 +170,165 @@ def plot_activation_statistics(
     ax2.set_ylim(0, ymax2)
     ax2.legend(loc="lower right", fontsize=9)
 
-    return fig1, fig2
+    # Create figure for rational cell types activation
+    fig3, ax3 = plt.subplots(figsize=(fig_width_in, fig_height_in))
+    for i, config in enumerate(configs):
+        ax3.plot(
+            range(1, num_steps + 1),
+            rational_percentages[config],
+            marker="o",
+            label=config,
+            color=colors[i % len(colors)],
+            linewidth=1.2,
+            markersize=3.5,
+        )
+
+    ax3.set_xlabel("Message Passing Step")
+    ax3.set_ylabel("Rational Neurons Active (%)")
+    ax3.set_title("Rational Cell Types Activation", pad=7)
+    ax3.grid(True, linestyle="--", alpha=0.5, linewidth=0.5)
+    ax3.set_xticks(range(1, num_steps + 1))
+    ymax3 = max([max(vals) for vals in rational_percentages.values() if vals]) * 1.1 if any([vals for vals in rational_percentages.values()]) else 100
+    ax3.set_ylim(0, ymax3)
+    ax3.legend(loc="upper left", fontsize=9)
+
+    return fig1, fig2, fig3
 
 
-def plot_synapse_length_distributions(neuron_coords, conns_dict, plots_dir=plots_dir, use_density=True):
+def plot_synapse_length_distributions(neuron_coords, conns_dict, use_density=True, num_confidence_interval_se=1):
+    """
+    Plot synapse length distributions for multiple network types.
+    
+    Parameters:
+    -----------
+    neuron_coords : DataFrame
+        Contains neuron coordinates
+    conns_dict : dict
+        Dictionary of network types with their connection DataFrames
+    use_density : bool, default=True
+        Whether to normalize histograms to density
+    num_confidence_interval_se : int, default=1
+        Number of standard errors for confidence interval bands
+        
+    Returns:
+    --------
+    tuple: (fig1, fig2) - Two figure objects for histogram and synapse strength vs distance
+    """
+    titles = list(conns_dict.keys())
+    n_plots = len(titles)
+    
+    # Ensure we have no more than 6 plots
+    if n_plots > 6:
+        raise ValueError(f"Too many networks to plot ({n_plots}). Maximum supported is 6.")
+    
+    # Extended color palette for up to 6 plots
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b'][:n_plots]
 
-    titles  = conns_dict.keys()
-    colors  = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
-
-    # Pre-calculem distàncies per a cadascun dels quatre dataframes
-    dists   = {name: compute_individual_synapse_lengths(df, neuron_coords)
-               for name, df in conns_dict.items()}
+    # Pre-calculate distances for each dataframe
+    dists = {name: compute_individual_synapse_lengths(df, neuron_coords)
+            for name, df in conns_dict.items()}
     weights = {name: df["syn_count"].to_numpy()
-               for name, df in conns_dict.items()}
+              for name, df in conns_dict.items()}
 
-    # Binat com abans (99 % per treure extrems)
-    all_d   = np.concatenate(list(dists.values()))
+    # Get 99 percentile of all distances to avoid outliers
+    all_d = np.concatenate(list(dists.values()))
     max_len = np.percentile(all_d, 99)
-    bins    = np.linspace(0, max_len, 100)
+    bins = np.linspace(0, max_len, 100)
 
-    # Primera passada per obtenir la y-max comuna
+    # Get common y-max for all plots
     max_val = 0
     for name in titles:
         hist, _ = np.histogram(dists[name], bins=bins,
-                               weights=weights[name], density=use_density)
+                              weights=weights[name], density=use_density)
         max_val = max(max_val, hist.max())
-    max_val *= 1.1        # petit marge
+    max_val *= 1.1  # Add a small margin
 
-    # ——— Figura ———
-    fig, axs = plt.subplots(4, 1, figsize=(12, 10), sharex=True,
-                            constrained_layout=True)
+    # ——— Figure 1: Histogram of distance distribution ———
+    fig1, axs1 = plt.subplots(n_plots, 1, figsize=(12, 2.5 * n_plots), 
+                             sharex=True, constrained_layout=True)
+    
+    # Ensure axs1 is always iterable (when n_plots=1, axs1 is a single Axes object)
+    if n_plots == 1:
+        axs1 = [axs1]
 
-    total_mm = {}             # mm totals per a l'annotació
+    total_mm = {}  # Total wiring lengths for annotation
 
-    for ax, title, col in zip(axs, titles, colors):
-        w  = weights[title]
-        L  = dists[title]
+    for ax, title, col in zip(axs1, titles, colors):
+        w = weights[title]
+        L = dists[title]
         ax.hist(L, bins=bins, weights=w, density=use_density,
-                color=col, alpha=0.7)
+               color=col, alpha=0.7)
 
-        # Mean (ponderat!)
+        # Weighted mean
         mean_nm = np.average(L, weights=w)
         ax.axvline(mean_nm, ls='--', c='k', lw=1)
-        # Put the mean in µm
+        # Display mean in µm
         ax.text(mean_nm*1.05, 0.7*max_val,
-                f"Mean: {mean_nm / 1e3:,.2f} µm", fontsize=12)
+               f"Mean: {mean_nm / 1e3:,.2f} µm", fontsize=12)
 
         # Total wiring length (m)
-        tot_nm   = float(np.sum(L * w))
-        tot_m   = tot_nm / 1e12
+        tot_nm = float(np.sum(L * w))
+        tot_m = tot_nm / 1e12
         total_mm[title] = tot_m
         ax.text(0.95, 0.85, f"Total: {tot_m:,.2f} km",
-                transform=ax.transAxes, ha='right',
-                bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
+               transform=ax.transAxes, ha='right',
+               bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
 
         ax.set_ylim(0, max_val)
         ax.set_ylabel("Density" if use_density else "Count")
         ax.set_title(title)
 
-    axs[-1].set_xlabel("Synapse Length (nm)")
+    axs1[-1].set_xlabel("Synapse Length (nm)")
+    
+    # ——— Figure 2: Synapse strength vs distance ———
+    # Create bins for distance ranges
+    bin_edges = np.linspace(0, max_len, 20)  # Fewer bins for better statistics
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    
+    fig2, axs2 = plt.subplots(n_plots, 1, figsize=(12, 2.5 * n_plots), 
+                             sharex=True, constrained_layout=True)
+    
+    # Ensure axs2 is always iterable
+    if n_plots == 1:
+        axs2 = [axs2]
+    
+    for ax, title, col in zip(axs2, titles, colors):
+        L = dists[title]
+        w = weights[title]
+        
+        # Compute statistics for each bin
+        means = []
+        errors = []
+        
+        for i in range(len(bin_edges) - 1):
+            mask = (L >= bin_edges[i]) & (L < bin_edges[i+1])
+            if np.sum(mask) > 0:
+                bin_weights = w[mask]
+                mean_weight = np.mean(bin_weights)
+                # Standard error = std / sqrt(n)
+                std_err = np.std(bin_weights) / np.sqrt(len(bin_weights))
+                means.append(mean_weight)
+                errors.append(std_err)
+            else:
+                means.append(0)
+                errors.append(0)
+        
+        # Plot the mean line
+        ax.plot(bin_centers, means, 'o-', color=col, markersize=5, alpha=0.9, label=title)
+        
+        # Add confidence interval bands
+        upper_bound = [m + e * num_confidence_interval_se for m, e in zip(means, errors)]
+        lower_bound = [m - e * num_confidence_interval_se for m, e in zip(means, errors)]
+        ax.fill_between(bin_centers, lower_bound, upper_bound, color=col, alpha=0.2)
+        
+        ax.set_ylabel("Avg. Synapse Count")
+        ax.set_title(title)
+        ax.grid(True, linestyle='--', alpha=0.3)
+    
+    axs2[-1].set_xlabel("Synapse Length (nm)")
+    plt.tight_layout()
 
-    return fig
+    return fig1, fig2
 
 
 def efficiency_comparison(neuron_position_data, connections_dict):
@@ -868,4 +991,79 @@ def visualize_steps_separated_compact(
 
     plt.subplots_adjust(wspace=-0.5, hspace=-0.06)
 
+    return fig
+
+def plot_synapse_counts_histogram(conns_dict, bins=30, figsize=(12, 8), log_scale=False):
+    """
+    Plot simple histograms of synapse counts for each network type.
+    
+    Parameters:
+    -----------
+    conns_dict : dict
+        Dictionary of network types with their connection DataFrames
+    bins : int or list, default=30
+        Number of bins or bin edges for histogram
+    figsize : tuple, default=(12, 8)
+        Figure size (width, height)
+    log_scale : bool, default=False
+        Whether to use log scale for y-axis
+        
+    Returns:
+    --------
+    fig : matplotlib.figure.Figure
+        Figure object with histograms
+    """
+    titles = list(conns_dict.keys())
+    n_plots = len(titles)
+    
+    # Ensure we have no more than 6 plots
+    if n_plots > 6:
+        raise ValueError(f"Too many networks to plot ({n_plots}). Maximum supported is 6.")
+    
+    # Extended color palette for up to 6 plots
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b'][:n_plots]
+    
+    # Create figure with subplots (one per network)
+    fig, axs = plt.subplots(n_plots, 1, figsize=figsize, sharex=True, constrained_layout=True)
+    
+    # Ensure axs is always iterable (when n_plots=1, axs is a single Axes object)
+    if n_plots == 1:
+        axs = [axs]
+        
+    for ax, title, color in zip(axs, titles, colors):
+        # Get synapse counts for this network
+        syn_counts = conns_dict[title]["syn_count"].values
+        
+        # Plot histogram
+        ax.hist(syn_counts, bins=bins, color=color, alpha=0.7)
+        
+        # Calculate statistics
+        mean_count = np.mean(syn_counts)
+        median_count = np.median(syn_counts)
+        max_count = np.max(syn_counts)
+        total_synapses = np.sum(syn_counts)
+        
+        # Add statistics as text
+        stats_text = (f"Mean: {mean_count:.2f}\n"
+                     f"Median: {median_count:.2f}\n"
+                     f"Max: {max_count:.2f}\n"
+                     f"Total: {total_synapses:,}")
+        
+        ax.text(0.95, 0.95, stats_text,
+                transform=ax.transAxes,
+                verticalalignment='top',
+                horizontalalignment='right',
+                bbox=dict(boxstyle='round', facecolor='white', alpha=0.7))
+        
+        # Add title and labels
+        ax.set_title(title)
+        ax.set_ylabel("Count")
+        
+        # Set log scale if requested
+        if log_scale:
+            ax.set_yscale('log')
+            
+    # Add x-label to bottom subplot only
+    axs[-1].set_xlabel("Synapse Count")
+    
     return fig

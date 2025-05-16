@@ -156,6 +156,7 @@ def get_all_connections():
         "Biological": load_connections("connections.csv"),
         "Random unconstrained": load_connections("connections_random_unconstrained.csv"),
         "Random pruned": load_connections("connections_random_pruned.csv"),
+        "Connection-pruned": load_connections("connections_random_conn_pruned.csv"),
         "Random bin-wise": load_connections("connections_random_binned.csv"),
     }
 
@@ -186,6 +187,12 @@ def get_activation_dictionnary(connections_dict, num_passes=4):
         activated_data, random_pruned, num_passes
     )
 
+    # Connection-pruned connectome
+    conn_pruned = connections_dict["Connection-pruned"]
+    propagation_conn_pruned = propagate_through_connectome(
+        activated_data, conn_pruned, num_passes
+    )
+
     # Random bin-wise connectome
     random_binned = connections_dict["Random bin-wise"]
     propagation_binned = propagate_through_connectome(
@@ -197,6 +204,7 @@ def get_activation_dictionnary(connections_dict, num_passes=4):
         "Biological": propagation_original,
         "Random unconstrained": propagation_unconstrained,
         "Random pruned": propagation_pruned,
+        "Connection-pruned": propagation_conn_pruned,
         "Random bin-wise": propagation_binned,
     }
 

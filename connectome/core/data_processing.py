@@ -146,9 +146,12 @@ class DataProcessor:
         self.tesselated_neurons = self.voronoi_cells.get_tesselated_neurons()
         self.voronoi_indices = self.voronoi_cells.get_image_indices()
 
-    def get_data_from_paths(self, paths):
+    def get_data_from_paths(self, paths, get_labels=True):
         imgs = import_images(paths)
-        labels = paths_to_labels(paths, self.classes)
+        if get_labels:
+            labels = paths_to_labels(paths, self.classes)
+        else:
+            labels = None
         return imgs, labels
 
     def calculate_neuron_activations(self, voronoi_averages):

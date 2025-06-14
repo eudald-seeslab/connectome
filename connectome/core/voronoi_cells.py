@@ -74,8 +74,24 @@ class VoronoiCells:
         return coords
 
     def _plot_voronoi_cells(self, ax, show_points=False, line_color="orange", line_width=1):
+        """Plot the Voronoi diagram, flipping the y-coordinate so that it
+        matches the coordinate system used for both the underlying image
+        (drawn with ``imshow`` and the default *origin='upper'*) and the
+        neuron scatter plot, where the y-axis is already inverted 
+        Note that we create a *temporary* Voronoi instance whose centres have their
+        y-coordinate flipped.  This way we do **not** touch
+        ``self.voronoi`` (which is also used for KD-Tree queries etc.) and
+        we avoid having to change the rest of the pipeline.
+        """
+
+        # Flip the points vertically so that they align with the neuron positions
+        flipped_centres = self.centers.copy()
+        flipped_centres[:, 1] = self.pixel_num - 1 - flipped_centres[:, 1]
+
+        plot_voronoi = Voronoi(flipped_centres)
+
         voronoi_plot_2d(
-            self.voronoi,
+            plot_voronoi,
             ax=ax,
             show_points=show_points,
             show_vertices=False,

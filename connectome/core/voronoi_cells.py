@@ -179,6 +179,7 @@ class VoronoiCells:
 
         ax.set_facecolor("black")
 
+        # Draw the Voronoi skeleton (with y-flip) 
         self._plot_voronoi_cells(ax, line_color=voronoi_color, line_width=volonoi_width)
 
         rgb_values = (
@@ -196,13 +197,31 @@ class VoronoiCells:
         rgb_values["g"] = self.get_colour_average(rgb_values, "g")
         rgb_values["r"] = self.get_colour_average(rgb_values, "r")
 
-        # Fill Voronoi regions with colors based on aggregated RGB values
-        for region_index in self.voronoi.point_region:
-            region = self.voronoi.regions[region_index]
-            if not -1 in region:
-                polygon = [self.voronoi.vertices[i] for i in region]
-                color = rgb_values.loc[region_index, ["r", "g", "b"]]
-                ax.fill(*zip(*polygon), color=color)
+        # Build a *painting* Voronoi object whose geometry is flipped the
+        # same way as in ``_plot_voronoi_cells`` so that filled polygons
+        # coincide with the boundaries that were just drawn.
+        flipped_centres = self.centers.copy()
+        flipped_centres[:, 1] = self.pixel_num - 1 - flipped_centres[:, 1]
+        plot_voronoi = Voronoi(flipped_centres)
+
+        # Fill Voronoi regions: get colour from the *original* region index
+        # (used to build ``rgb_values``) but draw the polygon determined by
+        # the *flipped* geometry so that everything aligns.
+        for i in range(len(self.centers)):
+            region_orig = self.voronoi.point_region[i]
+            region_flip = plot_voronoi.point_region[i]
+
+            # Skip if the original region did not get an activation entry
+            if region_orig not in rgb_values.index:
+                continue
+
+            region = plot_voronoi.regions[region_flip]
+            if -1 in region:
+                continue  # skip infinite regions
+
+            polygon = [plot_voronoi.vertices[v] for v in region]
+            color = rgb_values.loc[region_orig, ["r", "g", "b"]]
+            ax.fill(*zip(*polygon), color=color)
 
         self.clip_image(ax)
 

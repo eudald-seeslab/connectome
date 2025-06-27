@@ -129,6 +129,15 @@ def setup_logging(level: int = logging.INFO) -> None:
     )
 
 
+def get_logger(name: str) -> logging.Logger:
+    """Get a logger for a specific module.
+    
+    This function ensures logging is set up and returns a logger with the given name.
+    """
+    setup_logging()
+    return logging.getLogger(name)
+
+
 def load_connections(file_name: str = "connections.csv", root_dir: str = PROJECT_ROOT) -> pd.DataFrame:
     """Load a connections CSV and aggregate duplicate rows.
 

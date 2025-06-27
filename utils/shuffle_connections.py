@@ -1,77 +1,30 @@
+# Standard library
 import logging
 import os
 import argparse
 
+# Third-party
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+# Local modules
 from notebooks.visualization.activation_plots import plot_synapse_length_distributions
 from paths import PROJECT_ROOT
-from utils.helpers import add_coords, compute_total_synapse_length
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+from utils.helpers import (
+    compute_total_synapse_length,
+    add_distance_column,
+    load_connections,
+    load_neuron_annotations,
+    shuffle_post_root_id,
+    setup_logging,
 )
+
+# Configure logging once for the entire application
+setup_logging(level=logging.INFO)
+
+# Module-specific logger
 logger = logging.getLogger(__name__)
-
-
-def load_connections():
-    return pd.read_csv(
-        os.path.join(PROJECT_ROOT, "new_data", "connections.csv"),
-        dtype={
-            "pre_root_id": "string",
-            "post_root_id": "string",
-            "syn_count": np.int32,
-        },
-    )
-
-def load_neuron_coordinates():
-    nc = pd.read_table(
-        os.path.join(PROJECT_ROOT, "new_data", "neuron_annotations.tsv"),
-        dtype={
-            "root_id": "string",
-            "soma_x": np.float32,
-            "soma_y": np.float32,
-            "soma_z": np.float32,
-            "cell_type": "string",
-        },
-        usecols=[
-            "root_id",
-            "pos_x",
-            "pos_y",
-            "pos_z",
-            "soma_x",
-            "soma_y",
-            "soma_z",
-            "cell_type",
-        ],
-    )
-    nc["soma_x"] = nc["soma_x"].fillna(nc["pos_x"])
-    nc["soma_y"] = nc["soma_y"].fillna(nc["pos_y"])
-    nc["soma_z"] = nc["soma_z"].fillna(nc["pos_z"])
-    nc = nc.drop(columns=["pos_x", "pos_y", "pos_z"]).rename(columns={"soma_x": "pos_x", "soma_y": "pos_y", "soma_z": "pos_z"})
-
-    return nc
-
-
-def shuffle_post_root_id(connections):
-    new_conns = connections.copy()
-    shuffled_posts = np.random.permutation(new_conns["post_root_id"].values)
-    new_conns["post_root_id"] = shuffled_posts
-    return new_conns
-
-
-def shuffle_within_bin(bin_group):
-    if len(bin_group) <= 1:
-        return bin_group
-    shuffled_post_ids = np.random.permutation(bin_group['post_root_id'].values)
-    result = bin_group.copy()
-    result['post_root_id'] = shuffled_post_ids
-    return result
 
 
 def match_wiring_length_with_syn_scale(connections, nc, real_length, scale_low=0.0, scale_high=2.0, 
@@ -113,13 +66,8 @@ def match_wiring_length_with_syn_scale(connections, nc, real_length, scale_low=0
     int_counts = np.floor(float_counts).astype(int)
     fractions = float_counts - int_counts
     
-    # Calculate distance for each connection
-    conns_with_coords = add_coords(connections, nc)
-    conns_with_coords["distance"] = np.sqrt(
-        (conns_with_coords["pre_x"] - conns_with_coords["post_x"])**2 +
-        (conns_with_coords["pre_y"] - conns_with_coords["post_y"])**2 +
-        (conns_with_coords["pre_z"] - conns_with_coords["post_z"])**2
-    )
+    # Add coordinates and a pre-computed distance column
+    conns_with_coords = add_distance_column(connections, nc)
     
     # Calculate impact = distance × fraction (how much adding 1 synapse affects length)
     conns_with_coords["impact"] = conns_with_coords["distance"] * fractions
@@ -279,12 +227,7 @@ def match_wiring_length_with_random_pruning_old(connections, nc, real_length,max
     logger.info("Starting vectorized random fine-tuning...")
     
     # Add coordinate data and calculate distances vectorially
-    conns_with_coords = add_coords(connections, nc)
-    conns_with_coords["distance"] = np.sqrt(
-        (conns_with_coords["pre_x"] - conns_with_coords["post_x"])**2 +
-        (conns_with_coords["pre_y"] - conns_with_coords["post_y"])**2 +
-        (conns_with_coords["pre_z"] - conns_with_coords["post_z"])**2
-    )
+    conns_with_coords = add_distance_column(connections, nc)
     
     # Initialize synapse counts with rounded values from binary search
     # We use ceiling to ensure we don't get zeros (unless allowed)
@@ -426,12 +369,9 @@ def match_wiring_length_with_random_pruning(
     # ------------------------------------------------------------
     # 1. Distància d'aquest parell pre–post
     # ------------------------------------------------------------
-    coords = add_coords(conns, nc)
-    distances = np.linalg.norm(
-        coords[["pre_x", "pre_y", "pre_z"]].values -
-        coords[["post_x", "post_y", "post_z"]].values,
-        axis=1,
-    )
+    logger.info("Calculating distances between neurons...")
+    connections_with_coords = add_distance_column(conns, nc, distance_col="distance")
+    distances = connections_with_coords["distance"].values
 
     orig_counts = conns["syn_count"].to_numpy()
     unconstrained_len = float(np.sum(distances * orig_counts))
@@ -507,14 +447,7 @@ def create_length_preserving_random_network(
 
     # Add distance column to connections
     logger.info("Calculating distances between neurons...")
-    connections_with_coords = connections.merge(pre_neurons, on="pre_root_id").merge(
-        post_neurons, on="post_root_id"
-    )
-
-    pre_coords = connections_with_coords[["pre_x", "pre_y", "pre_z"]].to_numpy()
-    post_coords = connections_with_coords[["post_x", "post_y", "post_z"]].to_numpy()
-    distances = np.linalg.norm(pre_coords - post_coords, axis=1)
-    connections_with_coords["distance"] = distances
+    connections_with_coords = add_distance_column(connections, neurons, distance_col="distance")
 
     # Get bin edges for consistent binning
     logger.info(f"Creating {bins} distance bins...")
@@ -623,16 +556,11 @@ def match_wiring_length_with_connection_pruning(
     conns = connections.copy()
     
     # Add coordinate data and calculate distances vectorially
-    conns_with_coords = add_coords(conns, nc)
-    distances = np.sqrt(
-        (conns_with_coords["pre_x"] - conns_with_coords["post_x"])**2 +
-        (conns_with_coords["pre_y"] - conns_with_coords["post_y"])**2 +
-        (conns_with_coords["pre_z"] - conns_with_coords["post_z"])**2
-    )
+    conns_with_coords = add_distance_column(conns, nc)
     
     # Calculate initial wiring length
     syn_counts = conns["syn_count"].values
-    current_length = float(np.sum(distances * syn_counts))
+    current_length = float(np.sum(conns_with_coords["distance"] * syn_counts))
     
     logger.info(f"[CONN_PRUNE] Initial length: {current_length:,.2f}")
     logger.info(f"[CONN_PRUNE] Target length: {real_length:,.2f}")
@@ -646,7 +574,7 @@ def match_wiring_length_with_connection_pruning(
     total_conns = len(conns)
     
     # Calculate connection contribution to total wiring length (for tracking only)
-    length_contributions = distances * syn_counts
+    length_contributions = conns_with_coords["distance"].values * syn_counts
     
     # Start with 0.5% of connections to remove in first iteration
     if adaptive_batch:
@@ -785,7 +713,7 @@ if __name__ == "__main__":
     # Load data
     logger.info("Loading data...")
     connections = load_connections()
-    neuron_coordinates = load_neuron_coordinates()
+    neuron_coordinates = load_neuron_annotations()
     total_length = compute_total_synapse_length(connections, neuron_coordinates)
     logger.info(f"Total wiring length of original network: {total_length:.2f}")
 
@@ -870,7 +798,7 @@ if __name__ == "__main__":
             conns_to_plot["Random conn. pruned"] = random_conn_pruned
         if args.binned or run_all:
             conns_to_plot["Random bin-wise"] = random_binned
-            
+
         fig1, fig2 = plot_synapse_length_distributions(neuron_coordinates, conns_to_plot, use_density=False)
         plots_path = os.path.join(PROJECT_ROOT, "utils", "plots")
         os.makedirs(plots_path, exist_ok=True)

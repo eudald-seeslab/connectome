@@ -2,13 +2,16 @@ import argparse
 import wandb
 import multiprocessing
 import pandas as pd
+import os
 
-from configs import config
+from configs import config as base_config
 from scripts.train import main
 from connectome.tools.wandb_logger import WandBLogger
+from utils.randomization_generator import generate_random_connectome
+from connectome.core.utils import update_config_with_sweep
 
 
-project_name = "architecture"
+project_name = base_config.wandb_project
 
 sweep_config1 = {
     "method": "bayes",
@@ -25,19 +28,41 @@ sweep_config1 = {
     },
 }
 
-cts = pd.read_csv("adult_data/cell_types.csv")
-cts = cts[cts["count"] > 1000]
-rational_cell_types = pd.read_csv("adult_data/rational_cell_types.csv", index_col=0).index.tolist()
-forbidden_cell_types = rational_cell_types + ["R8", "R7", "R1-6"]
-cell_types = [x for x in cts["cell_type"].values if x not in forbidden_cell_types]
+def _load_cell_type_lists():
+    """Return *cell_types* and *rational_cell_types* lists, using whatever
+    files are available. If the expected CSVs are missing, return empty lists
+    so that sweeps that do not depend on them can still run."""
 
-sweep_config2 = {
-    "method": "bayes",
-    "metric": {"name": "accuracy", "goal": "maximize"},
-    "parameters": {
-        "filtered_celltypes": {"values": cell_types},
+    adult_dir = "adult_data"
+    ct_path = os.path.join(adult_dir, "cell_types.csv")
+    rat_path = os.path.join(adult_dir, "rational_cell_types.csv")
+
+    if not os.path.exists(ct_path) or not os.path.exists(rat_path):
+        return [], []
+
+    cts_df = pd.read_csv(ct_path)
+    cts_df = cts_df[cts_df["count"] > 1000]
+    rational = pd.read_csv(rat_path, index_col=0).index.tolist()
+    forbidden = rational + ["R8", "R7", "R1-6"]
+    cell_types = [x for x in cts_df["cell_type"].values if x not in forbidden]
+    return cell_types, rational
+
+
+# -------------------------------------------------------------
+# Cell-type dependent sweep config (only built if data available)
+# -------------------------------------------------------------
+_cell_types, _rational_cell_types = _load_cell_type_lists()
+
+if _cell_types:
+    sweep_config2 = {
+        "method": "bayes",
+        "metric": {"name": "accuracy", "goal": "maximize"},
+        "parameters": {
+            "filtered_celltypes": {"values": _cell_types},
+        },
     }
-}
+else:
+    sweep_config2 = None  # data not available; skip this sweep
 
 sweep_config3 = {
     "method": "random",
@@ -67,10 +92,25 @@ sweep_config5 = {
     },
 }
 
+seeds = list(range(10))
+sweep_config_seeds = {
+    "method": "grid",
+    "parameters": {
+        "random_seed": {"values": seeds},
+    },
+}
 
-def train(config=None):
+
+def train(sweep_cfg=None):
     wandb_logger = WandBLogger(project_name)
-    with wandb.init(config=config):
+    with wandb.init(config=sweep_cfg):
+        # Merge sweep hyper-parameters into the global config so the generator
+        # knows about the seed/strategy values.
+        u_config = update_config_with_sweep(base_config, wandb.config)
+
+        # Create the randomised dataset (if requested) before training.
+        generate_random_connectome(u_config)
+
         main(wandb_logger, wandb.config)
 
 
@@ -89,14 +129,22 @@ if __name__ == "__main__":
         default=None,
         help="Sweep id if you have started the sweep elsewhere.",
     )
+    parser.add_argument(
+        "--seeds_sweep",
+        action="store_true",
+        help="Run sweep that iterates over random seeds and uses on-the-fly randomised connectomes.",
+    )
     args = parser.parse_args()
 
     if args.sweep_id:
         sweep_id = args.sweep_id
     else:
-        sweep_id = wandb.sweep(sweep_config5, project=project_name)
+        if args.seeds_sweep:
+            sweep_id = wandb.sweep(sweep_config_seeds, project=project_name)
+        else:
+            sweep_id = wandb.sweep(sweep_config5, project=project_name)
 
-    if config.device_type == "cpu":
+    if base_config.device_type == "cpu":
         num_agents = 4
         processes = []
         for _ in range(num_agents):

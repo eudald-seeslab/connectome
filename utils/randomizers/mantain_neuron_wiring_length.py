@@ -49,16 +49,7 @@ def mantain_neuron_wiring_length(
     """
     import time
     import gc
-    try:
-        import psutil
-        monitor_memory = True
-        process = psutil.Process()
-        initial_memory = process.memory_info().rss / 1024 / 1024 / 1024  # GB
-        logger.info(f"Initial memory usage: {initial_memory:.2f} GB")
-    except ImportError:
-        monitor_memory = False
-        logger.info("psutil not available - memory monitoring disabled")
-    
+
     start_time = time.time()
     
     np.random.seed(random_state)
@@ -72,10 +63,7 @@ def mantain_neuron_wiring_length(
     logger.info(
         f"Distance calculation + coordinate attachment completed in {time.time() - step_start:.2f}s"
     )
-    if monitor_memory:
-        current_memory = process.memory_info().rss / 1024 / 1024 / 1024
-        logger.info(f"Memory usage after distance calculation: {current_memory:.2f} GB")
-    
+
     # Count connections per neuron (vectorized)
     connection_counts = connections_with_coords.groupby('pre_root_id').size()
     
@@ -113,25 +101,7 @@ def mantain_neuron_wiring_length(
     
     # Force garbage collection after memory-intensive binning operation
     gc.collect()
-    if monitor_memory:
-        current_memory = process.memory_info().rss / 1024 / 1024 / 1024
-        logger.info(f"Memory usage after binning: {current_memory:.2f} GB")
-    
-    # Split into binned and simple shuffle groups
-    connections_binned = connections_with_coords[
-        connections_with_coords['pre_root_id'].isin(neurons_for_binning)
-    ]
-    
-    # For neurons with few connections, they already have distance_bin = 0
-    connections_simple = connections_with_coords[
-        connections_with_coords['pre_root_id'].isin(neurons_for_simple)
-    ]
-    
-    # All connections now have distance_bin assigned
-    all_connections = connections_with_coords
-    # Note: all_connections is just a reference to connections_with_coords
-    # We'll delete all_connections later to free the memory
-    
+
     logger.info("Shuffling post_root_ids within (neuron, distance_bin) groups…")
     
     step_start = time.time()

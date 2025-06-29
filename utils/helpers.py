@@ -164,7 +164,7 @@ def load_connections(file_name: str = "connections.csv", root_dir: str = PROJECT
     return df
 
 
-def load_neuron_annotations(file_name: str = "neuron_annotations.tsv", root_dir: str = PROJECT_ROOT) -> pd.DataFrame:
+def load_neuron_coordinates(file_name: str = "neuron_annotations.tsv", root_dir: str = PROJECT_ROOT) -> pd.DataFrame:
     """Load the master neuron annotation table with cleaned coordinates."""
     path = os.path.join(root_dir, "new_data", file_name)
 

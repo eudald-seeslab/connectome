@@ -6,7 +6,7 @@ from paths import PROJECT_ROOT
 from utils.helpers import (
     compute_total_synapse_length,
     shuffle_post_root_id,
-    load_neuron_annotations,
+    load_neuron_coordinates,
 )
 from utils.randomizers.binned import create_length_preserving_random_network
 from utils.randomizers.connection_prunning import match_wiring_length_with_connection_pruning
@@ -48,7 +48,7 @@ def generate_random_connectome(u_config):
         .sort_values(["pre_root_id", "post_root_id"])
     )
 
-    neuron_coords = load_neuron_annotations(root_dir=PROJECT_ROOT)
+    neuron_coords = load_neuron_coordinates(root_dir=PROJECT_ROOT)
 
     seed = u_config.random_seed
     strategy = u_config.randomization_strategy

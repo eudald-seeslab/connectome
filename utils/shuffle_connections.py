@@ -11,7 +11,7 @@ from paths import PROJECT_ROOT
 from utils.helpers import (
     compute_total_synapse_length,
     load_connections,
-    load_neuron_annotations,
+    load_neuron_coordinates,
     shuffle_post_root_id,
     setup_logging,
     get_logger,
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     # Load data
     logger.info("Loading data...")
     connections = load_connections()
-    neuron_coordinates = load_neuron_annotations()
+    neuron_coordinates = load_neuron_coordinates()
     total_length = compute_total_synapse_length(connections, neuron_coordinates)
     logger.info(f"Total wiring length of original network: {total_length:.2f}")
 

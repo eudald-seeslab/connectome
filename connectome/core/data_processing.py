@@ -532,7 +532,6 @@ class DataProcessor:
         pkl_path = csv_path.replace(".csv", ".pkl")
 
         if os.path.exists(pkl_path) and os.path.getmtime(pkl_path) >= os.path.getmtime(csv_path):
-            print(f"Loading cached CSV from {pkl_path}")
             return pd.read_pickle(pkl_path)
 
         df = pd.read_csv(csv_path, **read_csv_kwargs)

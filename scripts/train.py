@@ -9,6 +9,7 @@ import torch
 from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
 from torch.amp import GradScaler, autocast
+import inspect
 
 from connectome.core.debug_utils import get_logger, model_summary
 from connectome.core.graph_models_helpers import EarlyStopping, TrainingError
@@ -78,7 +79,13 @@ def main(wandb_logger, sweep_config=None):
     optimizer = TorchAdamW(model.parameters(), lr=u_config.base_lr, fused=True)
 
     criterion = CrossEntropyLoss()
-    scaler = GradScaler(device_type="cuda")
+    # Initialize GradScaler in a version-agnostic way – older PyTorch releases do not
+    # accept the `device_type` argument. We therefore inspect the signature and only
+    # pass the argument when it is supported to avoid a TypeError.
+    if "device_type" in inspect.signature(GradScaler.__init__).parameters:
+        scaler = GradScaler(device_type="cuda")
+    else:
+        scaler = GradScaler()
 
     total_steps = get_iteration_number(len(training_images), u_config) * u_config.num_epochs
     scheduler = torch.optim.lr_scheduler.OneCycleLR(

@@ -58,10 +58,35 @@ def process_images(imgs, voronoi_indices):
 
 
 def get_voronoi_averages(processed_imgs):
+    """Compute average colour channels per Voronoi cell for each image.
+
+    *processed_imgs* must have shape ``(B, N_pixels, 5)`` with the last
+    dimension containing ``[r, g, b, mean, cell_idx]``.
+
+    Returns a list of pandas ``DataFrame`` objects (one per image), indexed
+    by cell identifier with columns ``['r', 'g', 'b', 'mean']``.
+    """
+
+    # All images share the same cell mapping, so we can use the first image
+    # to determine the total number of cells.
+    cell_idx = processed_imgs[0, :, 4].astype(np.int32)
+    num_cells = int(cell_idx.max()) + 1
+
     dfs = []
     for img in processed_imgs:
-        img = pd.DataFrame(img, columns=["r", "g", "b", "mean", "cell"])
-        dfs.append(img.groupby("cell").mean())
+        cells = img[:, 4].astype(np.int32)
+
+        counts = np.bincount(cells, minlength=num_cells).astype(np.float32)
+        counts[counts == 0] = 1.0
+
+        avgs = []
+        for ch in range(4):
+            sums = np.bincount(cells, weights=img[:, ch], minlength=num_cells)
+            avgs.append(sums / counts)
+
+        df = pd.DataFrame(np.stack(avgs, axis=1), columns=["r", "g", "b", "mean"])
+        dfs.append(df)
+
     return dfs
 
 

@@ -8,6 +8,8 @@ import numpy as np
 import torch
 from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
+from torch.amp import GradScaler, autocast
+import inspect
 
 from connectome.core.debug_utils import get_logger, model_summary
 from connectome.core.graph_models_helpers import EarlyStopping, TrainingError
@@ -35,6 +37,9 @@ warnings.filterwarnings(
     category=RuntimeWarning,
     module="wandb.sdk.data_types.image",
 )
+
+# Direct import (torch >= 2.0, CUDA >= 11.4 ensures fused flag exists)
+from torch.optim import AdamW as TorchAdamW
 
 
 def main(wandb_logger, sweep_config=None):
@@ -65,11 +70,28 @@ def main(wandb_logger, sweep_config=None):
     # get data and prepare model
     training_images = get_image_paths(u_config.TRAINING_DATA_DIR, u_config.small_length)
     data_processor = DataProcessor(u_config)
-    model = FullGraphModel(data_processor, u_config, random_generator).to(
-        u_config.DEVICE
-    )
-    optimizer = torch.optim.Adam(model.parameters(), lr=u_config.base_lr)
+    model = FullGraphModel(data_processor, u_config, random_generator).to(u_config.DEVICE)
+
+    # Compile model for extra perf (requires torch>=2.0)
+    model = torch.compile(model, mode="reduce-overhead")
+
+    # Optimizer: fused AdamW (available with CUDA≥11.4)
+    optimizer = TorchAdamW(model.parameters(), lr=u_config.base_lr, fused=True)
+
     criterion = CrossEntropyLoss()
+    # Initialize GradScaler in a version-agnostic way – older PyTorch releases do not
+    # accept the `device_type` argument. We therefore inspect the signature and only
+    # pass the argument when it is supported to avoid a TypeError.
+    if "device_type" in inspect.signature(GradScaler.__init__).parameters:
+        scaler = GradScaler(device_type="cuda")
+    else:
+        scaler = GradScaler()
+
+    total_steps = get_iteration_number(len(training_images), u_config) * u_config.num_epochs
+    scheduler = torch.optim.lr_scheduler.OneCycleLR(
+        optimizer, max_lr=u_config.base_lr, total_steps=total_steps
+    )
+
     early_stopping = EarlyStopping(patience=u_config.patience, min_delta=0, target_accuracy=0.99)
 
     if u_config.resume_checkpoint is not None:
@@ -105,12 +127,15 @@ def main(wandb_logger, sweep_config=None):
 
                 inputs, labels = data_processor.process_batch(images, labels)
 
-                optimizer.zero_grad()
-                with torch.autocast(u_config.device_type):
+                optimizer.zero_grad(set_to_none=True)
+                with autocast(device_type="cuda", dtype=torch.float16):
                     out = model(inputs)
                     loss = criterion(out, labels)
-                    loss.backward()
-                    optimizer.step()
+
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
+                scheduler.step()
 
                 _, _, _, correct = clean_model_outputs(out, labels)
                 running_loss += update_running_loss(loss, inputs)

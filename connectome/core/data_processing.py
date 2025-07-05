@@ -11,7 +11,7 @@ import pandas as pd
 import torch
 from torch_scatter import scatter_add
 from scipy.sparse import coo_matrix
-from torch_geometric.data import Data
+from torch_geometric.data import Data, Batch
 import torch.nn.functional as F
 
 from paths import PROJECT_ROOT
@@ -343,7 +343,7 @@ class DataProcessor:
             )
 
     # ---------------------------------------------------------------------
-    # Fast, NumPy-based pipeline used during training
+    # Fast, NumPy-based pipeline (no pandas) used during training
     # ---------------------------------------------------------------------
 
     def _build_neuron_mappings(self):
@@ -354,6 +354,8 @@ class DataProcessor:
         Voronoi cell), ``cell_idx`` is set to ``-1`` so that their activation is
         forced to zero.
         """
+
+        import numpy as _np
 
         num_neurons = len(self.root_ids)
         self._neuron_cell_idx = np.full(num_neurons, -1, dtype=np.int32)
@@ -396,24 +398,28 @@ class DataProcessor:
         and avoids pandas/DataFrame overhead.
         """
 
-        # Convert to torch tensor on correct device
-        processed_t = processed_imgs if torch.is_tensor(processed_imgs) else torch.from_numpy(processed_imgs).to(self.device, dtype=self.dtype)
-
+        # Keep the original dtype of *processed_imgs* to avoid an up-cast that doubles
+        # the temporary memory footprint. When running on CUDA we typically receive
+        # *float16* tensors from *_process_images_torch*; staying in half precision
+        # during the scatter operations cuts the required memory in half and is
+        # fully supported by ``torch_scatter``.
+        processed_t = processed_imgs if torch.is_tensor(processed_imgs) else torch.from_numpy(processed_imgs).to(self.device)
+        
         B, P, _ = processed_t.shape
         cell_idx = processed_t[0, :, 4].long()
         num_cells = int(cell_idx.max().item()) + 1
-
+        
         channels = processed_t[:, :, :4]  # B, P, 4
         cell_indices = processed_t[:, :, 4].long()  # B,P
-
+        
         means = torch.zeros((B, num_cells, 4), device=self.device, dtype=channels.dtype)
-
+        
         for i in range(B):
             idx = cell_indices[i]
             sums = scatter_add(channels[i], idx.unsqueeze(-1).expand(-1, 4), dim=0, dim_size=num_cells)
             counts = scatter_add(torch.ones_like(idx, dtype=channels.dtype), idx, dim=0, dim_size=num_cells).clamp(min=1.0)
             means[i] = sums / counts.unsqueeze(-1)
-
+        
         return means  # stay on device
 
     # ------------------------------------------------------------------
@@ -450,8 +456,10 @@ class DataProcessor:
 
         gathered = channels[:, cell_indices, ch_indices]  # B, N_valid
 
+        # Work in the model dtype (typically *float32*) to avoid downstream dtype
+        # mismatches while still benefiting from the reduced precision earlier.
         activation = torch.zeros(len(self._neuron_cell_idx_torch), vm.shape[0], device=self.device, dtype=self.dtype)
-        activation[valid_neuron_idx, :] = gathered.transpose(0, 1)
+        activation[valid_neuron_idx, :] = gathered.transpose(0, 1).to(self.dtype)
 
         return activation
 
@@ -465,11 +473,14 @@ class DataProcessor:
         Accepts numpy uint8 images of shape (B,H,W) or (B,H,W,3).
         Returns torch tensor float32 (B, H, W, 3) on device; no /255 scaling.
         """
-        # Accept numpy or torch tensor
+        # Use half precision on GPU to slash memory usage; fall back to full
+        # precision on CPU where memory is less constrained.
+        target_dtype = torch.float16 if self.device.type == "cuda" else torch.float32
+
         if isinstance(imgs_input, np.ndarray):
-            imgs_t = torch.from_numpy(imgs_input).to(self.device, dtype=self.dtype)
+            imgs_t = torch.from_numpy(imgs_input).to(self.device, dtype=target_dtype)
         else:
-            imgs_t = imgs_input.to(self.device, dtype=self.dtype)
+            imgs_t = imgs_input.to(self.device, dtype=target_dtype)
 
         if imgs_t.ndim == 3:
             imgs_t = imgs_t.unsqueeze(-1)  # grayscale
@@ -479,6 +490,7 @@ class DataProcessor:
 
         if H != 512 or W != 512:
             imgs_t = imgs_t.permute(0,3,1,2)
+            # Interpolation can be performed in half precision as well.
             imgs_t = F.interpolate(imgs_t, size=(512,512), mode="bilinear", align_corners=False)
             imgs_t = imgs_t.permute(0,2,3,1)
 
@@ -490,7 +502,7 @@ class DataProcessor:
         mean_channel = imgs_t.mean(dim=2, keepdim=True)  # B,P,1
         imgs_t = torch.cat([imgs_t, mean_channel], dim=2)  # B,P,4
 
-        vor_idx = self.voronoi_indices_torch.view(1, -1, 1).expand(B, -1, 1).to(self.dtype)
+        vor_idx = self.voronoi_indices_torch.view(1, -1, 1).expand(B, -1, 1).to(target_dtype)
         imgs_t = torch.cat([imgs_t, vor_idx], dim=2)  # B,P,5
 
         return imgs_t

@@ -11,7 +11,7 @@ import pandas as pd
 import torch
 from torch_scatter import scatter_add
 from scipy.sparse import coo_matrix
-from torch_geometric.data import Data, Batch
+from torch_geometric.data import Data
 import torch.nn.functional as F
 
 from paths import PROJECT_ROOT
@@ -343,7 +343,7 @@ class DataProcessor:
             )
 
     # ---------------------------------------------------------------------
-    # Fast, NumPy-based pipeline (no pandas) used during training
+    # Fast, NumPy-based pipeline used during training
     # ---------------------------------------------------------------------
 
     def _build_neuron_mappings(self):
@@ -354,8 +354,6 @@ class DataProcessor:
         Voronoi cell), ``cell_idx`` is set to ``-1`` so that their activation is
         forced to zero.
         """
-
-        import numpy as _np
 
         num_neurons = len(self.root_ids)
         self._neuron_cell_idx = np.full(num_neurons, -1, dtype=np.int32)

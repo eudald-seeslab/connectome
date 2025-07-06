@@ -214,6 +214,29 @@ def main(wandb_logger, sweep_config=None):
         f"accuracy {total_correct / total}."
     )
 
+    # -- Clean-up Torch compile state -------------------------------------------------
+    # Multiple runs are executed sequentially in the same Python process when using
+    # `wandb.agent`.  Re-invoking `torch.compile` without resetting the global
+    # state can leave stale CUDA graph tree managers around, which leads to
+    # `AssertionError` inside `torch._inductor.cudagraph_trees` on subsequent runs.
+    # Resetting the Dynamo and Inductor caches here avoids the problem.
+    # Avoid `import torch._dynamo` here because it would create a local variable named
+    # `torch`, shadowing the module imported at the top and causing `UnboundLocalError`
+    # earlier in this function.  Instead, import the sub-module explicitly:
+    from torch import _dynamo as _torch_dynamo  # type: ignore
+    _torch_dynamo.reset()
+    try:
+        from torch._inductor import cudagraph_trees  # type: ignore
+        cudagraph_trees.reset_cudagraph_trees()
+    except Exception:
+        # The reset helper is best-effort; ignore if it is unavailable (e.g. on CPU)
+        pass
+
+    # Free up cached GPU memory and trigger IPC cleanup so that the next sweep
+    # iteration starts with maximum available memory.
+    torch.cuda.empty_cache()
+    torch.cuda.ipc_collect()
+
 
 if __name__ == "__main__":
 

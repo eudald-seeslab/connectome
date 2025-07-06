@@ -88,9 +88,10 @@ class DataProcessor:
             else config_.CLASSES
         )
 
+        # Store edges as int32 to halve memory; they will be cast to int64 lazily in the model.
         self.edges = torch.tensor(
             np.array([self.synaptic_matrix.row, self.synaptic_matrix.col]),
-            dtype=torch.int64,  # do not touch
+            dtype=torch.int32,
         )
         self.weights = torch.tensor(self.synaptic_matrix.data, dtype=self.dtype)
         self.inhibitory_r7_r8 = config_.inhibitory_r7_r8
@@ -126,6 +127,13 @@ class DataProcessor:
         processed_imgs = self._process_images_torch(imgs_t)
         voronoi_means = self._get_voronoi_means_torch(processed_imgs)
         activation_tensor = self._calculate_neuron_activations_torch(voronoi_means)
+
+        # Delete bulky intermediate tensors to reclaim GPU memory before constructing
+        # the (potentially huge) batched edge index. This prevents peak-memory spikes
+        # that previously caused CUDA OOMs.
+        del imgs_t, processed_imgs, voronoi_means
+        torch.cuda.empty_cache()
+
         # Build a single batched graph (avoids Python-level loops)
         batch_size = len(labels)
         num_nodes = activation_tensor.shape[0]
@@ -137,12 +145,9 @@ class DataProcessor:
         # Edge index replication with node offsets per graph
         edge_index_rep = self.edges.to(self.device).repeat(1, batch_size)
         node_offsets = (
-            torch.arange(batch_size, device=self.device, dtype=torch.long) * num_nodes
+            torch.arange(batch_size, device=self.device, dtype=torch.int32) * num_nodes
         ).repeat_interleave(num_edges)
         edge_index_rep = edge_index_rep + node_offsets.unsqueeze(0)
-
-        # Edge attributes repeated
-        edge_attr_rep = self.weights.to(self.device).repeat(batch_size)
 
         # Batch vector indicating graph id per node (needed for pooling)
         batch_vec = torch.arange(batch_size, device=self.device).repeat_interleave(num_nodes)
@@ -150,7 +155,6 @@ class DataProcessor:
         inputs = Data(
             x=x,
             edge_index=edge_index_rep,
-            edge_attr=edge_attr_rep,
             batch=batch_vec,
         )
 

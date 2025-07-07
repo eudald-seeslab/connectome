@@ -288,10 +288,27 @@ class VoronoiCells:
         flat_vals     = channels.reshape(-1, 4)                     # (B*P,4)
 
         total = B * num_cells
-        sums   = scatter_add(flat_vals, flat_idx.unsqueeze(-1).expand(-1, 4),
-                             dim=0, dim_size=total)                 # (total,4)
-        # Re-use cached counts → broadcast to all batches
-        counts = pixel_counts.to(device=device, dtype=channels.dtype).repeat(B)
+        sums = scatter_add(
+            flat_vals,
+            flat_idx.unsqueeze(-1).expand(-1, 4),
+            dim=0,
+            dim_size=total,
+        )  # (total,4)
+
+        # ------------------------------------------------------------
+        # Counts: either use the supplied *pixel_counts* tensor or
+        # compute them on the fly when *None* so that the function
+        # behaves correctly with the default argument (needed by tests).
+        # ------------------------------------------------------------
+        if pixel_counts is None:
+            # Compute per-cell pixel counts once and broadcast to all batches
+            ones = torch.ones(P, device=device, dtype=channels.dtype)
+            counts_single = scatter_add(
+                ones, cell_idx[0], dim=0, dim_size=num_cells
+            )  # (C,)
+            counts = counts_single.repeat(B)  # (B*C,)
+        else:
+            counts = pixel_counts.to(device=device, dtype=channels.dtype).repeat(B)
 
         return (sums / counts.unsqueeze(-1)).view(B, num_cells, 4)
 

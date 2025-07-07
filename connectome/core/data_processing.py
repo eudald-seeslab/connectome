@@ -11,7 +11,7 @@ import pandas as pd
 import torch
 from torch_scatter import scatter_add
 from scipy.sparse import coo_matrix
-from torch_geometric.data import Data, Batch
+from torch_geometric.data import Data
 import torch.nn.functional as F
 
 from paths import PROJECT_ROOT

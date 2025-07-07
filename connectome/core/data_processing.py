@@ -1,11 +1,6 @@
 import os
 import random
 
-import matplotlib
-from matplotlib import pyplot as plt
-
-matplotlib.use("Agg")
-
 import numpy as np
 import pandas as pd
 import torch
@@ -13,23 +8,20 @@ from scipy.sparse import coo_matrix
 
 from paths import PROJECT_ROOT
 from connectome.core.csv_loader import CSVLoader
+from connectome.core.fly_plotter import FlyPlotter
 
 from connectome.core.train_funcs import (
-    apply_inhibitory_r7_r8,
     construct_synaptic_matrix,
-    get_activation_from_cell_type,
     get_neuron_activations,
     get_side_decision_making_vector,
-    get_voronoi_averages,
     import_images,
-    preprocess_images,
-    process_images,
 )
 from connectome.core.voronoi_cells import VoronoiCells
 from connectome.core.neuron_mapper import NeuronMapper
 from connectome.core.utils import paths_to_labels
 from connectome.core.image_processor import ImageProcessor
 from connectome.core.graph_builder import GraphBuilder
+from configs.config import CONNECTOME_DATA_DIR
 
 
 class DataProcessor:
@@ -44,8 +36,7 @@ class DataProcessor:
         torch.manual_seed(config_.random_seed)
         random.seed(config_.random_seed)
 
-        data_dir_ = "new_data" if config_.new_connectome else "adult_data"
-        self.data_dir = os.path.join(PROJECT_ROOT, data_dir_)
+        self.data_dir = os.path.join(PROJECT_ROOT, CONNECTOME_DATA_DIR)
 
         # CSV loader with on-disk pickle cache
         self.csv_loader = CSVLoader()
@@ -114,6 +105,9 @@ class DataProcessor:
 
         # Graph builder utility
         self.graph_builder = GraphBuilder(self.edges, device=self.device)
+
+        # Plotting utility
+        self.plotter = FlyPlotter(self.voronoi_cells)
 
     @property
     def num_classes(self):
@@ -204,43 +198,14 @@ class DataProcessor:
         return torch.tensor(activation_df.values, dtype=self.dtype)
 
     def plot_input_images(self, img, voronoi_colour="orange", voronoi_width=1):
-        fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-        self.voronoi_cells.plot_voronoi_cells_with_neurons(
-            self.tesselated_neurons, axes[0], voronoi_colour, voronoi_width
-        )
-        self.plot_neuron_activations(img, axes[1], voronoi_colour, voronoi_width)
-        self.voronoi_cells.plot_input_image(img, axes[2])
-        plt.tight_layout()
-        plt.close("all")
-
-        return fig, "Activations -> Voronoi <- Input image"
-
-    def plot_neuron_activations(self, img, ax, voronoi_colour, voronoi_width):
-        # This is repeated in process_batch, but it's the cleanest way to get the plots
-        img = preprocess_images(np.expand_dims(img, 0))
-        processed_img = process_images(img, self.voronoi_indices)
-        voronoi_average = get_voronoi_averages(processed_img)[0]
-        # we need to put everything in terms of the voronoi point regions
-        voronoi_average.index = [
-            self.voronoi_cells.voronoi.point_region[int(i)]
-            for i in voronoi_average.index
-        ]
-        corr_tess = self.tesselated_neurons.copy()
-        corr_tess["voronoi_indices"] = [
-            self.voronoi_cells.voronoi.point_region[int(i)]
-            for i in corr_tess["voronoi_indices"]
-        ]
-        neuron_activations = corr_tess.merge(
-            voronoi_average, left_on="voronoi_indices", right_index=True
-        )
-        if self.inhibitory_r7_r8:
-            neuron_activations = apply_inhibitory_r7_r8(neuron_activations)
-
-        neuron_activations["activation"] = neuron_activations.apply(
-            get_activation_from_cell_type, axis=1
-        )
-        return self.voronoi_cells.plot_neuron_activations(
-            neuron_activations, ax, voronoi_colour, voronoi_width
+        """Convenience wrapper that delegates to ConnectomePlotter."""
+        return self.plotter.plot_input_images(
+            img,
+            self.tesselated_neurons,
+            self.voronoi_indices,
+            self.inhibitory_r7_r8,
+            voronoi_colour=voronoi_colour,
+            voronoi_width=voronoi_width,
         )
 
     @staticmethod

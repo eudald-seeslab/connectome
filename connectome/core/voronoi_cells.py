@@ -5,6 +5,7 @@ from scipy.spatial import Voronoi, cKDTree, voronoi_plot_2d
 import matplotlib.pyplot as plt
 import torch
 from torch_scatter import scatter_add
+from typing import Optional
 
 from connectome.core.train_funcs import assign_cell_type
 
@@ -252,32 +253,47 @@ class VoronoiCells:
         return (values[colour] + values["mean"]) / 2
 
     @staticmethod
-    def compute_voronoi_means(processed_imgs: torch.Tensor, device: torch.device) -> torch.Tensor:
+    def compute_voronoi_means(
+        processed_imgs: torch.Tensor,
+        device: torch.device,
+        pixel_counts: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """Return per-cell mean colour channels.
 
-        *processed_imgs* shape: ``(B, P, 5)`` where the last dimension is
-        ``[r, g, b, mean, cell_idx]``.
+        Parameters
+        ----------
+        processed_imgs : Tensor
+            Shape ``(B, P, 5)`` – ``[r, g, b, mean, cell_idx]``.
+        device : torch.device
+            Destination device for the computation.
+        pixel_counts : Tensor | None, optional
+            1-D tensor ``(C,)`` with the number of pixels belonging to each
+            Voronoi cell.  If *None*, the counts are recomputed on the fly via
+            ``scatter_add``.
+
+        Returns
+        -------
+        Tensor
+            Shape ``(B, C, 4)`` containing per-cell RGB/mean values.
         """
+        processed = processed_imgs.to(device)
+        B, P, _ = processed.shape
+        channels  = processed[:, :, :4]                     # (B,P,4)
+        cell_idx  = processed[:, :, 4].long()               # (B,P)
+        num_cells = int(cell_idx[0].max().item()) + 1
 
-        processed_t = processed_imgs.to(device)
+        # give each batch its own index range [0..num_cells-1] -> [k*num_cells ..]
+        batch_offsets = torch.arange(B, device=device).view(B, 1) * num_cells
+        flat_idx      = (cell_idx + batch_offsets).reshape(-1)      # (B*P)
+        flat_vals     = channels.reshape(-1, 4)                     # (B*P,4)
 
-        B, _, _ = processed_t.shape
-        cell_idx = processed_t[0, :, 4].long()
-        num_cells = int(cell_idx.max().item()) + 1
+        total = B * num_cells
+        sums   = scatter_add(flat_vals, flat_idx.unsqueeze(-1).expand(-1, 4),
+                             dim=0, dim_size=total)                 # (total,4)
+        # Re-use cached counts → broadcast to all batches
+        counts = pixel_counts.to(device=device, dtype=channels.dtype).repeat(B)
 
-        channels = processed_t[:, :, :4]  # B,P,4
-        cell_indices = processed_t[:, :, 4].long()
-
-        means = torch.zeros((B, num_cells, 4), device=device, dtype=channels.dtype)
-
-        # TODO: maybe we could vectorize this?
-        for i in range(B):
-            idx = cell_indices[i]
-            sums = scatter_add(channels[i], idx.unsqueeze(-1).expand(-1, 4), dim=0, dim_size=num_cells)
-            counts = scatter_add(torch.ones_like(idx, dtype=channels.dtype), idx, dim=0, dim_size=num_cells).clamp(min=1.0)
-            means[i] = sums / counts.unsqueeze(-1)
-
-        return means
+        return (sums / counts.unsqueeze(-1)).view(B, num_cells, 4)
 
     # ------------------------------------------------------------------
     # Public API

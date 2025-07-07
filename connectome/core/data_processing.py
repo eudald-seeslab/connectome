@@ -78,10 +78,18 @@ class DataProcessor:
                 device=config_.DEVICE,
                 dtype=torch.long,
             )
+
+            # Cache per-cell pixel counts once (small tensor, few kB)
+            num_cells = int(self.voronoi_indices_torch.max().item()) + 1
+            counts = torch.bincount(
+                self.voronoi_indices_torch.cpu(), minlength=num_cells
+            ).to(config_.DEVICE, dtype=torch.float32)
+            self.pixel_counts_torch = counts
         else:
             self.tesselated_neurons = None
             self.voronoi_indices = None
             self.voronoi_indices_torch = None
+            self.pixel_counts_torch = None
 
         # ------------------------------------------------------------------
         # 5. Device, dtypes & image helpers
@@ -140,7 +148,11 @@ class DataProcessor:
         # Reshape and colour images if needed
         imgs_t = self._image_processor.preprocess(imgs)
         processed_imgs = self._image_processor.process(imgs_t, self.voronoi_indices_torch)
-        voronoi_means = VoronoiCells.compute_voronoi_means(processed_imgs, self.device)
+        voronoi_means = VoronoiCells.compute_voronoi_means(
+            processed_imgs,
+            self.device,
+            self.pixel_counts_torch,
+        )
         activation_tensor = self.neuron_mapper.activations_from_voronoi_means(voronoi_means)
 
         # Delete bulky intermediate tensors to reclaim GPU memory before constructing
@@ -170,6 +182,12 @@ class DataProcessor:
             dtype=self.dtype,
             inhibitory_r7_r8=self.inhibitory_r7_r8,
         )
+
+        # Update cached pixel counts after the tessellation changes
+        num_cells = int(self.voronoi_indices_torch.max().item()) + 1
+        self.pixel_counts_torch = torch.bincount(
+            self.voronoi_indices_torch.cpu(), minlength=num_cells
+        ).to(self.device, dtype=torch.float32)
 
     def get_data_from_paths(self, paths, get_labels=True):
         imgs = import_images(paths)

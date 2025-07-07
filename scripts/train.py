@@ -38,7 +38,6 @@ warnings.filterwarnings(
     module="wandb.sdk.data_types.image",
 )
 
-# Direct import (torch >= 2.0, CUDA >= 11.4 ensures fused flag exists)
 from torch.optim import AdamW as TorchAdamW
 
 
@@ -70,10 +69,8 @@ def main(wandb_logger, sweep_config=None):
     # get data and prepare model
     training_images = get_image_paths(u_config.TRAINING_DATA_DIR, u_config.small_length)
     data_processor = DataProcessor(u_config)
-    model = FullGraphModel(data_processor, u_config, random_generator).to(u_config.DEVICE)
 
-    # Compile model for extra perf (requires torch>=2.0)
-    model = torch.compile(model, mode="reduce-overhead")
+    model = FullGraphModel(data_processor, u_config, random_generator).to(u_config.DEVICE)
 
     # Optimizer: fused AdamW (available with CUDA≥11.4)
     optimizer = TorchAdamW(model.parameters(), lr=u_config.base_lr, fused=True)
@@ -214,26 +211,9 @@ def main(wandb_logger, sweep_config=None):
         f"accuracy {total_correct / total}."
     )
 
-    # -- Clean-up Torch compile state -------------------------------------------------
-    # Multiple runs are executed sequentially in the same Python process when using
-    # `wandb.agent`.  Re-invoking `torch.compile` without resetting the global
-    # state can leave stale CUDA graph tree managers around, which leads to
-    # `AssertionError` inside `torch._inductor.cudagraph_trees` on subsequent runs.
-    # Resetting the Dynamo and Inductor caches here avoids the problem.
-    # Avoid `import torch._dynamo` here because it would create a local variable named
-    # `torch`, shadowing the module imported at the top and causing `UnboundLocalError`
-    # earlier in this function.  Instead, import the sub-module explicitly:
-    from torch import _dynamo as _torch_dynamo  # type: ignore
-    _torch_dynamo.reset()
-    try:
-        from torch._inductor import cudagraph_trees  # type: ignore
-        cudagraph_trees.reset_cudagraph_trees()
-    except Exception:
-        # The reset helper is best-effort; ignore if it is unavailable (e.g. on CPU)
-        pass
-
-    # Free up cached GPU memory and trigger IPC cleanup so that the next sweep
-    # iteration starts with maximum available memory.
+    # Free up cached GPU memory so that the next sweep iteration starts from a
+    # clean slate.  With *torch.compile* removed we no longer need special
+    # Dynamo / Inductor resets.
     torch.cuda.empty_cache()
     torch.cuda.ipc_collect()
 

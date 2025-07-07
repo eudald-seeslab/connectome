@@ -9,10 +9,7 @@ matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 import torch
-from torch_scatter import scatter_add
 from scipy.sparse import coo_matrix
-from torch_geometric.data import Data
-import torch.nn.functional as F
 
 from paths import PROJECT_ROOT
 
@@ -28,8 +25,10 @@ from connectome.core.train_funcs import (
     process_images,
 )
 from connectome.core.voronoi_cells import VoronoiCells
+from connectome.core.neuron_mapper import NeuronMapper
 from connectome.core.utils import paths_to_labels
 from connectome.core.image_processor import ImageProcessor
+from connectome.core.graph_builder import GraphBuilder
 
 
 class DataProcessor:
@@ -99,8 +98,17 @@ class DataProcessor:
         self.weights = torch.tensor(self.synaptic_matrix.data, dtype=self.dtype)
         self.inhibitory_r7_r8 = config_.inhibitory_r7_r8
 
-        # Pre-compute mapping neuron -> (cell_idx, channel_idx) for fast activation gathering
-        self._build_neuron_mappings()
+        # Pre-compute mapping neuron → activations helper
+        self.neuron_mapper = NeuronMapper(
+            self.root_ids,
+            self.tesselated_neurons,
+            device=self.device,
+            dtype=self.dtype,
+            inhibitory_r7_r8=self.inhibitory_r7_r8,
+        )
+
+        # Graph builder utility
+        self.graph_builder = GraphBuilder(self.edges, device=self.device)
 
     @property
     def num_classes(self):
@@ -128,8 +136,8 @@ class DataProcessor:
         # Reshape and colour if needed (delegate to helper)
         imgs_t = self._image_processor.preprocess(imgs)
         processed_imgs = self._image_processor.process(imgs_t, self.voronoi_indices_torch)
-        voronoi_means = self._get_voronoi_means_torch(processed_imgs)
-        activation_tensor = self._calculate_neuron_activations_torch(voronoi_means)
+        voronoi_means = VoronoiCells.compute_voronoi_means(processed_imgs, self.device)
+        activation_tensor = self.neuron_mapper.activations_from_voronoi_means(voronoi_means)
 
         # Delete bulky intermediate tensors to reclaim GPU memory before constructing
         # the (potentially huge) batched edge index. This prevents peak-memory spikes
@@ -137,33 +145,10 @@ class DataProcessor:
         del imgs_t, processed_imgs, voronoi_means
         torch.cuda.empty_cache()
 
-        # Build a single batched graph (avoids Python-level loops)
-        batch_size = len(labels)
-        num_nodes = activation_tensor.shape[0]
-        num_edges = self.edges.shape[1]
+        # Convert activations into a batched PyG graph
+        inputs, labels_t = self.graph_builder.build_batch(activation_tensor, labels)
 
-        # Node features: flatten batch dimension
-        x = activation_tensor.t().contiguous().view(-1, 1)
-
-        # Edge index replication with node offsets per graph
-        edge_index_rep = self.edges.to(self.device).repeat(1, batch_size)
-        node_offsets = (
-            torch.arange(batch_size, device=self.device, dtype=torch.int32) * num_nodes
-        ).repeat_interleave(num_edges)
-        edge_index_rep = edge_index_rep + node_offsets.unsqueeze(0)
-
-        # Batch vector indicating graph id per node (needed for pooling)
-        batch_vec = torch.arange(batch_size, device=self.device).repeat_interleave(num_nodes)
-
-        inputs = Data(
-            x=x,
-            edge_index=edge_index_rep,
-            batch=batch_vec,
-        )
-
-        labels = torch.tensor(labels, dtype=torch.long, device=self.device)
-
-        return inputs, labels
+        return inputs, labels_t
 
     @property
     def number_of_synapses(self):
@@ -175,7 +160,13 @@ class DataProcessor:
         self.voronoi_indices = self.voronoi_cells.get_image_indices()
         self.voronoi_indices_torch = torch.tensor(self.voronoi_indices, device=self.device, dtype=torch.long)
         # Update fast-mapping tables because Voronoi indices changed
-        self._build_neuron_mappings()
+        self.neuron_mapper = NeuronMapper(
+            self.root_ids,
+            self.tesselated_neurons,
+            device=self.device,
+            dtype=self.dtype,
+            inhibitory_r7_r8=self.inhibitory_r7_r8,
+        )
 
     def get_data_from_paths(self, paths, get_labels=True):
         imgs = import_images(paths)
@@ -348,190 +339,6 @@ class DataProcessor:
             raise ValueError(
                 f"You can't filter out any of the following cell types: {', '.join(self.protected_cell_types)}"
             )
-
-    # ---------------------------------------------------------------------
-    # Fast, NumPy-based pipeline (no pandas) used during training
-    # ---------------------------------------------------------------------
-
-    def _build_neuron_mappings(self):
-        """Create vectorised look-up tables mapping neuron index → (cell, channel).
-
-        The neuron index (*index_id*) order is determined by ``self.root_ids``.
-        For neurons that are **not** in ``self.tesselated_neurons`` (i.e. have no
-        Voronoi cell), ``cell_idx`` is set to ``-1`` so that their activation is
-        forced to zero.
-        """
-
-        import numpy as _np
-
-        num_neurons = len(self.root_ids)
-        self._neuron_cell_idx = np.full(num_neurons, -1, dtype=np.int32)
-        self._neuron_channel_idx = np.zeros(num_neurons, dtype=np.int8)
-
-        # Map cell_type to channel: r=0, g=1, b=2, mean=3
-        channel_map = {"R1-6": 3, "R7": 2, "R8p": 1, "R8y": 0}
-
-        tesselated = self.tesselated_neurons.copy()
-        tesselated["root_id"] = tesselated["root_id"].astype("string")
-
-        mapping_df = (
-            self.root_ids.merge(
-                tesselated[["root_id", "voronoi_indices", "cell_type"]],
-                on="root_id",
-                how="left",
-            )
-            .sort_values("index_id")
-        )
-
-        valid_mask = ~mapping_df["voronoi_indices"].isna()
-        valid_indices = mapping_df[valid_mask]["index_id"].values.astype(int)
-        self._neuron_cell_idx[valid_indices] = mapping_df[valid_mask]["voronoi_indices"].astype(int).values
-
-        self._neuron_channel_idx[valid_indices] = mapping_df[valid_mask]["cell_type"].map(channel_map).astype(int).values
-
-        # Torch versions on device for quick gather
-        device = self.device
-        self._neuron_cell_idx_torch = torch.tensor(self._neuron_cell_idx, device=device, dtype=torch.long)
-        self._neuron_channel_idx_torch = torch.tensor(self._neuron_channel_idx, device=device, dtype=torch.long)
-
-    # ------------------------------------------------------------------
-    # Vectorised Voronoi means
-    # ------------------------------------------------------------------
-
-    def _get_voronoi_means_torch(self, processed_imgs):
-        """Return ndarray (B, num_cells, 4) with mean r, g, b, mean-channel.
-
-        The implementation loops over the batch dimension but stays within NumPy
-        and avoids pandas/DataFrame overhead.
-        """
-
-        # Keep the original dtype of *processed_imgs* to avoid an up-cast that doubles
-        # the temporary memory footprint. When running on CUDA we typically receive
-        # *float16* tensors from *_process_images_torch*; staying in half precision
-        # during the scatter operations cuts the required memory in half and is
-        # fully supported by ``torch_scatter``.
-        processed_t = processed_imgs if torch.is_tensor(processed_imgs) else torch.from_numpy(processed_imgs).to(self.device)
-        
-        B, _, _ = processed_t.shape
-        cell_idx = processed_t[0, :, 4].long()
-        num_cells = int(cell_idx.max().item()) + 1
-        
-        channels = processed_t[:, :, :4]  # B, P, 4
-        cell_indices = processed_t[:, :, 4].long()  # B,P
-        
-        means = torch.zeros((B, num_cells, 4), device=self.device, dtype=channels.dtype)
-        
-        for i in range(B):
-            idx = cell_indices[i]
-            sums = scatter_add(channels[i], idx.unsqueeze(-1).expand(-1, 4), dim=0, dim_size=num_cells)
-            counts = scatter_add(torch.ones_like(idx, dtype=channels.dtype), idx, dim=0, dim_size=num_cells).clamp(min=1.0)
-            means[i] = sums / counts.unsqueeze(-1)
-        
-        return means  # stay on device
-
-    # ------------------------------------------------------------------
-    # Vectorised neuron activation computation
-    # ------------------------------------------------------------------
-
-    def _calculate_neuron_activations_torch(self, voronoi_means):
-        """Map per-cell colour averages to neuron activations (NumPy).
-
-        Parameters
-        ----------
-        voronoi_means : np.ndarray
-            Shape ``(B, num_cells, 4)`` where channels follow the order
-            ``r, g, b, mean``.
-        """
-
-        # Convert to torch on correct device
-        vm = voronoi_means.to(self.device)
-
-        r, g, b, m = vm[..., 0], vm[..., 1], vm[..., 2], vm[..., 3]
-
-        if self.inhibitory_r7_r8:
-            mask = b > torch.maximum(r, g)
-            r = torch.where(mask, 0, r)
-            g = torch.where(mask, 0, g)
-            b = torch.where(mask, b, 0)
-
-        channels = torch.stack([r, g, b, m], dim=-1)  # B, num_cells, 4
-
-        valid_mask = self._neuron_cell_idx_torch != -1
-        valid_neuron_idx = torch.nonzero(valid_mask, as_tuple=False).squeeze()
-        cell_indices = self._neuron_cell_idx_torch[valid_mask]
-        ch_indices = self._neuron_channel_idx_torch[valid_mask]
-
-        gathered = channels[:, cell_indices, ch_indices]  # B, N_valid
-
-        # Work in the model dtype (typically *float32*) to avoid downstream dtype
-        # mismatches while still benefiting from the reduced precision earlier.
-        activation = torch.zeros(len(self._neuron_cell_idx_torch), vm.shape[0], device=self.device, dtype=self.dtype)
-        activation[valid_neuron_idx, :] = gathered.transpose(0, 1).to(self.dtype)
-
-        return activation
-
-    # ------------------------------------------------------------------
-    # Fast torch-based image processing
-    # ------------------------------------------------------------------
-
-    def _process_images_torch(self, imgs_input):
-        """GPU version of process_images (resize + colour repeat).
-
-        Accepts numpy uint8 images of shape (B,H,W) or (B,H,W,3).
-        Returns torch tensor float32 (B, H, W, 3) on device; no /255 scaling.
-        """
-        # Use half precision on GPU to slash memory usage; fall back to full
-        # precision on CPU where memory is less constrained.
-        target_dtype = torch.float16 if self.device.type == "cuda" else torch.float32
-
-        if isinstance(imgs_input, np.ndarray):
-            imgs_t = torch.from_numpy(imgs_input).to(self.device, dtype=target_dtype)
-        else:
-            imgs_t = imgs_input.to(self.device, dtype=target_dtype)
-
-        if imgs_t.ndim == 3:
-            imgs_t = imgs_t.unsqueeze(-1)  # grayscale
-
-        B, H, W, C = imgs_t.shape
-        assert C == 3, "Images must have 3 channels"
-
-        if H != 512 or W != 512:
-            imgs_t = imgs_t.permute(0,3,1,2)
-            # Interpolation can be performed in half precision as well.
-            imgs_t = F.interpolate(imgs_t, size=(512,512), mode="bilinear", align_corners=False)
-            imgs_t = imgs_t.permute(0,2,3,1)
-
-        imgs_t = imgs_t / 255.0
-
-        # Flatten spatial to B,P,3
-        imgs_t = imgs_t.reshape(B, -1, 3)
-
-        mean_channel = imgs_t.mean(dim=2, keepdim=True)  # B,P,1
-        imgs_t = torch.cat([imgs_t, mean_channel], dim=2)  # B,P,4
-
-        vor_idx = self.voronoi_indices_torch.view(1, -1, 1).expand(B, -1, 1).to(target_dtype)
-        imgs_t = torch.cat([imgs_t, vor_idx], dim=2)  # B,P,5
-
-        return imgs_t
-
-    def _preprocess_images_torch(self, imgs_np):
-        """GPU version of preprocess_images (resize + colour repeat).
-
-        Accepts numpy uint8 images of shape (B,H,W) or (B,H,W,3).
-        Returns torch tensor float32 (B, H, W, 3) on device; no /255 scaling.
-        """
-        imgs_t = torch.from_numpy(imgs_np).to(self.device)
-
-        if imgs_t.ndim == 3:  # grayscale
-            imgs_t = imgs_t.unsqueeze(-1).repeat(1,1,1,3)
-
-        B,H,W,C = imgs_t.shape
-        if H != 512 or W != 512:
-            imgs_t = imgs_t.permute(0,3,1,2).float()
-            imgs_t = F.interpolate(imgs_t, size=(512,512), mode="bilinear", align_corners=False)
-            imgs_t = imgs_t.permute(0,2,3,1)
-
-        return imgs_t.float()
 
     # ------------------------------------------------------------------
     # CSV cache helper

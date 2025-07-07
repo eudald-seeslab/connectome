@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from scipy.spatial import Voronoi, cKDTree, voronoi_plot_2d
 import matplotlib.pyplot as plt
+import torch
+from torch_scatter import scatter_add
 
 from connectome.core.train_funcs import assign_cell_type
 
@@ -248,3 +250,31 @@ class VoronoiCells:
     @staticmethod
     def get_colour_average(values, colour):
         return (values[colour] + values["mean"]) / 2
+
+    @staticmethod
+    def compute_voronoi_means(processed_imgs: torch.Tensor, device: torch.device) -> torch.Tensor:
+        """Return per-cell mean colour channels.
+
+        *processed_imgs* shape: ``(B, P, 5)`` where the last dimension is
+        ``[r, g, b, mean, cell_idx]``.
+        """
+
+        processed_t = processed_imgs.to(device)
+
+        B, _, _ = processed_t.shape
+        cell_idx = processed_t[0, :, 4].long()
+        num_cells = int(cell_idx.max().item()) + 1
+
+        channels = processed_t[:, :, :4]  # B,P,4
+        cell_indices = processed_t[:, :, 4].long()
+
+        means = torch.zeros((B, num_cells, 4), device=device, dtype=channels.dtype)
+
+        # TODO: maybe we could vectorize this?
+        for i in range(B):
+            idx = cell_indices[i]
+            sums = scatter_add(channels[i], idx.unsqueeze(-1).expand(-1, 4), dim=0, dim_size=num_cells)
+            counts = scatter_add(torch.ones_like(idx, dtype=channels.dtype), idx, dim=0, dim_size=num_cells).clamp(min=1.0)
+            means[i] = sums / counts.unsqueeze(-1)
+
+        return means

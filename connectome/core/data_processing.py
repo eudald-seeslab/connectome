@@ -29,6 +29,7 @@ from connectome.core.train_funcs import (
 )
 from connectome.core.voronoi_cells import VoronoiCells
 from connectome.core.utils import paths_to_labels
+from connectome.core.image_processor import ImageProcessor
 
 
 class DataProcessor:
@@ -81,6 +82,8 @@ class DataProcessor:
         self.filtered_celltypes = config_.filtered_celltypes
         self.dtype = config_.dtype
         self.device = config_.DEVICE
+        # Image preprocessing helper (keeps heavy resize logic out of DataProcessor)
+        self._image_processor = ImageProcessor(self.device)
         # This is somewhat convoluted to be compatible with the multitask training
         self.classes = (
             sorted(os.listdir(input_images_dir))
@@ -122,9 +125,9 @@ class DataProcessor:
 
         """
 
-        # Reshape and colour if needed
-        imgs_t = self._preprocess_images_torch(imgs)
-        processed_imgs = self._process_images_torch(imgs_t)
+        # Reshape and colour if needed (delegate to helper)
+        imgs_t = self._image_processor.preprocess(imgs)
+        processed_imgs = self._image_processor.process(imgs_t, self.voronoi_indices_torch)
         voronoi_means = self._get_voronoi_means_torch(processed_imgs)
         activation_tensor = self._calculate_neuron_activations_torch(voronoi_means)
 
@@ -409,7 +412,7 @@ class DataProcessor:
         # fully supported by ``torch_scatter``.
         processed_t = processed_imgs if torch.is_tensor(processed_imgs) else torch.from_numpy(processed_imgs).to(self.device)
         
-        B, P, _ = processed_t.shape
+        B, _, _ = processed_t.shape
         cell_idx = processed_t[0, :, 4].long()
         num_cells = int(cell_idx.max().item()) + 1
         

@@ -3,6 +3,7 @@ import wandb
 import multiprocessing
 import pandas as pd
 import os
+import hashlib, json
 
 from configs import config as base_config
 from scripts.train import main
@@ -111,6 +112,10 @@ def train(sweep_cfg=None):
         # Create the randomised dataset (if requested) before training.
         generate_random_connectome(u_config)
 
+        connections = pd.read_csv(f"new_data/connections_random_{u_config.randomization_strategy}.csv")
+        checksum = hashlib.md5(connections.to_json().encode()).hexdigest()
+        wandb.log({"connectome_md5": checksum})
+
         main(wandb_logger, wandb.config)
 
 
@@ -144,15 +149,4 @@ if __name__ == "__main__":
         else:
             sweep_id = wandb.sweep(sweep_config5, project=project_name)
 
-    if base_config.device_type == "cpu":
-        num_agents = 4
-        processes = []
-        for _ in range(num_agents):
-            p = multiprocessing.Process(target=run_agent, args=(sweep_id,))
-            p.start()
-            processes.append(p)
-
-        for p in processes:
-            p.join()
-    else:
-        run_agent(sweep_id)
+    run_agent(sweep_id)

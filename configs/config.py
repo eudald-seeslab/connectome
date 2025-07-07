@@ -14,13 +14,13 @@ refined_synaptic_data = False
 synaptic_limit = True
 
 # Other often changing vars
-batch_size = 12
+batch_size = 16
 resume_checkpoint = None # "m_2024-12-28 18:42_n3l481jr.pth"
 NUM_CONNECTOME_PASSES = 3
 randomization_strategy = "neuron_binned"  # None, "unconstrained", "pruned", "conn_pruned", "binned", "neuron_binned"
 device_type = "cuda" if cuda.is_available() else "cpu"
 # device_type = "cpu"
-debugging = True
+debugging = False
 wandb_project = "randomizations"
 
 # Data
@@ -61,7 +61,7 @@ filtered_celltypes = []
 # Note: it's a fraction of the number of neurons after filtering by cell type
 # and also after removing the protected cell types (R1-6, R7, R8, and the rational cell types)
 # None if you don't want to filter
-filtered_fraction = 0.25
+filtered_fraction = None
 # droputs: there is a dropout for the neuron activations to simulate that, for some reason
 #  (oscillations, the neuron having fired too recently, etc) the neuron does not fire
 neuron_dropout = 0

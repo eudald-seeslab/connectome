@@ -124,7 +124,7 @@ class FullGraphModel(nn.Module):
         self.decision_making_indices = self.select_decision_making_indices(data_processor, config_, random_generator)
 
     def forward(self, data):
-        x, edge_index = data.x, data.edge_index
+        x, edge_index = data.x, data.edge_index.long()  # ensure int64 for PyG operations
 
         # pass through the connectome and reshape to wide again (batch_size, num_neurons, num_features)
         x = self.connectome(x, edge_index)

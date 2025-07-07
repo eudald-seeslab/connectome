@@ -12,6 +12,7 @@ import torch
 from scipy.sparse import coo_matrix
 
 from paths import PROJECT_ROOT
+from connectome.core.csv_loader import CSVLoader
 
 from connectome.core.train_funcs import (
     apply_inhibitory_r7_r8,
@@ -45,6 +46,10 @@ class DataProcessor:
 
         data_dir_ = "new_data" if config_.new_connectome else "adult_data"
         self.data_dir = os.path.join(PROJECT_ROOT, data_dir_)
+
+        # CSV loader with on-disk pickle cache
+        self.csv_loader = CSVLoader()
+
         rational_cell_types = self.get_rational_cell_types(config_.rational_cell_types)
         self.protected_cell_types = self.retinal_cells + rational_cell_types
         self._check_filtered_neurons(config_.filtered_celltypes)
@@ -250,7 +255,7 @@ class DataProcessor:
 
     def get_rational_cell_types_from_file(self):
         path = os.path.join(self.data_dir, "rational_cell_types.csv")
-        df = self._read_csv_cached(path, index_col=0)
+        df = self.csv_loader.read_csv(path, index_col=0)
         return df.index.tolist()
 
     def get_rational_cell_types(self, rational_cell_types):
@@ -281,7 +286,7 @@ class DataProcessor:
         side=None,
     ):
 
-        all_neurons = self._read_csv_cached(
+        all_neurons = self.csv_loader.read_csv(
             os.path.join(self.data_dir, "classification.csv"),
             usecols=["root_id", "cell_type", "side"],
             dtype={"root_id": "string"},
@@ -314,7 +319,7 @@ class DataProcessor:
             file_char += f"_random_{randomization_strategy}"
 
         filename = os.path.join(self.data_dir, f"connections{file_char}.csv")
-        connections = self._read_csv_cached(
+        connections = self.csv_loader.read_csv(
             filename,
             dtype={
                 "pre_root_id": "string",
@@ -339,31 +344,3 @@ class DataProcessor:
             raise ValueError(
                 f"You can't filter out any of the following cell types: {', '.join(self.protected_cell_types)}"
             )
-
-    # ------------------------------------------------------------------
-    # CSV cache helper
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _read_csv_cached(csv_path, **read_csv_kwargs):
-        """Read a CSV file, caching a pickle the first time for faster reuse.
-
-        A companion file with the same name and extension ``.pkl`` is created
-        next to the original CSV. If the pickle is newer than the CSV, it is
-        loaded directly, giving 10-30× faster load times in subsequent runs.
-        """
-
-        pkl_path = csv_path.replace(".csv", ".pkl")
-
-        if os.path.exists(pkl_path) and os.path.getmtime(pkl_path) >= os.path.getmtime(csv_path):
-            return pd.read_pickle(pkl_path)
-
-        df = pd.read_csv(csv_path, **read_csv_kwargs)
-
-        # Store pickle for next time; ignore failures (e.g., network fs read-only)
-        try:
-            df.to_pickle(pkl_path)
-        except Exception:
-            pass
-
-        return df

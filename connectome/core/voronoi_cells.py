@@ -54,7 +54,7 @@ class VoronoiCells:
         return pd.read_csv(data_path).drop(columns=["x", "y", "z", "PC1", "PC2"])
 
     def regenerate_random_centers(self):
-
+        
         n_centers = self.neuron_data.shape[0] // self.ommatidia_size
         self.centers = self.neuron_data[self.data_cols].sample(n_centers).values
         self.voronoi = Voronoi(self.centers)
@@ -278,3 +278,23 @@ class VoronoiCells:
             means[i] = sums / counts.unsqueeze(-1)
 
         return means
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def recreate(self):
+        """Generate a new random Voronoi tessellation and return the updated
+        neuron mapping and image-pixel indices.
+
+        Returns
+        -------
+        tuple (pd.DataFrame, np.ndarray)
+            *Tesselated neurons* with updated ``voronoi_indices`` column and
+            the flat array of per-pixel cell indices (length 512×512).
+        """
+
+        self.regenerate_random_centers()
+        tess = self.get_tesselated_neurons()
+        img_idx = self.get_image_indices()
+        return tess, img_idx

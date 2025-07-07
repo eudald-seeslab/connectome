@@ -113,8 +113,8 @@ def main(wandb_logger, sweep_config=None):
                     training_images, batch_size, already_selected
                 )
                 if u_config.voronoi_criteria == "all":
-                    # create voronoi cells each batch so they are different
-                    data_processor.recreate_voronoi_cells()
+                    data_processor.voronoi_cells.recreate()
+                    data_processor.update_voronoi_state()
                 images, labels = data_processor.get_data_from_paths(batch_files)
                 if i % u_config.wandb_images_every == 0:
                     p, title = data_processor.plot_input_images(

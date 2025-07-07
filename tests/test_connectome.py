@@ -15,7 +15,12 @@ class DummyDataProcessor:
         cols = np.array([1, 0])
         data = np.array([1, 1])
         self.synaptic_matrix = coo_matrix((data, (rows, cols)), shape=(2, 2))
-        self.number_of_synapses = self.synaptic_matrix.data.shape[0]
+        # Minimal GraphBuilder stub
+        from connectome.core.graph_builder import GraphBuilder
+
+        edges = torch.tensor([[0, 1], [1, 0]], dtype=torch.int32)
+        self.graph_builder = GraphBuilder(edges, device=torch.device("cpu"), synaptic_matrix=self.synaptic_matrix)
+        self.number_of_synapses = self.graph_builder.num_nodes
 
 
 class DummyConfig:

@@ -2,20 +2,13 @@ import os
 import random
 
 import numpy as np
-import pandas as pd
 import torch
-from scipy.sparse import coo_matrix
 
 from paths import PROJECT_ROOT
 from connectome.core.csv_loader import CSVLoader
 from connectome.core.fly_plotter import FlyPlotter
 
-from connectome.core.train_funcs import (
-    construct_synaptic_matrix,
-    get_neuron_activations,
-    get_side_decision_making_vector,
-    import_images,
-)
+from connectome.core.train_funcs import import_images
 from connectome.core.voronoi_cells import VoronoiCells
 from connectome.core.neuron_mapper import NeuronMapper
 from connectome.core.utils import paths_to_labels
@@ -30,71 +23,84 @@ class DataProcessor:
     retinal_cells = ["R1-6", "R7", "R8"]
 
     def __init__(self, config_, input_images_dir=None):
-        # TODO: this init does too many things, and they depend on each other. It should be refactored
-        
-        np.random.seed(config_.random_seed)
-        torch.manual_seed(config_.random_seed)
-        random.seed(config_.random_seed)
+        """Initialise a ``DataProcessor``."""
 
+        self._cfg = config_
+        self._input_images_dir = input_images_dir
+
+        # Step-wise initialisation
+        # ------------------------------------------------------------------
+        # 1. Reproducibility
+        # ------------------------------------------------------------------
+        self._init_randomness(config_.random_seed)
+
+        # ------------------------------------------------------------------
+        # 2. IO helpers and data paths
+        # ------------------------------------------------------------------
         self.data_dir = os.path.join(PROJECT_ROOT, CONNECTOME_DATA_DIR)
-
-        # CSV loader with on-disk pickle cache
         self.csv_loader = CSVLoader()
 
+        # ------------------------------------------------------------------
+        # 3. Neuron & synapse data
+        # ------------------------------------------------------------------
         rational_cell_types = self.get_rational_cell_types(config_.rational_cell_types)
         self.protected_cell_types = self.retinal_cells + rational_cell_types
         self._check_filtered_neurons(config_.filtered_celltypes)
-        neuron_classification = self._get_neurons(
-            config_.filtered_celltypes,
-            config_.filtered_fraction,
-            side=None,
-        )
-        connections = self._get_connections(config_.refined_synaptic_data, config_.randomization_strategy)
-        self.root_ids = self._get_root_ids(neuron_classification, connections)
-        self.synaptic_matrix = construct_synaptic_matrix(
-            neuron_classification, connections, self.root_ids
+
+        # ------------------------------------------------------------------
+        # Graph + synaptic data
+        # ------------------------------------------------------------------
+        self.graph_builder = GraphBuilder.from_dataset(
+            data_dir=self.data_dir,
+            csv_loader=self.csv_loader,
+            rational_cell_types=rational_cell_types,
+            config=config_,
         )
 
-        if config_.log_transform_weights:
-            self.synaptic_matrix.data = np.log1p(self.synaptic_matrix.data)
+        # TODO: this should stay in graph_builder
+        self.root_ids = self.graph_builder.root_ids
 
-        self.decision_making_vector = get_side_decision_making_vector(
-            self.root_ids, rational_cell_types, neuron_classification
-        )
-        self.neurons = config_.neurons
+        # ------------------------------------------------------------------
+        # 4. Voronoi geometry
+        # ------------------------------------------------------------------
         self.voronoi_cells = VoronoiCells(
             data_dir=self.data_dir,
             eye=config_.eye,
-            neurons=self.neurons,
+            neurons=config_.neurons,
             voronoi_criteria=config_.voronoi_criteria,
-            )
+        )
+
         if config_.voronoi_criteria == "R7":
             self.tesselated_neurons = self.voronoi_cells.get_tesselated_neurons()
             self.voronoi_indices = self.voronoi_cells.get_image_indices()
-            # Torch version for fast GPU operations
-            self.voronoi_indices_torch = torch.tensor(self.voronoi_indices, device=config_.DEVICE, dtype=torch.long)
+            self.voronoi_indices_torch = torch.tensor(
+                self.voronoi_indices,
+                device=config_.DEVICE,
+                dtype=torch.long,
+            )
+        else:
+            self.tesselated_neurons = None
+            self.voronoi_indices = None
+            self.voronoi_indices_torch = None
 
-        self.filtered_celltypes = config_.filtered_celltypes
+        # ------------------------------------------------------------------
+        # 5. Device, dtypes & image helpers
+        # ------------------------------------------------------------------
         self.dtype = config_.dtype
         self.device = config_.DEVICE
-        # Image preprocessing helper (keeps heavy resize logic out of DataProcessor)
         self._image_processor = ImageProcessor(self.device)
-        # This is somewhat convoluted to be compatible with the multitask training
+
         self.classes = (
             sorted(os.listdir(input_images_dir))
             if input_images_dir is not None
             else config_.CLASSES
         )
 
-        # Store edges as int32 to halve memory; they will be cast to int64 lazily in the model.
-        self.edges = torch.tensor(
-            np.array([self.synaptic_matrix.row, self.synaptic_matrix.col]),
-            dtype=torch.int32,
-        )
-        self.weights = torch.tensor(self.synaptic_matrix.data, dtype=self.dtype)
+        # ------------------------------------------------------------------
+        # 6. Graph representation helpers
+        # ------------------------------------------------------------------
         self.inhibitory_r7_r8 = config_.inhibitory_r7_r8
 
-        # Pre-compute mapping neuron → activations helper
         self.neuron_mapper = NeuronMapper(
             self.root_ids,
             self.tesselated_neurons,
@@ -103,10 +109,9 @@ class DataProcessor:
             inhibitory_r7_r8=self.inhibitory_r7_r8,
         )
 
-        # Graph builder utility
-        self.graph_builder = GraphBuilder(self.edges, device=self.device)
-
-        # Plotting utility
+        # ------------------------------------------------------------------
+        # 7. Plotting
+        # ------------------------------------------------------------------
         self.plotter = FlyPlotter(self.voronoi_cells)
 
     @property
@@ -132,15 +137,14 @@ class DataProcessor:
 
         """
 
-        # Reshape and colour if needed (delegate to helper)
+        # Reshape and colour images if needed
         imgs_t = self._image_processor.preprocess(imgs)
         processed_imgs = self._image_processor.process(imgs_t, self.voronoi_indices_torch)
         voronoi_means = VoronoiCells.compute_voronoi_means(processed_imgs, self.device)
         activation_tensor = self.neuron_mapper.activations_from_voronoi_means(voronoi_means)
 
         # Delete bulky intermediate tensors to reclaim GPU memory before constructing
-        # the (potentially huge) batched edge index. This prevents peak-memory spikes
-        # that previously caused CUDA OOMs.
+        # the (potentially huge) batched edge index. 
         del imgs_t, processed_imgs, voronoi_means
         torch.cuda.empty_cache()
 
@@ -149,16 +153,16 @@ class DataProcessor:
 
         return inputs, labels_t
 
-    @property
-    def number_of_synapses(self):
-        return self.synaptic_matrix.shape[0]
+    def update_voronoi_state(self):
+        """Refresh cached tensors after ``voronoi_cells.recreate()``."""
 
-    def recreate_voronoi_cells(self):
-        self.voronoi_cells.regenerate_random_centers()
+        # TODO: I'm not convinced about this method here. Think about it.
         self.tesselated_neurons = self.voronoi_cells.get_tesselated_neurons()
         self.voronoi_indices = self.voronoi_cells.get_image_indices()
-        self.voronoi_indices_torch = torch.tensor(self.voronoi_indices, device=self.device, dtype=torch.long)
-        # Update fast-mapping tables because Voronoi indices changed
+        self.voronoi_indices_torch = torch.tensor(
+            self.voronoi_indices, device=self.device, dtype=torch.long
+        )
+
         self.neuron_mapper = NeuronMapper(
             self.root_ids,
             self.tesselated_neurons,
@@ -175,28 +179,6 @@ class DataProcessor:
             labels = None
         return imgs, labels
 
-    def calculate_neuron_activations(self, voronoi_averages):
-        neuron_activations = pd.concat(
-            [
-                get_neuron_activations(
-                    self.tesselated_neurons, a, self.inhibitory_r7_r8
-                )
-                for a in voronoi_averages
-            ],
-            axis=1,
-        )
-        neuron_activations.index = neuron_activations.index.astype("string")
-        activation_df = (
-            self.root_ids.merge(
-                neuron_activations, left_on="root_id", right_index=True, how="left"
-            )
-            .fillna(0)
-            .set_index("index_id")
-            .drop(columns=["root_id"])
-        )
-
-        return torch.tensor(activation_df.values, dtype=self.dtype)
-
     def plot_input_images(self, img, voronoi_colour="orange", voronoi_width=1):
         """Convenience wrapper that delegates to ConnectomePlotter."""
         return self.plotter.plot_input_images(
@@ -208,104 +190,25 @@ class DataProcessor:
             voronoi_width=voronoi_width,
         )
 
-    @staticmethod
-    def shuffle_synaptic_matrix(synaptic_matrix):
-        shuffled_col = np.random.permutation(synaptic_matrix.col)
-        synaptic_matrix = coo_matrix(
-            (synaptic_matrix.data, (synaptic_matrix.row, shuffled_col)),
-            shape=synaptic_matrix.shape,
-        )
-        synaptic_matrix.sum_duplicates()
-        return synaptic_matrix
-
     def get_rational_cell_types_from_file(self):
         path = os.path.join(self.data_dir, "rational_cell_types.csv")
         df = self.csv_loader.read_csv(path, index_col=0)
         return df.index.tolist()
 
     def get_rational_cell_types(self, rational_cell_types):
+        # TODO: not sure this should be here.
         if rational_cell_types is None:
             return self.get_rational_cell_types_from_file()
         return rational_cell_types
-
-    @staticmethod
-    def _get_root_ids(classification, connections):
-
-        # get neuron root_ids that appear in both classification and in either
-        #  connections pre_root_id or post_root_id
-        neurons = classification[
-            classification["root_id"].isin(connections["pre_root_id"])
-            | classification["root_id"].isin(connections["post_root_id"])
-        ]
-        # pandas is terrible:
-        return (
-            neurons.reset_index(drop=True)
-            .reset_index()[["root_id", "index"]]
-            .rename(columns={"index": "index_id"})
-        )
-
-    def _get_neurons(
-        self,
-        filtered_celltpyes=None,
-        filtered_fraction=None,
-        side=None,
-    ):
-
-        all_neurons = self.csv_loader.read_csv(
-            os.path.join(self.data_dir, "classification.csv"),
-            usecols=["root_id", "cell_type", "side"],
-            dtype={"root_id": "string"},
-        ).fillna("Unknown")
-
-        if filtered_celltpyes is not None and len(filtered_celltpyes) > 0:
-            all_neurons = all_neurons[~all_neurons["cell_type"].isin(filtered_celltpyes)]
-
-        if filtered_fraction is not None:
-            protected_neurons = all_neurons[
-                all_neurons["cell_type"].isin(self.protected_cell_types)
-            ]
-            non_protected_neurons = all_neurons[
-                ~all_neurons["cell_type"].isin(self.protected_cell_types)
-            ]
-
-            non_protected_neurons = non_protected_neurons.sample(
-                frac=filtered_fraction, random_state=1714
-            )
-            all_neurons = pd.concat([protected_neurons, non_protected_neurons])
-
-        if side is not None:
-            all_neurons = all_neurons[all_neurons["side"] == side]
-
-        return all_neurons
-
-    def _get_connections(self, refined_synaptic_data=False, randomization_strategy=None):
-        file_char = "_refined" if refined_synaptic_data else ""
-        if randomization_strategy is not None:
-            file_char += f"_random_{randomization_strategy}"
-
-        filename = os.path.join(self.data_dir, f"connections{file_char}.csv")
-        connections = self.csv_loader.read_csv(
-            filename,
-            dtype={
-                "pre_root_id": "string",
-                "post_root_id": "string",
-                "syn_count": np.int32,
-            },
-            index_col=0,
-        )
-
-        grouped = (
-            connections.groupby(["pre_root_id", "post_root_id"])
-            .sum("syn_count")
-            .reset_index()
-        )
-
-        sorted_conns = grouped.sort_values(["pre_root_id", "post_root_id"])
-
-        return sorted_conns
 
     def _check_filtered_neurons(self, filtered_cell_types):
         if not set(filtered_cell_types).isdisjoint(self.protected_cell_types):
             raise ValueError(
                 f"You can't filter out any of the following cell types: {', '.join(self.protected_cell_types)}"
             )
+
+    @staticmethod
+    def _init_randomness(random_seed):
+        np.random.seed(random_seed)
+        torch.manual_seed(random_seed)
+        random.seed(random_seed)

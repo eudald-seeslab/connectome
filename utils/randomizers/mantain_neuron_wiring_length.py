@@ -1,10 +1,87 @@
+import time
+import gc
+
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from utils.helpers import add_coords, get_logger, add_distance_column
+
+from utils.helpers import get_logger
+from utils.randomizers.randomizers_helpers import add_coords, add_distance_column
 
 # Get logger for this module
 logger = get_logger(__name__)
+
+# -----------------------------------------------------------------------------
+# Optional Numba support
+# -----------------------------------------------------------------------------
+
+try:
+    from numba import njit, prange  # type: ignore
+
+    _HAS_NUMBA = True
+
+    @njit(fastmath=True, nogil=True)
+    def _numba_shuffle_post_ids(
+        post_sorted: np.ndarray,
+        dist_sorted: np.ndarray,
+        starts: np.ndarray,
+        ends: np.ndarray,
+        bins: int,
+        min_conn: int,
+    ) -> None:
+        """In-place bin-aware shuffling compiled with Numba (single-thread)."""
+
+        for idx in range(starts.size):
+            s = starts[idx]
+            e = ends[idx]
+            n = e - s
+            if n < 2:
+                continue
+
+            # Few connections → plain Fisher-Yates shuffle
+            if n < min_conn:
+                for j in range(n - 1, 0, -1):
+                    k = np.random.randint(j + 1)
+                    tmp = post_sorted[s + j]
+                    post_sorted[s + j] = post_sorted[s + k]
+                    post_sorted[s + k] = tmp
+                continue
+
+            # Rank distances, compute bin ids
+            # Numba lacks argsort that returns float32, so cast to float64
+            order_local = np.argsort(dist_sorted[s:e].astype(np.float64))
+            ranks = np.empty(n, dtype=np.int64)
+            for r in range(n):
+                ranks[order_local[r]] = r
+            bin_ids = (ranks * bins) // n
+
+            # Shuffle within each bin
+            for b in range(bins):
+                # Collect indices of this bin into a temporary list
+                m = 0
+                for j in range(n):
+                    if bin_ids[j] == b:
+                        m += 1
+                if m < 2:
+                    continue
+                idx_buf = np.empty(m, dtype=np.int64)
+                k = 0
+                for j in range(n):
+                    if bin_ids[j] == b:
+                        idx_buf[k] = j
+                        k += 1
+
+                # Fisher-Yates shuffle restricted to idx_buf
+                for j in range(m - 1, 0, -1):
+                    p = np.random.randint(j + 1)
+                    a = idx_buf[j]
+                    bidx = idx_buf[p]
+                    tmp = post_sorted[s + a]
+                    post_sorted[s + a] = post_sorted[s + bidx]
+                    post_sorted[s + bidx] = tmp
+
+except ImportError:  # pragma: no cover – numba optional
+    _HAS_NUMBA = False
 
 
 def mantain_neuron_wiring_length(
@@ -13,7 +90,9 @@ def mantain_neuron_wiring_length(
     bins: int = 20,
     min_connections_for_binning: int = 10,
     random_state: int | None = None,
-    tolerance: float = 0.01,
+    *,
+    silent: bool = False,
+    use_numba: bool = True,
 ) -> pd.DataFrame:
     """
     Create a randomized network that preserves per-neuron outgoing wiring length distributions.
@@ -47,128 +126,111 @@ def mantain_neuron_wiring_length(
     --------
     DataFrame with shuffled connections maintaining per-neuron outgoing wiring distributions
     """
-    import time
-    import gc
 
-    start_time = time.time()
-    
-    np.random.seed(random_state)
-    logger.info("Starting vectorized per-neuron length-preserving randomization...")
-    logger.info(f"Processing {len(connections):,} connections for {connections['pre_root_id'].nunique():,} neurons")
-    
-    # Calculate distances for all connections (vectorized) using helper
-    step_start = time.time()
-    connections_with_coords = add_distance_column(connections, nc, distance_col="distance")
-    distances = connections_with_coords["distance"]  # view only; avoids extra memory
-    logger.info(
-        f"Distance calculation + coordinate attachment completed in {time.time() - step_start:.2f}s"
-    )
-
-    # Count connections per neuron (vectorized)
-    connection_counts = connections_with_coords.groupby('pre_root_id').size()
-    
-    # Identify neurons with enough connections for binning
-    neurons_for_binning = connection_counts[connection_counts >= min_connections_for_binning].index
-    neurons_for_simple = connection_counts[connection_counts < min_connections_for_binning].index
-    
-    logger.info(f"Neurons using binning: {len(neurons_for_binning)}")
-    logger.info(f"Neurons using simple shuffle: {len(neurons_for_simple)}")
-    
     # ------------------------------------------------------------------
-    # Vectorized distance-bin creation (replaces slow Python for-loops)
+    # Pure NumPy implementation – no pandas inside the heavy loop.
     # ------------------------------------------------------------------
-    logger.info(
-        f"Creating distance bins for {len(neurons_for_binning):,} neurons using vectorised ranking…"
-    )
-    step_start = time.time()
 
-    # Initialise distance_bin to 0 (neurons with too few connections keep this)
-    connections_with_coords["distance_bin"] = 0
+    rng = np.random.default_rng(random_state)
 
-    if len(neurons_for_binning):
-        # Compute the percentile rank of each distance **within each neuron**
-        mask_binned = connections_with_coords["pre_root_id"].isin(neurons_for_binning)
-        # rank(pct=True) gives values in (0,1]; multiply by bins and cast to int
-        pct_rank = connections_with_coords.loc[mask_binned].groupby("pre_root_id")[
-            "distance"
-        ].rank(method="first", pct=True)
-        distance_bin = np.minimum((pct_rank * bins).astype(int), bins - 1)
-        # Assign back
-        connections_with_coords.loc[mask_binned, "distance_bin"] = distance_bin.values
+    prev_disabled = logger.disabled
+    logger.disabled = silent or prev_disabled
 
-    logger.info(f"Binning completed in {time.time() - step_start:.2f}s")
-    # ------------------------------------------------------------------
-    
-    # Force garbage collection after memory-intensive binning operation
-    gc.collect()
+    if not silent:
+        logger.info("Starting NumPy per-neuron length-preserving randomization …")
 
-    logger.info("Shuffling post_root_ids within (neuron, distance_bin) groups…")
-    
-    step_start = time.time()
-    # Keep only required columns for shuffling to save memory
-    shuffle_df = connections_with_coords[["pre_root_id", "distance_bin", "post_root_id", "syn_count"]].copy()
+    t0_total = time.perf_counter()
 
-    # Build the groupby object only once so we can access the number of groups
-    groups = shuffle_df.groupby(["pre_root_id", "distance_bin"])["post_root_id"]    
+    # --- 1. Prepare NumPy arrays ------------------------------------------------
+    pre_ids  = connections["pre_root_id"].to_numpy(dtype=np.int64)
+    post_ids = connections["post_root_id"].to_numpy(dtype=np.int64)
+    syn_cnt  = connections["syn_count"].to_numpy(dtype=np.int32)
 
-    pbar = tqdm(total=groups.ngroups, desc="Shuffling groups", disable=False)
+    roots    = nc["root_id"].to_numpy(dtype=np.int64)
+    coords   = nc[["pos_x", "pos_y", "pos_z"]].to_numpy(dtype=np.float32)
 
-    def _permute_with_progress(series):
-        """Helper that shuffles a series and updates the progress-bar."""
-        pbar.update(1)
-        return np.random.permutation(series.values)
+    # Map root_id → index
+    order          = np.argsort(roots)
+    roots_sorted   = roots[order]
+    coords_sorted  = coords[order]
 
-    shuffle_df["post_root_id"] = groups.transform(_permute_with_progress)
-    pbar.close()
+    idx_pre  = np.searchsorted(roots_sorted, pre_ids)
+    idx_post = np.searchsorted(roots_sorted, post_ids)
 
-    logger.info(f"Shuffling completed in {time.time() - step_start:.2f}s")
-    
-    # ------------------------------------------------------------------
-    # Prepare return value & clean-up
-    # ------------------------------------------------------------------
-    final_result = shuffle_df[["pre_root_id", "post_root_id", "syn_count"]].copy()
-    del shuffle_df, connections_with_coords  # free memory
-    gc.collect()
-    
-    logger.info("Validating wiring length preservation...")
-    
-    # Quick validation of total wiring length preservation
-    orig_total_wiring = np.sum(distances * connections["syn_count"])
-    
-    # Calculate final distances and wiring
-    validation_start = time.time()
-    final_coords = add_coords(final_result, nc)
-    final_distances = np.sqrt(
-        (final_coords["pre_x"] - final_coords["post_x"])**2 +
-        (final_coords["pre_y"] - final_coords["post_y"])**2 +
-        (final_coords["pre_z"] - final_coords["post_z"])**2
-    )
-    final_total_wiring = np.sum(final_distances * final_result["syn_count"])
-    
-    wiring_error = abs(final_total_wiring - orig_total_wiring) / orig_total_wiring
-    
-    total_time = time.time() - start_time
-    
-    logger.info(f"Validation completed in {time.time() - validation_start:.2f}s")
-    logger.info(f"Total processing time: {total_time:.2f}s ({total_time/60:.2f} minutes)")
-    logger.info(f"Total wiring length preservation error: {wiring_error:.8f}")
-    logger.info(f"Original total wiring: {orig_total_wiring:.2f}")
-    logger.info(f"Final total wiring: {final_total_wiring:.2f}")
-    
-    if wiring_error > 1e-10:
-        logger.warning(f"Wiring length error {wiring_error:.2e} is larger than expected for binned approach")
-    
-    # Detailed per-neuron validation (optional for large networks to avoid additional memory usage)
-    if len(connections) < 5000000:  # Only for networks with < 5M connections
-        logger.info("Running detailed per-neuron validation...")
-        detailed_validation = validate_per_neuron_outgoing_wiring_preservation(
-            connections, final_result, nc, tolerance=tolerance
-        )
-        logger.info(f"Detailed validation results: {detailed_validation}")
+    pre_xyz  = coords_sorted[idx_pre]
+    post_xyz = coords_sorted[idx_post]
+    dist_vec = np.linalg.norm(pre_xyz - post_xyz, axis=1)
+
+    if not silent:
+        logger.info("Distances computed (NumPy) – %.2f s", time.perf_counter() - t0_total)
+
+    # --- 2. Group by pre-synaptic neuron ---------------------------------------
+    # Sort by *inv_pre* so that all connections of a neuron form one contiguous
+    # slice – avoids repeatedly building boolean masks.
+
+    inv_pre = np.zeros_like(pre_ids, dtype=np.int32)
+    unique_pre, inv_pre = np.unique(pre_ids, return_inverse=True)
+
+    order_idx = np.argsort(inv_pre, kind="mergesort")  # stable
+
+    pre_sorted     = pre_ids[order_idx]
+    post_sorted    = post_ids.copy()[order_idx]
+    dist_sorted    = dist_vec[order_idx]
+
+    # Boundaries of each neuron block in the sorted arrays
+    boundaries = np.flatnonzero(np.diff(pre_sorted)) + 1
+    starts     = np.concatenate(([0], boundaries))
+    ends       = np.concatenate((boundaries, [len(pre_sorted)]))
+
+    if _HAS_NUMBA and use_numba:
+        if not silent:
+            logger.info("Running Numba-accelerated shuffling …")
+
+        # Call JIT kernel (in-place modification of post_sorted)
+        _numba_shuffle_post_ids(post_sorted, dist_sorted, starts, ends, bins, min_connections_for_binning)
+
     else:
-        logger.info("Skipping detailed per-neuron validation for large network (>5M connections)")
-    
-    return final_result
+        # Python fallback – iterate slices
+        for start, end in tqdm(zip(starts, ends), total=len(starts), disable=silent):
+            size = end - start
+            if size < 2:
+                continue
+
+            slice_post = post_sorted[start:end]
+
+            if size < min_connections_for_binning:
+                rng.shuffle(slice_post)
+                continue
+
+            order_local = np.argsort(dist_sorted[start:end])
+            ranks       = np.empty_like(order_local)
+            ranks[order_local] = np.arange(size)
+            bin_ids = (ranks * bins) // size
+
+            for b in range(bins):
+                sel = np.nonzero(bin_ids == b)[0]
+                if sel.size > 1:
+                    rng.shuffle(slice_post[sel])
+
+            # slice_post modifications apply to post_sorted in-place
+
+    # Reconstruct final shuffled_post in original order
+    shuffled_post = np.empty_like(post_ids)
+    shuffled_post[order_idx] = post_sorted
+
+    if not silent:
+        logger.info("Shuffling done – %.2f s", time.perf_counter() - t0_total)
+
+    # --- 3. Assemble result DataFrame ------------------------------------------
+    res_df = pd.DataFrame({
+        "pre_root_id": pre_sorted,
+        "post_root_id": shuffled_post,
+        "syn_count": syn_cnt[order_idx],
+    })
+
+    logger.disabled = prev_disabled
+
+    return res_df
 
 
 def validate_per_neuron_outgoing_wiring_preservation(original_conns, shuffled_conns, nc, tolerance=0.05):

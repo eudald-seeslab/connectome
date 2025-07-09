@@ -3,7 +3,7 @@
 
 from . import binned  # noqa: F401
 from . import pruning  # noqa: F401
-from . import connection_prunning  # noqa: F401
+from . import connection_pruning  # noqa: F401
 from . import mantain_neuron_wiring_length  # noqa: F401
 
 # from .binned import create_length_preserving_random_network  # noqa: F401

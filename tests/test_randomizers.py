@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 
-from utils.helpers import compute_total_synapse_length, add_coords
-from utils.randomizers import binned, pruning, connection_prunning, mantain_neuron_wiring_length
+from utils.helpers import add_coords
+from utils.randomizers import binned, connection_pruning, pruning, mantain_neuron_wiring_length
+from utils.randomizers.randomizers_helpers import compute_total_synapse_length
 
 
 def _sample_network():
@@ -86,7 +87,7 @@ def test_connection_pruning_matches_target_length():
     orig_len = compute_total_synapse_length(conns, nc)
     target_len = 0.80 * orig_len  # easier target for tiny graph
 
-    pruned = connection_prunning.match_wiring_length_with_connection_pruning(
+    pruned = connection_pruning.match_wiring_length_with_connection_pruning(
         conns,
         nc,
         real_length=target_len,
@@ -115,8 +116,7 @@ def test_mantain_neuron_wiring_length_preservation():
         nc,
         bins=3,
         min_connections_for_binning=2,
-        random_state=42,
-        tolerance=0.2,
+        random_state=1234
     )
 
     new_len = compute_total_synapse_length(shuffled, nc)

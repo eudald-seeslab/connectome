@@ -1,4 +1,3 @@
-import numpy as np
 import os
 import pandas as pd
 import logging
@@ -62,56 +61,6 @@ def add_coords(connections_df, coords_df):
     )
     
     return df
-
-def compute_individual_synapse_lengths(connections, neuron_coords):
-    """
-    Compute the length of each synapse.
-    """
-    conns_with_coords = add_coords(connections, neuron_coords)
-    return np.linalg.norm(
-        conns_with_coords[["pre_x", "pre_y", "pre_z"]].values -
-        conns_with_coords[["post_x", "post_y", "post_z"]].values,
-        axis=1
-    )
-
-
-def compute_total_synapse_length(connections, neuron_coords):
-    """
-    Compute the total wiring length of all synapses.
-    
-    Parameters:
-    -----------
-    connections : DataFrame
-        Contains pre_root_id, post_root_id, and syn_count columns
-    neuron_coords : DataFrame
-        Contains root_id, x, y, z coordinates for each neuron
-        
-    Returns:
-    --------
-    float: The total wiring length
-    """
-    
-    # Calculate total length by multiplying each connection distance by its synapse count
-    return np.sum(compute_individual_synapse_lengths(connections, neuron_coords) * connections["syn_count"])
-
-
-def add_distance_column(connections_df, coords_df, distance_col: str = "distance"):
-    """Return a copy of `connections_df` with coordinates and a new column
-    containing the Euclidean distance between the pre- and post-synaptic
-    neurons.
-
-    This wraps `add_coords` and centralises the distance computation that was
-    duplicated across several modules.
-    """
-
-    df = add_coords(connections_df, coords_df)
-    df[distance_col] = np.linalg.norm(
-        df[["pre_x", "pre_y", "pre_z"]].values -
-        df[["post_x", "post_y", "post_z"]].values,
-        axis=1,
-    )
-    return df
-
 
 def setup_logging(level: int = logging.INFO) -> None:
     """Configure global logging in a consistent way.
@@ -199,20 +148,3 @@ def load_neuron_coordinates(file_name: str = "neuron_annotations.tsv", root_dir:
         .rename(columns={"soma_x": "pos_x", "soma_y": "pos_y", "soma_z": "pos_z"})
     )
     return nc
-
-
-def shuffle_post_root_id(connections: pd.DataFrame, random_state: int | None = None) -> pd.DataFrame:
-    """Return a copy with *post_root_id* randomly permuted (degree-preserving)."""
-    rng = np.random.default_rng(random_state)
-    shuffled = connections.copy()
-    shuffled["post_root_id"] = rng.permutation(shuffled["post_root_id"].values)
-    return shuffled
-
-
-def shuffle_within_bin(bin_group):
-    if len(bin_group) <= 1:
-        return bin_group
-    shuffled_post_ids = np.random.permutation(bin_group['post_root_id'].values)
-    result = bin_group.copy()
-    result['post_root_id'] = shuffled_post_ids
-    return result

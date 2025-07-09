@@ -9,7 +9,8 @@ import matplotlib.patches as mpatches
 from matplotlib.patheffects import withStroke
 
 from notebooks.visualization.activations_funcs import split_title
-from utils.helpers import compute_individual_synapse_lengths, compute_total_synapse_length
+from utils.randomizers.randomizers_helpers import compute_individual_synapse_lengths
+from utils.randomizers.randomizers_helpers import compute_total_synapse_length
 
 
 def plot_activation_statistics(

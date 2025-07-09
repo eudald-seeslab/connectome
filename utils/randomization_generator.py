@@ -4,14 +4,13 @@ from pathlib import Path
 
 from paths import PROJECT_ROOT
 from utils.helpers import (
-    compute_total_synapse_length,
-    shuffle_post_root_id,
     load_neuron_coordinates,
 )
 from utils.randomizers.binned import create_length_preserving_random_network
-from utils.randomizers.connection_prunning import match_wiring_length_with_connection_pruning
+from utils.randomizers.connection_pruning import match_wiring_length_with_connection_pruning
 from utils.randomizers.pruning import match_wiring_length_with_random_pruning
 from utils.randomizers.mantain_neuron_wiring_length import mantain_neuron_wiring_length
+from utils.randomizers.randomizers_helpers import compute_total_synapse_length, shuffle_post_root_id
 
 
 def generate_random_connectome(u_config):

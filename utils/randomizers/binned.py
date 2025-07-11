@@ -1,16 +1,24 @@
-from utils.helpers import add_distance_column, compute_total_synapse_length, get_logger
+from utils.helpers import get_logger
+from utils.randomizers.randomizers_helpers import compute_total_synapse_length
 
 
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+from utils.randomizers.numba_helpers import euclidean_rows
+
 # Get logger for this module
 logger = get_logger(__name__)
 
 
 def create_length_preserving_random_network(
-    connections, neurons, bins=100, tolerance=0.1
+    connections,
+    neurons,
+    bins: int = 100,
+    tolerance: float = 0.1,
+    *,
+    silent: bool = False,
 ):
     """
     Create a randomized network that preserves the total wiring length.
@@ -18,88 +26,135 @@ def create_length_preserving_random_network(
     """
     connections = connections.copy()
     neurons = neurons.copy()
-    logger.info("Starting length-preserving network randomization...")
 
-    # Perform type conversions once
-    connections = connections.astype(
-        {"pre_root_id": int, "post_root_id": int, "syn_count": int}
+    # ------------------------------------------------------------------
+    # Optional silence – temporarily disable this module's logger so that
+    # benchmark runs remain clean.  We restore the previous *disabled*
+    # state on exit so other calls are unaffected.
+    # ------------------------------------------------------------------
+    prev_disabled = logger.disabled
+    logger.disabled = silent or prev_disabled
+
+    if not silent:
+        logger.info("Starting length-preserving network randomization...")
+
+    # Convert to NumPy arrays
+    pre_ids  = connections["pre_root_id"].to_numpy(dtype=np.int64)
+    post_ids = connections["post_root_id"].to_numpy(dtype=np.int64)
+    syn_cnt  = connections["syn_count"].to_numpy(dtype=np.int32)
+
+    roots   = neurons["root_id"].to_numpy(dtype=np.int64)
+    coords  = neurons[["pos_x", "pos_y", "pos_z"]].to_numpy(dtype=np.float32)
+
+    order   = np.argsort(roots)
+    roots_s = roots[order]
+    coords_s = coords[order]
+
+    idx_pre  = np.searchsorted(roots_s, pre_ids)
+    idx_post = np.searchsorted(roots_s, post_ids)
+
+    pre_xyz  = coords_s[idx_pre]
+    post_xyz = coords_s[idx_post]
+
+    if not silent:
+        logger.info("Computing distances …")
+
+    dist_vec = euclidean_rows(pre_xyz, post_xyz)
+
+    # ------------------------------------------------------------------
+    # Quantile bin edges via NumPy (avoids pandas qcut)
+    # ------------------------------------------------------------------
+    if not silent:
+        logger.info(f"Creating {bins} quantile bins …")
+
+    quantiles = np.linspace(0.0, 1.0, bins + 1)
+    edges = np.quantile(dist_vec, quantiles)
+    edges = np.unique(edges)  # drop duplicates
+
+    if edges.size < 2:
+        raise ValueError("Distance distribution degenerate – cannot bin.")
+
+    n_bins = edges.size - 1
+
+    bin_ids = np.searchsorted(edges, dist_vec, side="right") - 1
+    bin_ids[bin_ids == n_bins] = n_bins - 1  # rightmost edge fix
+
+    # ------------------------------------------------------------------
+    # Shuffle connections **within** each distance bin.
+    # Old implementation built a boolean mask for every bin which is
+    # O(N × bins).  We now sort by *bin_id* once, shuffle contiguous
+    # slices, then restore the original order – equivalent statistically
+    # but only O(N log N + N).
+    # ------------------------------------------------------------------
+
+    # Stable sort so that the relative order of rows belonging to the same
+    # bin is kept before shuffling – this has no statistical effect but
+    # avoids an extra permutation when we write back to the original order.
+    order_bins = np.argsort(bin_ids, kind="stable")
+
+    pre_sorted     = pre_ids[order_bins]
+    post_sorted    = post_ids[order_bins]
+    bin_ids_sorted = bin_ids[order_bins]
+
+    # Boundaries (start, end) of each bin slice in the *sorted* arrays
+    boundaries = np.flatnonzero(np.diff(bin_ids_sorted)) + 1
+    starts     = np.concatenate(([0], boundaries))
+    ends       = np.concatenate((boundaries, [len(bin_ids_sorted)]))
+
+    rng = np.random.default_rng()  # local RNG; preserves global state semantics
+
+    for s, e in zip(starts, ends):
+        n = e - s
+        if n <= 1:
+            continue  # nothing to shuffle in bins of size 0/1
+        perm = rng.permutation(n)
+        # Apply the *same* permutation to pre and post so syn_count rows stay aligned
+        pre_sorted[s:e]  = pre_sorted[s:e][perm]
+        post_sorted[s:e] = post_sorted[s:e][perm]
+
+    # Undo the bin sort: place shuffled values back into original positions
+    shuffled_pre          = np.empty_like(pre_ids)
+    shuffled_post         = np.empty_like(post_ids)
+    shuffled_pre[order_bins]  = pre_sorted
+    shuffled_post[order_bins] = post_sorted
+
+    final_connections = pd.DataFrame(
+        {
+            "pre_root_id": shuffled_pre,
+            "post_root_id": shuffled_post,
+            "syn_count": syn_cnt,
+        }
     )
-    neurons = neurons.astype({"root_id": int})
 
-    # Create position dataframes for pre and post neurons
-    pre_neurons = neurons[["root_id", "pos_x", "pos_y", "pos_z"]].copy()
-    pre_neurons.columns = ["pre_root_id", "pre_x", "pre_y", "pre_z"]
+    # ------------------------------------------------------------------
+    # Validate wiring length – reuse *dist_vec* for the original distances
+    # and compute the new ones with NumPy only (no pandas merges).
+    # ------------------------------------------------------------------
 
-    post_neurons = neurons[["root_id", "pos_x", "pos_y", "pos_z"]].copy()
-    post_neurons.columns = ["post_root_id", "post_x", "post_y", "post_z"]
+    if not silent:
+        logger.info("Validating total wiring length…")
 
-    # Add distance column to connections
-    logger.info("Calculating distances between neurons...")
-    connections_with_coords = add_distance_column(connections, neurons, distance_col="distance")
+    # Map *post_root_id* → coordinates for the **shuffled** posts
+    idx_post_new = np.searchsorted(roots_s, shuffled_post)
+    post_xyz_new = coords_s[idx_post_new]
+    dist_vec_new = euclidean_rows(pre_xyz, post_xyz_new)
 
-    # Get bin edges for consistent binning
-    logger.info(f"Creating {bins} distance bins...")
-    bin_edges = pd.qcut(connections_with_coords["distance"], bins, retbins=True)[1]
+    real_length  = float(np.sum(dist_vec * syn_cnt, dtype=np.float64))
+    final_length = float(np.sum(dist_vec_new * syn_cnt, dtype=np.float64))
+    dif_ratio    = abs(final_length - real_length) / real_length
 
-    # Process each bin separately to reduce memory usage
-    logger.info("Shuffling connections within bins...")
-    shuffled_connections = []
-
-    # Create bins based on distance
-    connections_with_coords["bin"] = pd.cut(
-        connections_with_coords["distance"],
-        bins=bin_edges,
-        labels=False,
-        include_lowest=True,
-    )
-
-    # Process each bin
-    for bin_idx in tqdm(range(bins), desc="Processing bins"):
-        # Get only connections in current bin
-        bin_mask = connections_with_coords["bin"] == bin_idx
-        if not np.any(bin_mask):
-            continue
-
-        bin_data = connections_with_coords[bin_mask].copy()
-
-        # Shuffle both pre and post IDs
-        pre_ids = bin_data['pre_root_id'].values.copy()
-        post_ids = bin_data['post_root_id'].values.copy()
-        syn_counts = bin_data['syn_count'].values
-
-        # This is crucial: shuffle the pre-post pairs, not individually
-        indices = np.random.permutation(len(pre_ids))
-        shuffled_pre = pre_ids[indices]
-        shuffled_post = post_ids[indices]
-
-        # Create new connections that preserve in/out degree distribution
-        bin_result = pd.DataFrame({
-            'pre_root_id': shuffled_pre,
-            'post_root_id': shuffled_post,
-            'syn_count': syn_counts
-        })
-
-        shuffled_connections.append(bin_result)
-
-    # Combine all shuffled bins
-    logger.info("Combining results from all bins...")
-    final_connections = pd.concat(shuffled_connections, ignore_index=True)
-
-    # Only keep the necessary columns
-    final_connections = final_connections[["pre_root_id", "post_root_id", "syn_count"]]
-
-    # Recalculate distances and check if within tolerance
-    logger.info("Validating total wiring length...")
-    real_length = compute_total_synapse_length(connections, neurons)
-    final_length = compute_total_synapse_length(final_connections, neurons)
-    dif_ratio = abs(final_length - real_length) / real_length
-
-    logger.info(f"Original wiring length: {real_length:.2f}")
-    logger.info(f"Randomized wiring length: {final_length:.2f}")
-    logger.info(f"Difference ratio: {dif_ratio:.4f} (should be < {tolerance})")
+    if not silent:
+        logger.info(f"Original wiring length:   {real_length:.2f}")
+        logger.info(f"Randomised wiring length: {final_length:.2f}")
+        logger.info(
+            f"Difference ratio: {dif_ratio:.4f} (should be < {tolerance})"
+        )
 
     assert (
         dif_ratio < 1 + tolerance
     ), f"Final length differs by {dif_ratio:.4f}, exceeding tolerance of {tolerance}"
+
+    # Restore logger state before returning
+    logger.disabled = prev_disabled
 
     return final_connections

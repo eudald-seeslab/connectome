@@ -134,12 +134,16 @@ def create_length_preserving_random_network(
     if not silent:
         logger.info("Validating total wiring length…")
 
-    # Map *post_root_id* → coordinates for the **shuffled** posts
+    # Map shuffled ids → coordinates for **both** pre- and post-synaptic neurons
+    idx_pre_new  = np.searchsorted(roots_s, shuffled_pre)
     idx_post_new = np.searchsorted(roots_s, shuffled_post)
-    post_xyz_new = coords_s[idx_post_new]
-    dist_vec_new = euclidean_rows(pre_xyz, post_xyz_new)
 
-    real_length  = float(np.sum(dist_vec * syn_cnt, dtype=np.float64))
+    pre_xyz_new  = coords_s[idx_pre_new]
+    post_xyz_new = coords_s[idx_post_new]
+
+    dist_vec_new = euclidean_rows(pre_xyz_new, post_xyz_new)
+
+    real_length  = float(np.sum(dist_vec      * syn_cnt, dtype=np.float64))
     final_length = float(np.sum(dist_vec_new * syn_cnt, dtype=np.float64))
     dif_ratio    = abs(final_length - real_length) / real_length
 

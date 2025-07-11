@@ -1,9 +1,8 @@
 import argparse
 import wandb
-import multiprocessing
 import pandas as pd
 import os
-import hashlib, json
+import hashlib
 
 from configs import config as base_config
 from scripts.train import main
@@ -11,140 +10,12 @@ from connectome.tools.wandb_logger import WandBLogger
 from utils.randomization_generator import generate_random_connectome
 from connectome.core.utils import update_config_with_sweep
 
+# New imports after refactor
+from configs.sweep_definitions import SWEEP_DEFS
+from scripts.sweep_utils import validate_sweep_config
+
 
 project_name = base_config.wandb_project
-
-# -----------------------------------------------------------------------------
-# Helper: pre-flight sanity checks
-# -----------------------------------------------------------------------------
-
-
-def validate_sweep_config(cfg, skip_checks: bool):
-    """Abort execution early if potentially incompatible debug/test settings are
-    enabled.
-
-    Parameters
-    ----------
-    cfg : module or namespace
-        The global configuration object (typically ``configs.config``).
-    skip_checks : bool
-        When *True*, all checks are bypassed – useful for quick local testing.
-    """
-
-    if skip_checks:
-        return
-
-    fail_reasons = []
-
-    if getattr(cfg, "debugging", False):
-        fail_reasons.append("debugging is enabled (debugging=True)")
-
-    if getattr(cfg, "filtered_fraction", None) is not None:
-        fail_reasons.append("filtered_fraction is not None")
-
-    if not getattr(cfg, "wandb_", True):
-        fail_reasons.append("W&B logging is disabled (wandb_=False)")
-
-    if getattr(cfg, "small_length", None) is not None:
-        fail_reasons.append("small_length is set (small_length is not None)")
-
-    if fail_reasons:
-        reasons = "\n  - ".join(fail_reasons)
-        msg = (
-            f"Sweep aborted by pre-flight checks:\n  - {reasons}\n"
-            "Use --skip_checks to override and run anyway."
-        )
-        import sys
-
-        print(msg, file=sys.stderr)
-        sys.exit(1)
-
-sweep_config1 = {
-    "method": "bayes",
-    "metric": {"name": "accuracy", "goal": "maximize"},
-    "parameters": {
-        "NUM_CONNECTOME_PASSES": {"values": [3, 4, 5, 6]},
-        "neurons": {"values": ["selected", "all"]},
-        "voronoi_criteria": {"values": ["R7", "all"]},
-        "random_synapses": {"values": [True, False]},
-        "eye": {"values": ["left", "right"]},
-        "train_edges": {"values": [True, False]},
-        "train_neurons": {"values": [True, False]},
-        "final_layer": {"values": ["mean", "nn"]},
-    },
-}
-
-def _load_cell_type_lists():
-    """Return *cell_types* and *rational_cell_types* lists, using whatever
-    files are available. If the expected CSVs are missing, return empty lists
-    so that sweeps that do not depend on them can still run."""
-
-    adult_dir = "adult_data"
-    ct_path = os.path.join(adult_dir, "cell_types.csv")
-    rat_path = os.path.join(adult_dir, "rational_cell_types.csv")
-
-    if not os.path.exists(ct_path) or not os.path.exists(rat_path):
-        return [], []
-
-    cts_df = pd.read_csv(ct_path)
-    cts_df = cts_df[cts_df["count"] > 1000]
-    rational = pd.read_csv(rat_path, index_col=0).index.tolist()
-    forbidden = rational + ["R8", "R7", "R1-6"]
-    cell_types = [x for x in cts_df["cell_type"].values if x not in forbidden]
-    return cell_types, rational
-
-
-# -------------------------------------------------------------
-# Cell-type dependent sweep config (only built if data available)
-# -------------------------------------------------------------
-_cell_types, _ = _load_cell_type_lists()
-
-if _cell_types:
-    sweep_config2 = {
-        "method": "bayes",
-        "metric": {"name": "accuracy", "goal": "maximize"},
-        "parameters": {
-            "filtered_celltypes": {"values": _cell_types},
-        },
-    }
-else:
-    sweep_config2 = None  # data not available; skip this sweep
-
-sweep_config3 = {
-    "method": "random",
-    "metric": {"name": "accuracy", "goal": "maximize"},
-    "parameters": {
-        "filtered_fraction": {"values": [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
-    },
-}
-
-sweep_config4 = {
-    "method": "random",
-    "metric": {"name": "Validation accuracy", "goal": "maximize"},
-    "parameters": {
-        "neuron_dropout": {"values": [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
-        "decision_dropout": {"values": [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
-    },
-}
-
-sweep_config5 = {
-    "method": "random",
-    "metric": {"name": "Validation accuracy", "goal": "maximize"},
-    "parameters": {
-        "train_neurons": {"values": [True, False]},
-        "train_edges": {"values": [True, False]},
-        "refined_synaptic_data": {"values": [True, False]},
-        "final_layer": {"values": ["mean", "nn"]},
-    },
-}
-
-seeds = list(range(10))
-sweep_config_seeds = {
-    "method": "grid",
-    "parameters": {
-        "random_seed": {"values": seeds},
-    },
-}
 
 
 def train(sweep_cfg=None):
@@ -185,10 +56,11 @@ if __name__ == "__main__":
         default=None,
         help="Sweep id if you have started the sweep elsewhere.",
     )
+    # Choose a sweep by name (defined in configs.sweep_definitions)
     parser.add_argument(
-        "--seeds_sweep",
-        action="store_true",
-        help="Run sweep that iterates over random seeds and uses on-the-fly randomised connectomes.",
+        "--sweep",
+        default="regularisation",
+        help=f"Sweep definition to use. Available: {', '.join(SWEEP_DEFS.keys())}",
     )
 
     # Allow the user to bypass pre-flight sanity checks (useful for quick local
@@ -200,16 +72,21 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # Pre-flight sanity checks 
+    # Pre-flight sanity checks
     validate_sweep_config(base_config, args.skip_checks)
 
     # Run / resume the sweep
     if args.sweep_id:
         sweep_id = args.sweep_id
     else:
-        if args.seeds_sweep:
-            sweep_id = wandb.sweep(sweep_config_seeds, project=project_name)
-        else:
-            sweep_id = wandb.sweep(sweep_config5, project=project_name)
+        sweep_name = args.sweep
+
+        try:
+            sweep_cfg_dict = SWEEP_DEFS[sweep_name]
+        except KeyError as exc:
+            available = ", ".join(SWEEP_DEFS)
+            raise SystemExit(f"Unknown sweep '{sweep_name}'. Available: {available}") from exc
+
+        sweep_id = wandb.sweep(sweep_cfg_dict, project=project_name)
 
     run_agent(sweep_id)

@@ -14,6 +14,51 @@ from connectome.core.utils import update_config_with_sweep
 
 project_name = base_config.wandb_project
 
+# -----------------------------------------------------------------------------
+# Helper: pre-flight sanity checks
+# -----------------------------------------------------------------------------
+
+
+def validate_sweep_config(cfg, skip_checks: bool):
+    """Abort execution early if potentially incompatible debug/test settings are
+    enabled.
+
+    Parameters
+    ----------
+    cfg : module or namespace
+        The global configuration object (typically ``configs.config``).
+    skip_checks : bool
+        When *True*, all checks are bypassed – useful for quick local testing.
+    """
+
+    if skip_checks:
+        return
+
+    fail_reasons = []
+
+    if getattr(cfg, "debugging", False):
+        fail_reasons.append("debugging is enabled (debugging=True)")
+
+    if getattr(cfg, "filtered_fraction", None) is not None:
+        fail_reasons.append("filtered_fraction is not None")
+
+    if not getattr(cfg, "wandb_", True):
+        fail_reasons.append("W&B logging is disabled (wandb_=False)")
+
+    if getattr(cfg, "small_length", None) is not None:
+        fail_reasons.append("small_length is set (small_length is not None)")
+
+    if fail_reasons:
+        reasons = "\n  - ".join(fail_reasons)
+        msg = (
+            f"Sweep aborted by pre-flight checks:\n  - {reasons}\n"
+            "Use --skip_checks to override and run anyway."
+        )
+        import sys
+
+        print(msg, file=sys.stderr)
+        sys.exit(1)
+
 sweep_config1 = {
     "method": "bayes",
     "metric": {"name": "accuracy", "goal": "maximize"},
@@ -52,7 +97,7 @@ def _load_cell_type_lists():
 # -------------------------------------------------------------
 # Cell-type dependent sweep config (only built if data available)
 # -------------------------------------------------------------
-_cell_types, _rational_cell_types = _load_cell_type_lists()
+_cell_types, _ = _load_cell_type_lists()
 
 if _cell_types:
     sweep_config2 = {
@@ -109,10 +154,16 @@ def train(sweep_cfg=None):
         # knows about the seed/strategy values.
         u_config = update_config_with_sweep(base_config, wandb.config)
 
+        # Log full config early so that the run's Config panel is complete. We
+        # only push serialisable primitives, so this won't interfere with the
+        # training loop that consumes *wandb.config* later on.
+        wandb_logger.update_full_config(u_config)
+
         # Create the randomised dataset (if requested) before training.
         generate_random_connectome(u_config)
 
-        connections = pd.read_csv(f"new_data/connections_random_{u_config.randomization_strategy}.csv")
+        dataset_name = f"connections_random_{u_config.randomization_strategy}" if u_config.randomization_strategy is not None else "connections"
+        connections = pd.read_csv(os.path.join("new_data", f"{dataset_name}.csv"))
         checksum = hashlib.md5(connections.to_json().encode()).hexdigest()
         wandb.log({"connectome_md5": checksum})
 
@@ -139,8 +190,20 @@ if __name__ == "__main__":
         action="store_true",
         help="Run sweep that iterates over random seeds and uses on-the-fly randomised connectomes.",
     )
+
+    # Allow the user to bypass pre-flight sanity checks (useful for quick local
+    # experimentation).
+    parser.add_argument(
+        "--skip_checks",
+        action="store_true",
+        help="Skip pre-flight checks (debugging, small_length, etc.) and run the sweep anyway.",
+    )
     args = parser.parse_args()
 
+    # Pre-flight sanity checks 
+    validate_sweep_config(base_config, args.skip_checks)
+
+    # Run / resume the sweep
     if args.sweep_id:
         sweep_id = args.sweep_id
     else:

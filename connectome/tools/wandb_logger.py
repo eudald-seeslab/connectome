@@ -70,6 +70,45 @@ class WandBLogger:
         if self.enabled:
             wandb.log({title: wandb.Table(dataframe=df)})
 
+    def update_full_config(self, cfg, protected_keys=("DEVICE",)):
+        """Update the live W&B run so that *all* serialisable attributes in
+        *cfg* appear in the run's configuration panel.
+
+        Parameters
+        ----------
+        cfg : object
+            A configuration object/module whose attributes hold the training
+            parameters.
+        protected_keys : iterable[str], optional
+            Attribute names that should be skipped because they reference
+            complex runtime objects (e.g. *torch.device*) or must not be
+            overridden inside an active run.
+        """
+
+        if not self.enabled:
+            return
+
+        full_cfg = {}
+        for k, v in cfg.__dict__.items():
+            if k.startswith("__") or k in protected_keys or callable(v):
+                continue
+
+            if v is None:
+                full_cfg[k] = None
+            elif isinstance(v, (int, float, bool, str)):
+                full_cfg[k] = v
+            elif isinstance(v, (list, tuple)):
+                if all(isinstance(item, (int, float, bool, str)) for item in v):
+                    full_cfg[k] = list(v)
+            # Skip complex, non-serialisable objects (e.g. torch.dtype, torch.device,
+            # functions, classes, Path objects, etc.) to avoid corrupting the live
+            # config used by training.
+
+        try:
+            wandb.config.update(full_cfg, allow_val_change=True)
+        except Exception as e:
+            print(f"Error updating full config to W&B: {e}. Continuing…")
+
     def log_validation_stats(
         self, running_loss_, total_correct_, total_, results_, plots, task=None
     ):

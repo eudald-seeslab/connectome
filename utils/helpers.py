@@ -148,3 +148,28 @@ def load_neuron_coordinates(file_name: str = "neuron_annotations.tsv", root_dir:
         .rename(columns={"soma_x": "pos_x", "soma_y": "pos_y", "soma_z": "pos_z"})
     )
     return nc
+
+
+# Sweep / analysis helpers
+def load_cell_type_lists(adult_dir: str = "adult_data") -> tuple[list[str], list[str]]:
+    """Return (cell_types, rational_cell_types).
+
+    Notes
+    -----
+    The function is resilient to missing files: when the expected CSVs are not
+    found it returns empty lists so that upstream code can decide whether to
+    skip cell-type–specific logic.
+    """
+
+    ct_path = os.path.join(adult_dir, "cell_types.csv")
+    rat_path = os.path.join(adult_dir, "rational_cell_types.csv")
+
+    if not (os.path.exists(ct_path) and os.path.exists(rat_path)):
+        return [], []
+
+    cts_df = pd.read_csv(ct_path)
+    cts_df = cts_df[cts_df["count"] > 1000]
+    rational = pd.read_csv(rat_path, index_col=0).index.tolist()
+    forbidden = rational + ["R8", "R7", "R1-6"]
+    cell_types = [x for x in cts_df["cell_type"].values if x not in forbidden]
+    return cell_types, rational

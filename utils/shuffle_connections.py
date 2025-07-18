@@ -6,7 +6,7 @@ import argparse
 # Third-party
 
 # Local modules
-from notebooks.visualization.activation_plots import plot_synapse_length_distributions
+from notebooks.visualization.activation_plots.synapse_distributions import plot_synapse_length_distributions
 from paths import PROJECT_ROOT
 from utils.helpers import (
     load_connections,

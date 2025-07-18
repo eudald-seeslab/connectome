@@ -7,6 +7,8 @@ import matplotlib as mpl
 
 from notebooks.visualization.activations_funcs import split_title
 
+from .plot_config import apply_plot_style, get_randomization_colors, RANDOMIZATION_NAMES
+
 
 def plot_activation_statistics(
     propagations_dict, neuron_position_data, num_steps=4, fig_width=120
@@ -29,26 +31,27 @@ def plot_activation_statistics(
         Three matplotlib.figure.Figure objects: one for activation percentages, one for activation distances,
         and one for rational cell types activation percentages.
     """
-    # Set Nature style parameters
-    mpl.rcParams.update(
-        {
-            "font.family": "sans-serif",
-            "font.sans-serif": ["Arial", "Helvetica"],
-            "font.size": 12,
-            "axes.labelsize": 12,
-            "axes.titlesize": 12,
-            "xtick.labelsize": 12,
-            "ytick.labelsize": 12,
-            "legend.fontsize": 12,
-            "axes.linewidth": 0.5,
-            "grid.linewidth": 0.5,
-            "lines.linewidth": 1.0,
-            "lines.markersize": 3,
-        }
-    )
+    # Apply centralized plotting style (small-text override)
+    apply_plot_style({
+        "font.size": 12,
+        "axes.labelsize": 12,
+        "axes.titlesize": 12,
+        "xtick.labelsize": 12,
+        "ytick.labelsize": 12,
+        "legend.fontsize": 12,
+        "axes.linewidth": 0.5,
+        "lines.linewidth": 1,
+        "lines.markersize": 3,
+    })
 
-    # Nature-friendly color scheme
-    colors = ["#0072B2", "#D55E00", "#009E73", "#CC79A7", "#56B4E9", "#E69F00"]
+    styles = {
+        "Biological":        dict(marker="o",  ls="-", lw=1.1, zorder=4, alpha=.8),
+        "Unconstrained":     dict(marker="s", ls="--", lw=2.2, alpha=.8),
+        "Random pruned":     dict(marker="^", ls=":",  lw=2.2, alpha=.8),
+        "Connection-pruned": dict(marker="v", ls="--", lw=2.2, alpha=.8),
+        "Random bin-wise":   dict(marker="d", ls=":",  lw=2.2, alpha=.8),
+        "Neuron binned":     dict(marker="P", ls="--", lw=2.2, alpha=.8),
+    }   
 
     # Calculate metrics for each configuration
     configs = list(propagations_dict.keys())
@@ -119,20 +122,15 @@ def plot_activation_statistics(
     fig_width_in = fig_width * 0.0393701
     fig_height_in = fig_width_in / 1.4
 
-    # print the activation percentages
-    print(activation_percentages)
-
     # Create figure for activation percentages
     fig1, ax1 = plt.subplots(figsize=(fig_width_in, fig_height_in))
     for i, config in enumerate(configs):
         ax1.plot(
             range(1, num_steps + 1),
             activation_percentages[config],
-            marker="o",
-            label=config,
-            color=colors[i % len(colors)],
-            linewidth=1.2,
-            markersize=3.5,
+            label=RANDOMIZATION_NAMES.get(config, config),
+            color=get_randomization_colors(config),
+            **styles[config]
         )
 
     ax1.set_xlabel("Message Passing Step")
@@ -150,11 +148,9 @@ def plot_activation_statistics(
         ax2.plot(
             range(1, num_steps + 1),
             activation_distances[config],
-            marker="o",
-            label=config,
-            color=colors[i % len(colors)],
-            linewidth=1.2,
-            markersize=3.5,
+            label=RANDOMIZATION_NAMES.get(config, config),
+            color=get_randomization_colors(config),
+            **styles[config]
         )
 
     ax2.set_xlabel("Message Passing Step")
@@ -172,11 +168,9 @@ def plot_activation_statistics(
         ax3.plot(
             range(1, num_steps + 1),
             rational_percentages[config],
-            marker="o",
-            label=config,
-            color=colors[i % len(colors)],
-            linewidth=1.2,
-            markersize=3.5,
+            label=RANDOMIZATION_NAMES.get(config, config),
+            color=get_randomization_colors(config),
+            **styles[config]
         )
 
     ax3.set_xlabel("Message Passing Step")
@@ -337,7 +331,7 @@ def visualize_steps_separated_compact(
     # Process each configuration (rows)
     for i, (config_name, prop_df) in enumerate(propagations_dict.items()):
 
-        config_name = split_title(config_name)
+        config_name = split_title(config_name, 10)
 
         # Merge with position data
         merged_data = pd.merge(prop_df, neuron_position_data, on="root_id")
@@ -639,4 +633,126 @@ def visualize_steps_separated_compact(
     plt.subplots_adjust(wspace=-0.5, hspace=-0.06)
 
     return fig
+
+
+def plot_3d_activation_compact(
+    ax,
+    positions,
+    alphas,
+    color,
+    title,
+    label,
+    marker_size=20,
+    voxel_size=None,
+    smoothing=None,
+    bounds=None,
+):
+    # --- Ensure alphas are in the valid [0, 1] range ------------------------
+    alphas = np.asarray(alphas, dtype=float)
+    if alphas.size:
+        # If values are outside [0,1], rescale by the maximum positive value.
+        if (alphas > 1).any() or (alphas < 0).any():
+            max_val = alphas.max()
+            if max_val > 0:
+                alphas = alphas / max_val
+        # Finally, clip to be absolutely safe
+        alphas = np.clip(alphas, 0.0, 1.0)
+
+    # Set axis properties for a clean look
+    ax.set_facecolor("white")
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_zticks([])
+    ax.xaxis.pane.set_edgecolor("lightgray")
+    ax.yaxis.pane.set_edgecolor("lightgray")
+    ax.zaxis.pane.set_edgecolor("lightgray")
+    ax.grid(False)
+
+    # Add padding to bounds
+    if bounds:
+        x_min, x_max = bounds["x_min"], bounds["x_max"]
+        y_min, y_max = bounds["y_min"], bounds["y_max"]
+        z_min, z_max = bounds["z_min"], bounds["z_max"]
+    else:
+        x_min, x_max = positions[:, 0].min(), positions[:, 0].max()
+        y_min, y_max = positions[:, 1].min(), positions[:, 1].max()
+        z_min, z_max = positions[:, 2].min(), positions[:, 2].max()
+
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+    ax.set_zlim(z_min, z_max)
+
+    # Handle case with no active neurons
+    if positions.shape[0] == 0:
+        return
+
+    # Option 1: Voxel-based heatmap with Gaussian smoothing
+    if voxel_size:
+        # Create a 3D histogram (voxel grid)
+        bins = [
+            np.arange(x_min, x_max + voxel_size, voxel_size),
+            np.arange(y_min, y_max + voxel_size, voxel_size),
+            np.arange(z_min, z_max + voxel_size, voxel_size),
+        ]
+        hist, _ = np.histogramdd(positions, bins=bins, weights=alphas)
+
+        # Normalize and smooth
+        if hist.max() > 0:
+            hist /= hist.max()
+        if smoothing:
+            hist = gaussian_filter(hist, sigma=smoothing)
+
+        # Get voxel centers and values for plotting
+        x_centers = (bins[0][:-1] + bins[0][1:]) / 2
+        y_centers = (bins[1][:-1] + bins[1][1:]) / 2
+        z_centers = (bins[2][:-1] + bins[2][1:]) / 2
+        x, y, z = np.meshgrid(x_centers, y_centers, z_centers, indexing="ij")
+
+        # Create RGBA colors with varying alpha
+        rgba_colors = np.zeros(hist.shape + (4,))
+        # Get base color
+        base_color = to_rgba(color)
+        rgba_colors[..., :3] = base_color[:3]  # Set RGB
+        rgba_colors[..., 3] = hist  # Set alpha based on density
+
+        # Plot voxels
+        ax.scatter(
+            x.flatten(),
+            y.flatten(),
+            z.flatten(),
+            c=rgba_colors.reshape(-1, 4),
+            marker="s",
+            s=voxel_size**2 * 0.8,  # Adjust marker size
+            edgecolors="none",
+        )
+
+    # Option 2: Scatter plot (if not using voxels)
+    else:
+        # Create RGBA colors with varying alpha based on activation strength
+        rgba_colors = np.array([to_rgba(color, alpha=a) for a in alphas])
+        ax.scatter(
+            positions[:, 0],
+            positions[:, 1],
+            positions[:, 2],
+            c=rgba_colors,
+            s=marker_size,
+            edgecolors="none",
+            depthshade=True,
+        )
+
+    # Add a single point for the legend
+    ax.scatter(
+        [],
+        [],
+        [],
+        c=[color],
+        s=100,
+        edgecolors="none",
+        label=label,
+    )
+    # add a title to the subplot
+    ax.set_title(title, fontsize=16, pad=-20)
+    
+    # set aspect ratio
+    ax.set_aspect('equal', 'box')
 

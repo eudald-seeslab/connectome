@@ -4,6 +4,8 @@ from utils.randomizers.randomizers_helpers import compute_individual_synapse_len
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .plot_config import RANDOMIZATION_COLORS, RANDOMIZATION_NAMES, apply_plot_style, get_randomization_colors
+
 
 def plot_synapse_length_distributions(neuron_coords, conns_dict, use_density=True, num_confidence_interval_se=1):
     """
@@ -24,15 +26,13 @@ def plot_synapse_length_distributions(neuron_coords, conns_dict, use_density=Tru
     --------
     tuple: (fig1, fig2) - Two figure objects for histogram and synapse strength vs distance
     """
+
     titles = list(conns_dict.keys())
     n_plots = len(titles)
 
     # Ensure we have no more than 6 plots
     if n_plots > 6:
         raise ValueError(f"Too many networks to plot ({n_plots}). Maximum supported is 6.")
-
-    # Extended color palette for up to 6 plots
-    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b'][:n_plots]
 
     # Pre-calculate distances for each dataframe
     dists = {name: compute_individual_synapse_lengths(df, neuron_coords)
@@ -63,11 +63,11 @@ def plot_synapse_length_distributions(neuron_coords, conns_dict, use_density=Tru
 
     total_mm = {}  # Total wiring lengths for annotation
 
-    for ax, title, col in zip(axs1, titles, colors):
+    for ax, title in zip(axs1, titles):
         w = weights[title]
         L = dists[title]
         ax.hist(L, bins=bins, weights=w, density=use_density,
-               color=col, alpha=0.7)
+               color=get_randomization_colors(title), alpha=0.7)
 
         # Weighted mean
         mean_nm = np.average(L, weights=w)
@@ -86,7 +86,7 @@ def plot_synapse_length_distributions(neuron_coords, conns_dict, use_density=Tru
 
         ax.set_ylim(0, max_val)
         ax.set_ylabel("Density" if use_density else "Count")
-        ax.set_title(title)
+        ax.set_title(RANDOMIZATION_NAMES.get(title, title))
 
     axs1[-1].set_xlabel("Synapse Length (nm)")
 
@@ -102,7 +102,7 @@ def plot_synapse_length_distributions(neuron_coords, conns_dict, use_density=Tru
     if n_plots == 1:
         axs2 = [axs2]
 
-    for ax, title, col in zip(axs2, titles, colors):
+    for ax, title in zip(axs2, titles):
         L = dists[title]
         w = weights[title]
 
@@ -124,15 +124,15 @@ def plot_synapse_length_distributions(neuron_coords, conns_dict, use_density=Tru
                 errors.append(0)
 
         # Plot the mean line
-        ax.plot(bin_centers, means, 'o-', color=col, markersize=5, alpha=0.9, label=title)
+        ax.plot(bin_centers, means, 'o-', color=get_randomization_colors(title), markersize=5, alpha=0.9, label=title)
 
         # Add confidence interval bands
         upper_bound = [m + e * num_confidence_interval_se for m, e in zip(means, errors)]
         lower_bound = [m - e * num_confidence_interval_se for m, e in zip(means, errors)]
-        ax.fill_between(bin_centers, lower_bound, upper_bound, color=col, alpha=0.2)
+        ax.fill_between(bin_centers, lower_bound, upper_bound, color=get_randomization_colors(title), alpha=0.2)
 
         ax.set_ylabel("Avg. Synapse Count")
-        ax.set_title(title)
+        ax.set_title(RANDOMIZATION_NAMES.get(title, title))
         ax.grid(True, linestyle='--', alpha=0.3)
 
     axs2[-1].set_xlabel("Synapse Length (nm)")
@@ -141,7 +141,11 @@ def plot_synapse_length_distributions(neuron_coords, conns_dict, use_density=Tru
     return fig1, fig2
 
 
-def plot_synapse_counts_histogram(conns_dict, bins=30, figsize=(12, 8), log_scale=False):
+# NOTE: `figsize` can now be left as `None` to automatically scale the
+# figure height according to the number of subplots so that each histogram
+# takes up more vertical space. If `figsize` is provided explicitly it will
+# be honoured as before.
+def plot_synapse_counts_histogram(conns_dict, bins=30, figsize=None, log_scale=False):
     """
     Plot simple histograms of synapse counts for each network type.
 
@@ -161,6 +165,7 @@ def plot_synapse_counts_histogram(conns_dict, bins=30, figsize=(12, 8), log_scal
     fig : matplotlib.figure.Figure
         Figure object with histograms
     """
+
     titles = list(conns_dict.keys())
     n_plots = len(titles)
 
@@ -168,8 +173,22 @@ def plot_synapse_counts_histogram(conns_dict, bins=30, figsize=(12, 8), log_scal
     if n_plots > 6:
         raise ValueError(f"Too many networks to plot ({n_plots}). Maximum supported is 6.")
 
-    # Extended color palette for up to 6 plots
-    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b'][:n_plots]
+    # Determine a sensible default figure size if none is provided.
+    # Roughly allocate 2.5 vertical inches per subplot so the bars look tall
+    # enough while keeping the width fixed at 12 inches (same as other
+    # plotting functions in this module).
+    if figsize is None:
+        figsize = (12, 2.5 * n_plots)
+
+    # --- Compute a common Y-max so every subplot uses the full vertical extent ---
+    max_val = 0
+    for title in titles:
+        # Build histogram purely to get the tallest bar height
+        hist_vals, _ = np.histogram(conns_dict[title]["syn_count"].values, bins=bins)
+        max_val = max(max_val, hist_vals.max())
+
+    # Add a small margin on top
+    max_val *= 1.1
 
     # Create figure with subplots (one per network)
     fig, axs = plt.subplots(n_plots, 1, figsize=figsize, sharex=True, constrained_layout=True)
@@ -178,12 +197,12 @@ def plot_synapse_counts_histogram(conns_dict, bins=30, figsize=(12, 8), log_scal
     if n_plots == 1:
         axs = [axs]
 
-    for ax, title, color in zip(axs, titles, colors):
+    for ax, title in zip(axs, titles):
         # Get synapse counts for this network
         syn_counts = conns_dict[title]["syn_count"].values
 
         # Plot histogram
-        ax.hist(syn_counts, bins=bins, color=color, alpha=0.7)
+        ax.hist(syn_counts, bins=bins, color=get_randomization_colors(title), alpha=0.7)
 
         # Calculate statistics
         mean_count = np.mean(syn_counts)
@@ -204,12 +223,17 @@ def plot_synapse_counts_histogram(conns_dict, bins=30, figsize=(12, 8), log_scal
                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.7))
 
         # Add title and labels
-        ax.set_title(title)
+        ax.set_title(RANDOMIZATION_NAMES.get(title, title))
         ax.set_ylabel("Count")
 
-        # Set log scale if requested
+        # Set log or linear scale and unify ylim so the bars occupy the available
+        # vertical space consistently across all subplots.
         if log_scale:
             ax.set_yscale('log')
+            # In log scale, the lower bound must be > 0.
+            ax.set_ylim(1, max_val)
+        else:
+            ax.set_ylim(0, max_val)
 
     # Add x-label to bottom subplot only
     axs[-1].set_xlabel("Synapse Count")

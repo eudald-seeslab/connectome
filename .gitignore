@@ -269,3 +269,6 @@ utils/plots/*
 
 # claude stuff
 CLAUDE.md
+
+# cache
+.joblib_cache/

@@ -14,14 +14,14 @@ refined_synaptic_data = False
 synaptic_limit = True
 
 # Other often changing vars
-batch_size = 24
+batch_size = 8
 resume_checkpoint = None # "m_2024-12-28 18:42_n3l481jr.pth"
 NUM_CONNECTOME_PASSES = 3
-randomization_strategy = "pruned"  # None, "unconstrained", "pruned", "binned"
+randomization_strategy = "neuron_binned"  # None, "unconstrained", "pruned", "conn_pruned", "binned", "neuron_binned"
 device_type = "cuda" if cuda.is_available() else "cpu"
 # device_type = "cpu"
-debugging = False
-wandb_project = "randomizations"
+debugging = True
+wandb_project = "proves"
 
 # Data
 TRAINING_DATA_DIR = os.path.join(PROJECT_ROOT, "images", data_type, "train")
@@ -32,6 +32,7 @@ sample_image = os.listdir(os.path.join(TRAINING_DATA_DIR, CLASSES[0]))[0]
 image_size = Image.open(os.path.join(TRAINING_DATA_DIR, CLASSES[0], sample_image)).size[
     0
 ]
+CONNECTOME_DATA_DIR = "new_data"
 
 # Training configuration
 num_epochs = 100
@@ -55,13 +56,12 @@ lambda_func = leaky_relu  # any torch activation function
 # before applying the activation function (above)
 neuron_normalization = "min_max"  # "log1p" or "min_max"
 # Shut off some neurons based on their cell_type
-# You can find all the cell types in adult_data/cell_types.csv
 filtered_celltypes = []
 # You can also filter a fraction of the neurons
 # Note: it's a fraction of the number of neurons after filtering by cell type
 # and also after removing the protected cell types (R1-6, R7, R8, and the rational cell types)
 # None if you don't want to filter
-filtered_fraction = None
+filtered_fraction = 0.25
 # droputs: there is a dropout for the neuron activations to simulate that, for some reason
 #  (oscillations, the neuron having fired too recently, etc) the neuron does not fire
 neuron_dropout = 0
@@ -76,7 +76,7 @@ inhibitory_r7_r8 = False
 # As of October 2024, there is a new version of the connectome, do you want to use it?
 new_connectome = True
 # You can choose the cell types used to compute the final decision
-# If None, the ones in adult_data/rational_cell_types.csv will be used
+# If None, the ones in data/rational_cell_types.csv will be used
 original_rational = ["KCapbp-m", "KCapbp-ap2", "KCapbp-ap1"]
 rational_cell_types = original_rational
 
@@ -108,6 +108,6 @@ sparse_layout = torch.sparse_coo
 
 # small checks so that i don't screw up
 wandb_ = False if debugger_is_active() else wandb_
-wandb_ = False if debugging else wandb_
+# wandb_ = False if debugging else wandb_
 validation_length = validation_length if small_length is not None else None
 num_epochs = 1 if debugging else num_epochs

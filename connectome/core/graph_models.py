@@ -11,8 +11,9 @@ class Connectome(MessagePassing):
         super(Connectome, self).__init__(aggr="add")
 
         self.num_passes = config.NUM_CONNECTOME_PASSES
-        num_nodes = data_processor.number_of_synapses
-        edge_weight = data_processor.synaptic_matrix.data
+        graph_builder = data_processor.graph_builder
+        num_nodes = graph_builder.num_nodes
+        edge_weight = graph_builder.synaptic_matrix.data
         num_synapses = edge_weight.shape[0]
         self.batch_size = config.batch_size
         self.train_edges = config.train_edges
@@ -112,19 +113,20 @@ class FullGraphModel(nn.Module):
         super(FullGraphModel, self).__init__()
 
         self.connectome = Connectome(data_processor, config_)
+        graph_builder = data_processor.graph_builder
         self.train_neurons = config_.train_neurons
-        self.register_buffer("decision_making_vector", data_processor.decision_making_vector)
+        self.register_buffer("decision_making_vector", graph_builder.decision_making_vector)
         self.num_features = 1 # only works with 1 for now
         self.batch_size = config_.batch_size
         self.final_layer = config_.final_layer
         self.num_decision_making_neurons = config_.num_decision_making_neurons
-        final_layer_input_size = self.compute_final_layer_size(data_processor, config_)
+        final_layer_input_size = self.compute_final_layer_size(graph_builder, config_)
         self.final_fc = nn.Linear(final_layer_input_size, data_processor.num_classes, dtype=config_.dtype)
         self.decision_making_dropout = nn.Dropout(config_.decision_dropout)
-        self.decision_making_indices = self.select_decision_making_indices(data_processor, config_, random_generator)
+        self.decision_making_indices = self.select_decision_making_indices(graph_builder, config_, random_generator)
 
     def forward(self, data):
-        x, edge_index = data.x, data.edge_index
+        x, edge_index = data.x, data.edge_index.long()  # ensure int64 for PyG operations
 
         # pass through the connectome and reshape to wide again (batch_size, num_neurons, num_features)
         x = self.connectome(x, edge_index)
@@ -164,18 +166,18 @@ class FullGraphModel(nn.Module):
         return (x - x.min()) / (x.max() - x.min())
 
     @staticmethod
-    def compute_final_layer_size(data_processor, config):
+    def compute_final_layer_size(graph_builder, config):
         if config.final_layer == "nn":
             if config.num_decision_making_neurons is not None:
                 return config.num_decision_making_neurons
-            return int(data_processor.decision_making_vector.sum())
+            return int(graph_builder.decision_making_vector.sum())
         return 1
 
     @staticmethod
-    def select_decision_making_indices(data_processor, config_, random_generator):
+    def select_decision_making_indices(graph_builder, config_, random_generator):
         if config_.num_decision_making_neurons is not None:
             decision_making_indices = torch.randperm(
-                data_processor.decision_making_vector.sum(), generator=random_generator, device=config_.DEVICE
+                graph_builder.decision_making_vector.sum(), generator=random_generator, device=config_.DEVICE
             )[:config_.num_decision_making_neurons]
             return decision_making_indices
         return None

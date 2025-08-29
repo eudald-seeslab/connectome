@@ -74,7 +74,7 @@ def get_label(name, classes):
     try:
         return classes.index(x)
     except ValueError:
-        raise ValueError(f"Unexpected directory label {x}")
+        raise ValueError(f"Unexpected directory label '{x}'")
 
 
 def paths_to_labels(paths, classes):

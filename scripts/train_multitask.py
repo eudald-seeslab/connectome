@@ -50,8 +50,8 @@ def get_multitask_batch_data(
         training_images, batch_size, already_selected
     )
     if config_.voronoi_criteria == "all":
-        # create voronoi cells each batch so they are different
-        data_processor.recreate_voronoi_cells()
+        data_processor.voronoi_cells.recreate()
+        data_processor.update_voronoi_state()
     inputs, labels = data_processor.get_data_from_paths(batch_files)
     if i % config_.wandb_images_every == 0:
         p, title = data_processor.plot_input_images(inputs[0])

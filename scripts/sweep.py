@@ -1,76 +1,43 @@
 import argparse
 import wandb
-import multiprocessing
 import pandas as pd
+import os
+import hashlib
 
-from configs import config
+from configs import config as base_config
 from scripts.train import main
 from connectome.tools.wandb_logger import WandBLogger
+from utils.randomization_generator import generate_random_connectome
+from connectome.core.utils import update_config_with_sweep
+
+# New imports after refactor
+from configs.sweep_definitions import SWEEP_DEFS
+from scripts.sweep_utils import validate_sweep_config
 
 
-project_name = "architecture"
-
-sweep_config1 = {
-    "method": "bayes",
-    "metric": {"name": "accuracy", "goal": "maximize"},
-    "parameters": {
-        "NUM_CONNECTOME_PASSES": {"values": [3, 4, 5, 6]},
-        "neurons": {"values": ["selected", "all"]},
-        "voronoi_criteria": {"values": ["R7", "all"]},
-        "random_synapses": {"values": [True, False]},
-        "eye": {"values": ["left", "right"]},
-        "train_edges": {"values": [True, False]},
-        "train_neurons": {"values": [True, False]},
-        "final_layer": {"values": ["mean", "nn"]},
-    },
-}
-
-cts = pd.read_csv("adult_data/cell_types.csv")
-cts = cts[cts["count"] > 1000]
-rational_cell_types = pd.read_csv("adult_data/rational_cell_types.csv", index_col=0).index.tolist()
-forbidden_cell_types = rational_cell_types + ["R8", "R7", "R1-6"]
-cell_types = [x for x in cts["cell_type"].values if x not in forbidden_cell_types]
-
-sweep_config2 = {
-    "method": "bayes",
-    "metric": {"name": "accuracy", "goal": "maximize"},
-    "parameters": {
-        "filtered_celltypes": {"values": cell_types},
-    }
-}
-
-sweep_config3 = {
-    "method": "random",
-    "metric": {"name": "accuracy", "goal": "maximize"},
-    "parameters": {
-        "filtered_fraction": {"values": [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
-    },
-}
-
-sweep_config4 = {
-    "method": "random",
-    "metric": {"name": "Validation accuracy", "goal": "maximize"},
-    "parameters": {
-        "neuron_dropout": {"values": [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
-        "decision_dropout": {"values": [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
-    },
-}
-
-sweep_config5 = {
-    "method": "random",
-    "metric": {"name": "Validation accuracy", "goal": "maximize"},
-    "parameters": {
-        "train_neurons": {"values": [True, False]},
-        "train_edges": {"values": [True, False]},
-        "refined_synaptic_data": {"values": [True, False]},
-        "final_layer": {"values": ["mean", "nn"]},
-    },
-}
+project_name = base_config.wandb_project
 
 
-def train(config=None):
+def train(sweep_cfg=None):
     wandb_logger = WandBLogger(project_name)
-    with wandb.init(config=config):
+    with wandb.init(config=sweep_cfg):
+        # Merge sweep hyper-parameters into the global config so the generator
+        # knows about the seed/strategy values.
+        u_config = update_config_with_sweep(base_config, wandb.config)
+
+        # Log full config early so that the run's Config panel is complete. We
+        # only push serialisable primitives, so this won't interfere with the
+        # training loop that consumes *wandb.config* later on.
+        wandb_logger.update_full_config(u_config)
+
+        # Create the randomised dataset (if requested) before training.
+        generate_random_connectome(u_config)
+
+        dataset_name = f"connections_random_{u_config.randomization_strategy}" if u_config.randomization_strategy is not None else "connections"
+        connections = pd.read_csv(os.path.join("new_data", f"{dataset_name}.csv"))
+        checksum = hashlib.md5(connections.to_json().encode()).hexdigest()
+        wandb.log({"connectome_md5": checksum})
+
         main(wandb_logger, wandb.config)
 
 
@@ -89,22 +56,37 @@ if __name__ == "__main__":
         default=None,
         help="Sweep id if you have started the sweep elsewhere.",
     )
+    # Choose a sweep by name (defined in configs.sweep_definitions)
+    parser.add_argument(
+        "--sweep",
+        default="regularisation",
+        help=f"Sweep definition to use. Available: {', '.join(SWEEP_DEFS.keys())}",
+    )
+
+    # Allow the user to bypass pre-flight sanity checks (useful for quick local
+    # experimentation).
+    parser.add_argument(
+        "--skip_checks",
+        action="store_true",
+        help="Skip pre-flight checks (debugging, small_length, etc.) and run the sweep anyway.",
+    )
     args = parser.parse_args()
 
+    # Pre-flight sanity checks
+    validate_sweep_config(base_config, args.skip_checks)
+
+    # Run / resume the sweep
     if args.sweep_id:
         sweep_id = args.sweep_id
     else:
-        sweep_id = wandb.sweep(sweep_config5, project=project_name)
+        sweep_name = args.sweep
 
-    if config.device_type == "cpu":
-        num_agents = 4
-        processes = []
-        for _ in range(num_agents):
-            p = multiprocessing.Process(target=run_agent, args=(sweep_id,))
-            p.start()
-            processes.append(p)
+        try:
+            sweep_cfg_dict = SWEEP_DEFS[sweep_name]
+        except KeyError as exc:
+            available = ", ".join(SWEEP_DEFS)
+            raise SystemExit(f"Unknown sweep '{sweep_name}'. Available: {available}") from exc
 
-        for p in processes:
-            p.join()
-    else:
-        run_agent(sweep_id)
+        sweep_id = wandb.sweep(sweep_cfg_dict, project=project_name)
+
+    run_agent(sweep_id)

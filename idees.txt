@@ -49,6 +49,11 @@ Idees
 [ ] Manifolds: see how neural representations evolve with training
 [ ] Manifolds: check shapes trained only on edges
 
+Randomitzacions
+[ ] fracció de neurones que pensen que estan actives
+[x] treure connexions senceres
+[x] mirar relació llargada / pes de les connexions
+
 Paper:
 - weber
 - distingir coses

@@ -16,6 +16,7 @@ from utils.model_inspection_funcs import (
     sample_images,
 )
 from utils.model_inspection_utils import propagate_data_with_steps
+from .random_networks_plots.plot_config import RANDOMIZATION_NAMES
 
 cmap = plt.cm.binary
 
@@ -82,9 +83,7 @@ def propagate_through_connectome(activated_data, connections, num_passes, weight
         DataFrame containing neuron IDs and their activations at each step
         Columns: 'root_id', 'input', 'activation_1', 'activation_2', ..., 'activation_n'
     """
-    import pandas as pd
-    import numpy as np
-
+    
     # Make a copy of connections to avoid modifying the original
     connections_copy = connections.copy()
 
@@ -153,10 +152,12 @@ def reshuffle_connections(connections):
 
 def get_all_connections():
     return {
-        "Biological": load_connections("connections.csv"),
-        "Random unconstrained": load_connections("connections_random_unconstrained.csv"),
-        "Random pruned": load_connections("connections_random_pruned.csv"),
-        "Random bin-wise": load_connections("connections_random_binned.csv"),
+        RANDOMIZATION_NAMES["biological"]: load_connections("connections.csv"),
+        RANDOMIZATION_NAMES["unconstrained"]: load_connections("connections_random_unconstrained.csv"),
+        RANDOMIZATION_NAMES["random_pruned"]: load_connections("connections_random_pruned.csv"),
+        RANDOMIZATION_NAMES["connection_pruned"]: load_connections("connections_random_conn_pruned.csv"),
+        RANDOMIZATION_NAMES["random_binned"]: load_connections("connections_random_binned.csv"),
+        RANDOMIZATION_NAMES["neuron_binned"]: load_connections("connections_random_mantain_neuron_wiring_length.csv"),
     }
 
 
@@ -171,34 +172,48 @@ def get_activation_dictionnary(connections_dict, num_passes=4):
     activated_data = neuron_data_from_image(img, visual_neuron_data)
 
     # Real connectome
-    connections = connections_dict["Biological"]
+    connections = connections_dict[RANDOMIZATION_NAMES["biological"]]
     propagation_original = propagate_through_connectome(activated_data, connections, num_passes)
 
     # Shuffled connectome
-    random_unconstrained = connections_dict["Random unconstrained"]
+    random_unconstrained = connections_dict[RANDOMIZATION_NAMES["unconstrained"]]
     propagation_unconstrained = propagate_through_connectome(
         activated_data, random_unconstrained, num_passes
     )
 
     # Random pruned connectome
-    random_pruned = connections_dict["Random pruned"]
+    random_pruned = connections_dict[RANDOMIZATION_NAMES["random_pruned"]]
     propagation_pruned = propagate_through_connectome(
         activated_data, random_pruned, num_passes
     )
 
+    # Connection-pruned connectome
+    conn_pruned = connections_dict[RANDOMIZATION_NAMES["connection_pruned"]]
+    propagation_conn_pruned = propagate_through_connectome(
+        activated_data, conn_pruned, num_passes
+    )
+
     # Random bin-wise connectome
-    random_binned = connections_dict["Random bin-wise"]
+    random_binned = connections_dict[RANDOMIZATION_NAMES["random_binned"]]
     propagation_binned = propagate_through_connectome(
         activated_data, random_binned, num_passes
     )
 
+    # Neuron binned connectome
+    neuron_binned = connections_dict[RANDOMIZATION_NAMES["neuron_binned"]]
+    propagation_neuron_binned = propagate_through_connectome(
+        activated_data, neuron_binned, num_passes
+    )
+
     # Return all propagations for further use
     return {
-        "Biological": propagation_original,
-        "Random unconstrained": propagation_unconstrained,
-        "Random pruned": propagation_pruned,
-        "Random bin-wise": propagation_binned,
+        RANDOMIZATION_NAMES["biological"]: propagation_original,
+        RANDOMIZATION_NAMES["unconstrained"]: propagation_unconstrained,
+        RANDOMIZATION_NAMES["random_pruned"]: propagation_pruned,
+        RANDOMIZATION_NAMES["connection_pruned"]: propagation_conn_pruned,
+        RANDOMIZATION_NAMES["random_binned"]: propagation_binned,
+        RANDOMIZATION_NAMES["neuron_binned"]: propagation_neuron_binned,
     }
 
 def split_title(title, max_length=15):
-    return title.replace(" ", "\n") if len(title) > max_length else title
+    return title.replace("-", "\n").replace(" ", "\n") if len(title) > max_length else title

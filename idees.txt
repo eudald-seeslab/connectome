@@ -62,3 +62,19 @@ Paper:
 what can flies do?
 
 query per la posició de les neurones: https://codex.flywire.ai/app/view_3d?query=cell_type+%7Bin%7D+R1-6%2CR7%2CR8+%7Band%7D+side+%7Bequal%7D+right&action=random_sample&color_by=Type&mode=3D+only
+
+després de la reunió de juliol 2025
+
+[x] en el neuron binned, ho fem per totes les n entre dues neurones?
+    -> sí, van en bloc
+[ ] atp per mantenir neurones llargues
+[ ] buscar centres de neuropils
+[ ] afegir on són les imatges i accuracy
+[x] death to taronja
+[ ] weber ratio plot per les randomitzacions
+
+missatges principals:
+importància de no afegir models teòrics, si no que fem el model raw del connetome (vanilla connetome)
+reconstrucció de l'ull és guai
+els experiments que he fet
+comparació amb random ( el cervell és òptim sota constraints biològics)

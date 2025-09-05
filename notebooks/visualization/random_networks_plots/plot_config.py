@@ -1,7 +1,7 @@
 RANDOMIZATION_NAMES = {
     "biological": "Biological",
     "neuron_binned": "Neuron binned",
-    "random_binned": "Random bin-wise",
+    "random_binned": "Binned",
     "unconstrained": "Unconstrained",
     "random_pruned": "Random pruned",
     "connection_pruned": "Connection-pruned",

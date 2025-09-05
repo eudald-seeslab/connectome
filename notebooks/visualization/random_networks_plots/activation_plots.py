@@ -319,9 +319,7 @@ def visualize_steps_separated_compact(
     y_min, y_max = bounds["y_min"], bounds["y_max"]
     z_min, z_max = bounds["z_min"], bounds["z_max"]
 
-    # Nature-friendly colors for each step
-    step_colors = ["#4878D0", "#6ACC64", "#EE854A", "#D65F5F"]
-    input_color = "#8A2BE2"  # A distinct purple color for input visualization
+    # Colors: match grouped_accuracy_comparison by using per-configuration color
 
     # Create a figure with 4x(num_steps+1) grid: rows=configurations, columns=input + steps
     fig, axes = plt.subplots(
@@ -331,7 +329,10 @@ def visualize_steps_separated_compact(
     # Process each configuration (rows)
     for i, (config_name, prop_df) in enumerate(propagations_dict.items()):
 
-        config_name = split_title(config_name, 10)
+        # Use human-readable label and consistent color per configuration
+        display_label = RANDOMIZATION_NAMES.get(config_name, config_name)
+        config_color = get_randomization_colors(display_label)
+        config_name = split_title(display_label, 10)
 
         # Merge with position data
         merged_data = pd.merge(prop_df, neuron_position_data, on="root_id")
@@ -430,8 +431,8 @@ def visualize_steps_separated_compact(
             # Calculate alpha values based on activation strength
             alphas = 0.3 + 0.4 * norm_values
 
-            # Plot density as scatter with varying alpha
-            rgba_colors = np.array([to_rgba(input_color, alpha=a) for a in alphas])
+            # Plot density as scatter with varying alpha (per-configuration color)
+            rgba_colors = np.array([to_rgba(config_color, alpha=a) for a in alphas])
 
             ax.scatter(
                 x_coords,
@@ -468,7 +469,7 @@ def visualize_steps_separated_compact(
             neuron_sample["pos_x"],
             neuron_sample["pos_y"],
             neuron_sample["pos_z"],
-            c=[input_color],
+            c=[config_color],
             s=neuron_sizes,
             alpha=0.7,
             edgecolors="none",
@@ -512,8 +513,8 @@ def visualize_steps_separated_compact(
                 ax.set_ylabel("Y", labelpad=-10)
                 ax.set_zlabel("Z", labelpad=-10)
 
-            # Get color for this step
-            color = step_colors[step - 1]
+            # Per-configuration color for all steps
+            color = config_color
 
             # Filter data for this step
             act_col = f"activation_{step}"

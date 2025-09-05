@@ -4,7 +4,7 @@ from utils.randomizers.randomizers_helpers import compute_individual_synapse_len
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .plot_config import RANDOMIZATION_COLORS, RANDOMIZATION_NAMES, apply_plot_style, get_randomization_colors
+from .plot_config import RANDOMIZATION_NAMES, get_randomization_colors
 
 
 def plot_synapse_length_distributions(neuron_coords, conns_dict, use_density=True, num_confidence_interval_se=1):
@@ -74,7 +74,7 @@ def plot_synapse_length_distributions(neuron_coords, conns_dict, use_density=Tru
         ax.axvline(mean_nm, ls='--', c='k', lw=1)
         # Display mean in µm
         ax.text(mean_nm*1.05, 0.7*max_val,
-               f"Mean: {mean_nm / 1e3:,.2f} µm", fontsize=12)
+               f"Mean: {mean_nm / 1e3:,.2f} µm")
 
         # Total wiring length (m)
         tot_nm = float(np.sum(L * w))

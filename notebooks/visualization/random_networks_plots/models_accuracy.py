@@ -141,7 +141,7 @@ def grouped_accuracy_comparison_4groups(df: pd.DataFrame) -> plt.Figure:
         ("Biological",            [RANDOMIZATION_NAMES["biological"]]),
         ("Mean length-constr.",   [RANDOMIZATION_NAMES["neuron_binned"],
                                    RANDOMIZATION_NAMES["random_binned"]]),
-        ("Total length-constr.",  [RANDOMIZATION_NAMES["random_pruned"],
+        ("Total length-constr.",  [# RANDOMIZATION_NAMES["random_pruned"],
                                    RANDOMIZATION_NAMES["connection_pruned"]]),
         ("No constraints",        [RANDOMIZATION_NAMES["unconstrained"]]),
     ])
@@ -165,7 +165,7 @@ def grouped_accuracy_comparison_4groups(df: pd.DataFrame) -> plt.Figure:
     gap = 1.2      # separació extra entre blocs; ajusta’l al gust
     x = 0
 
-    for group_name, strategies in groups.items():
+    for _, strategies in groups.items():
         for strat in strategies:
             bar_positions.append(x)
             bar_means.append(stats.at[strat, "mean"])
@@ -224,7 +224,7 @@ def task_accuracy_comparison():
         RANDOMIZATION_NAMES["biological"],
         RANDOMIZATION_NAMES["neuron_binned"],
         RANDOMIZATION_NAMES["random_binned"],
-        RANDOMIZATION_NAMES["random_pruned"],
+        # RANDOMIZATION_NAMES["random_pruned"],
         RANDOMIZATION_NAMES["connection_pruned"],
         RANDOMIZATION_NAMES["unconstrained"],
     ]
@@ -232,16 +232,15 @@ def task_accuracy_comparison():
     # Made-up performance data for three tasks (percentage accuracy)
     # Reorganized: each row is a task, each column is a network
     task_data = {
-        "Color\nDiscrimination": [100, 100, 100, 100, 100, 100],
-        "Numerical\nDiscrimination": [84, 82, 82, 92, 91, 92],
-        "Shape\nRecognition": [64, 60, 63, 69, 69, 70]
+        "Color\nDiscrimination": [100, 100, 100, 100, 100],
+        "Numerical\nDiscrimination": [84, 82, 82, 91, 92],
+        "Shape\nRecognition": [64, 60, 63, 69, 70]
     }
 
-    # Made-up error bars (standard error) - reorganized to match
     task_errors = {
-        "Color\nDiscrimination": [0, 0, 0, 0, 0, 0],
-        "Numerical\nDiscrimination": [0, 0, 0, 0, 0, 0],
-        "Shape\nRecognition": [0, 0, 0, 0, 0, 0]
+        "Color\nDiscrimination": [0, 0, 0, 0, 0],
+        "Numerical\nDiscrimination": [0, 0, 0, 0, 0],
+        "Shape\nRecognition": [0, 0, 0, 0, 0]
     }
 
     # Set width of bars

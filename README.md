@@ -48,39 +48,35 @@ pip install .[all]
 
 ## Data preparation
 
-You can create input data using the scripts in 'input_data_creation', like such:
-
-Approximate Number System:
+Quick start:
 ```bash
-python input_data_creation/points_creator.py --img_dir images/one_to_ten/train --easy
-python input_data_creation/points_creator.py --img_dir images/one_to_ten/test --easy
+pip install cogstim
+# Shape recognition (circle vs star)
+python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20
+# Colour recognition (yellow vs blue), no positional jitter
+python -m cogstim.cli --color_recognition --no-jitter
+# Approximate Number System (ANS), easy ratios
+python -m cogstim.cli --ans --easy --train_num 100 --test_num 40
+# Single-colour dot arrays (1–5), equalized total surface
+python -m cogstim.cli --one_colour --min_point_num 1 --max_point_num 5
+# Rotated stripe patterns (lines)
+python -m cogstim.cli --lines --train_num 50 --test_num 20 --angles 0 45 90 135 --min_stripes 3 --max_stripes 5
 ```
 
-Shapes:
-```bash
-python input_data_creation/shapes_creator.py --shapes
+Output directory structure remains:
 ```
-Colors:
-
-```bash
-python input_data_creation/shapes_creator.py --colors
-```
-
-You can also place your custom input data in the images directory. The structure of directories needs to be:
-```
-images/
-├── your_directory/
-    ├── train/
-    │   ├── class_1/
-    │   ├── class_2/
-    │   └── class_n/
-    └── test/
-        ├── class_1/
-        ├── class_2/
-        └── class_n/
+images/your_directory/
+├── train/
+│   ├── class_1/
+│   ├── class_2/
+│   └── class_n/
+└── test/
+    ├── class_1/
+    ├── class_2/
+    └── class_n/
 ```
 
-And the model will automatically pick the number of output classes it needs to train on.
+Models will automatically infer the number of output classes from this structure.
 
 ## Training
 

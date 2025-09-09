@@ -263,10 +263,6 @@ connections_refined.csv
 new_data
 supplementary_data/*
 
-# plots
-plots/*
-utils/plots/*
-
 # claude stuff
 CLAUDE.md
 

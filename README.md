@@ -52,16 +52,18 @@ Quick start:
 ```bash
 pip install cogstim
 # Shape recognition (circle vs star)
-python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20
+cogstim shapes --train-num 60 --test-num 20
 # Colour recognition (yellow vs blue), no positional jitter
-python -m cogstim.cli --color_recognition --no-jitter
+cogstim colours --train-num 60 --test-num 20 --no-jitter
 # Approximate Number System (ANS), easy ratios
-python -m cogstim.cli --ans --easy --train_num 100 --test_num 40
+cogstim ans --ratios easy --train-num 100 --test-num 40
 # Single-colour dot arrays (1–5), equalized total surface
-python -m cogstim.cli --one_colour --min_point_num 1 --max_point_num 5
+cogstim one-colour --train-num 50 --test-num 20 --min-point-num 1 --max-point-num 5
 # Rotated stripe patterns (lines)
-python -m cogstim.cli --lines --train_num 50 --test_num 20 --angles 0 45 90 135 --min_stripes 3 --max_stripes 5
+cogstim lines --train-num 50 --test-num 20 --angles 0 45 90 135 --min-stripes 3 --max-stripes 5
 ```
+
+For more information and all available tasks, see the [cogstim documentation](https://github.com/eudald-seeslab/cogstim).
 
 Output directory structure remains:
 ```

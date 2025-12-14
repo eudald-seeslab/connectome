@@ -143,3 +143,51 @@ def guess_your_plots(config_):
         if not config_.data_type == "mnist":
             return ["point_num"]
     return []
+
+def plot_ans_accuracies_by_randomization(all_results: pd.DataFrame, out="ans_accuracy", dpi=300):
+    apply_plot_style()  # usa el teu estil
+
+    df = all_results.copy()
+    df["key"] = df["dataframe"].map(lambda k: NAME_ALIAS.get(k, k))
+    df["label"] = df["key"].map(RANDOMIZATION_NAMES)
+    df["color"] = df["label"].map(get_randomization_colors)
+
+    # manté només els presents i ordena com a la llegenda
+    df = df[df["label"].isin(ORDER)]
+    df["label"] = pd.Categorical(df["label"], categories=ORDER, ordered=True)
+    df = df.sort_values("label")
+
+    x = np.arange(len(df))
+    y = df["w"].to_numpy(float)
+    yerr = df["w_se"].to_numpy(float)
+    colors = df["color"].to_list()
+    labels = df["label"].to_list()
+
+    width_inches = 183 / 25.4
+    height_inches = width_inches * 0.75
+    fig, ax = plt.subplots(figsize=(width_inches, height_inches), dpi=300)
+
+    for i, (yi, sei, ci) in enumerate(zip(y, yerr, colors)):
+        ax.errorbar(i, yi, yerr=sei, fmt="o", color=ci, capsize=4, elinewidth=2)
+
+    # eix X compacte, sense tallar punts
+    ax.set_xlim(-0.5, len(x) - 0.5)
+    ax.set_xticks(x, labels, rotation=35, ha="right")
+
+    # eix Y compacte (amb marge per a les barres d’error)
+    pad = 5 * (np.nanmax(yerr) if len(yerr) else 0.0)
+    ax.set_ylim(y.min() - pad, y.max() + pad)
+
+    ax.set_ylabel("Weber fraction")
+    ax.grid(axis="y", linestyle="--", linewidth=0.6, alpha=0.6)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    fig.tight_layout(pad=0.2)
+
+    plots_dir = os.path.join("../..", "plots")
+    os.makedirs(plots_dir, exist_ok=True)
+    fig.savefig(os.path.join(plots_dir, f"{out}.png"), dpi=300, bbox_inches="tight")
+    fig.savefig(os.path.join(plots_dir, f"{out}.pdf"), dpi=300, bbox_inches="tight")
+    
+    return fig, ax

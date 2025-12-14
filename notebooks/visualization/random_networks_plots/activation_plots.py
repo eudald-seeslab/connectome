@@ -11,10 +11,11 @@ from .plot_config import apply_plot_style, get_randomization_colors, RANDOMIZATI
 
 
 def plot_activation_statistics(
-    propagations_dict, neuron_position_data, num_steps=4, fig_width=120
+    propagations_dict, neuron_position_data, num_steps=4, fig_width=120,
+    axes=None, show_legend=True, show_title=True
 ):
     """
-    Plot statistics about neuronal activations across different configurations in Nature journal style.
+    Plot statistics about neuronal activations across different configurations.
 
     Parameters:
     -----------
@@ -24,14 +25,18 @@ def plot_activation_statistics(
         DataFrame containing position data for neurons
     fig_width : int
         Width in mm (183mm for double-column in Nature)
+    axes : tuple of 3 Axes, optional
+        If provided, plot on these axes instead of creating new figures
+    show_legend : bool
+        Whether to show legends on individual plots
+    show_title : bool
+        Whether to show titles on plots
 
     Returns:
     --------
     tuple
-        Three matplotlib.figure.Figure objects: one for activation percentages, one for activation distances,
-        and one for rational cell types activation percentages.
+        Three axes objects (or figures if axes not provided)
     """
-    # Apply centralized plotting style (small-text override)
     apply_plot_style({
         "font.size": 12,
         "axes.labelsize": 12,
@@ -47,28 +52,23 @@ def plot_activation_statistics(
     styles = {
         "Biological":        dict(marker="o",  ls="-", lw=1.1, zorder=4, alpha=.8),
         "Unconstrained":     dict(marker="s", ls="--", lw=2.2, alpha=.8),
-        "Random pruned":     dict(marker="^", ls=":",  lw=2.2, alpha=.8),
         "Connection-pruned": dict(marker="v", ls="--", lw=2.2, alpha=.8),
-        "Random bin-wise":   dict(marker="d", ls=":",  lw=2.2, alpha=.8),
+        "Binned":   dict(marker="d", ls=":",  lw=2.2, alpha=.8),
         "Neuron binned":     dict(marker="P", ls="--", lw=2.2, alpha=.8),
     }   
 
-    # Calculate metrics for each configuration
     configs = list(propagations_dict.keys())
     activation_percentages = {config: [] for config in configs}
     activation_distances = {config: [] for config in configs}
-    rational_percentages = {config: [] for config in configs}  # New metric
+    rational_percentages = {config: [] for config in configs}
 
-    # Define rational cell types
     rational_cell_types = ["KCapbp-m", "KCapbp-ap2", "KCapbp-ap1"]
     
-    # Count total rational neurons
     total_rational_neurons = neuron_position_data[
         neuron_position_data['cell_type'].isin(rational_cell_types)
     ]['root_id'].nunique()
 
     for config, prop_df in propagations_dict.items():
-        # Calculate percentage of neurons active at each step
         total_neurons = len(neuron_position_data)
 
         for step in range(1, num_steps + 1):
@@ -79,7 +79,6 @@ def plot_activation_statistics(
                     100 * active_neurons / total_neurons
                 )
                 
-                # Calculate percentage of rational cell types active
                 merged_rational = pd.merge(
                     prop_df[prop_df[act_col] > 0],
                     neuron_position_data[neuron_position_data['cell_type'].isin(rational_cell_types)],
@@ -93,10 +92,8 @@ def plot_activation_statistics(
                 activation_percentages[config].append(0)
                 rational_percentages[config].append(0)
 
-        # Merge prop_df with neuron_position_data to get positions
         merged = pd.merge(prop_df, neuron_position_data, on="root_id")
 
-        # Calculate average distance of active neurons from eye
         input_active = merged[merged["input"] > 0]
         if not input_active.empty:
             eye_position = input_active[["pos_x", "pos_y", "pos_z"]].mean().values
@@ -118,13 +115,18 @@ def plot_activation_statistics(
             else:
                 activation_distances[config].append(0)
 
-    # Convert mm to inches (1 mm = 0.0393701 inches)
     fig_width_in = fig_width * 0.0393701
     fig_height_in = fig_width_in / 1.4
 
-    # Create figure for activation percentages
-    fig1, ax1 = plt.subplots(figsize=(fig_width_in, fig_height_in))
-    for i, config in enumerate(configs):
+    if axes is not None:
+        ax1, ax2, ax3 = axes
+    else:
+        _, ax1 = plt.subplots(figsize=(fig_width_in, fig_height_in))
+        _, ax2 = plt.subplots(figsize=(fig_width_in, fig_height_in))
+        _, ax3 = plt.subplots(figsize=(fig_width_in, fig_height_in))
+
+    # Plot activation percentages
+    for config in configs:
         ax1.plot(
             range(1, num_steps + 1),
             activation_percentages[config],
@@ -135,16 +137,17 @@ def plot_activation_statistics(
 
     ax1.set_xlabel("Message Passing Step")
     ax1.set_ylabel("Neurons Active (%)")
-    ax1.set_title("Neural Activation", pad=7)
+    if show_title:
+        ax1.set_title("Neural Activation", pad=7)
     ax1.grid(True, linestyle="--", alpha=0.5, linewidth=0.5)
     ax1.set_xticks(range(1, num_steps + 1))
     ymax1 = max([max(vals) for vals in activation_percentages.values()]) * 1.1
     ax1.set_ylim(0, ymax1)
-    ax1.legend(loc="upper left", fontsize=9)
+    if show_legend:
+        ax1.legend(loc="upper left", fontsize=9)
 
-    # Create figure for activation distances
-    fig2, ax2 = plt.subplots(figsize=(fig_width_in, fig_height_in))
-    for i, config in enumerate(configs):
+    # Plot activation distances
+    for config in configs:
         ax2.plot(
             range(1, num_steps + 1),
             activation_distances[config],
@@ -155,16 +158,17 @@ def plot_activation_statistics(
 
     ax2.set_xlabel("Message Passing Step")
     ax2.set_ylabel("Avg. Distance from Input (μm)")
-    ax2.set_title("Activation Propagation Distance", pad=7)
+    if show_title:
+        ax2.set_title("Activation Propagation Distance", pad=7)
     ax2.grid(True, linestyle="--", alpha=0.5, linewidth=0.5)
     ax2.set_xticks(range(1, num_steps + 1))
     ymax2 = max([max(vals) for vals in activation_distances.values()]) * 1.1
     ax2.set_ylim(0, ymax2)
-    ax2.legend(loc="lower right", fontsize=9)
+    if show_legend:
+        ax2.legend(loc="lower right", fontsize=9)
 
-    # Create figure for rational cell types activation
-    fig3, ax3 = plt.subplots(figsize=(fig_width_in, fig_height_in))
-    for i, config in enumerate(configs):
+    # Plot rational cell types activation
+    for config in configs:
         ax3.plot(
             range(1, num_steps + 1),
             rational_percentages[config],
@@ -174,15 +178,17 @@ def plot_activation_statistics(
         )
 
     ax3.set_xlabel("Message Passing Step")
-    ax3.set_ylabel("Rational Neurons Active (%)")
-    ax3.set_title("Rational Cell Types Activation", pad=7)
+    ax3.set_ylabel("Kenyon Neurons Active (%)")
+    if show_title:
+        ax3.set_title("Kenyon Cell Types Activation", pad=7)
     ax3.grid(True, linestyle="--", alpha=0.5, linewidth=0.5)
     ax3.set_xticks(range(1, num_steps + 1))
     ymax3 = max([max(vals) for vals in rational_percentages.values() if vals]) * 1.1 if any([vals for vals in rational_percentages.values()]) else 100
     ax3.set_ylim(0, ymax3)
-    ax3.legend(loc="upper left", fontsize=9)
+    if show_legend:
+        ax3.legend(loc="upper left", fontsize=9)
 
-    return fig1, fig2, fig3
+    return ax1, ax2, ax3
 
 
 def get_active_neuron_bounds(

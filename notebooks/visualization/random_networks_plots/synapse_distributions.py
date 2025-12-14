@@ -4,7 +4,7 @@ from utils.randomizers.randomizers_helpers import compute_individual_synapse_len
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .plot_config import RANDOMIZATION_NAMES, get_randomization_colors
+from .plot_config import RANDOMIZATION_NAMES, apply_plot_style, get_randomization_colors
 
 
 def plot_synapse_length_distributions(neuron_coords, conns_dict, use_density=True, num_confidence_interval_se=1):
@@ -239,3 +239,191 @@ def plot_synapse_counts_histogram(conns_dict, bins=30, figsize=None, log_scale=F
     axs[-1].set_xlabel("Synapse Count")
 
     return fig
+
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
+from matplotlib.lines import Line2D
+
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
+from matplotlib.lines import Line2D
+from matplotlib.ticker import FuncFormatter, LogFormatterMathtext, ScalarFormatter
+
+def plot_overlay_wiring_distributions(neuron_coords, conns_dict,
+                                      biological_key="Biological",
+                                      use_density=True,
+                                      xmax_percentile=99,
+                                      bins=100,
+                                      x_unit="nm",
+                                      logy=False,
+                                      fig_width_mm=90,
+                                      font_size=8,
+                                      show_mean_lines=True,
+                                      mean_label=True,
+                                      ax=None):
+    """
+    Overlay histogram of synapse lengths for multiple network types.
+    
+    Returns (ax, metrics) dict with totals and means.
+    """
+
+    apply_plot_style()
+
+    names = list(conns_dict.keys())
+    for name, df in conns_dict.items():
+        if "__syn_len_nm" not in df.columns:
+            df["__syn_len_nm"] = compute_individual_synapse_lengths(df, neuron_coords)
+
+    d_nm = {name: df["__syn_len_nm"].to_numpy() for name, df in conns_dict.items()}
+    w    = {n: np.asarray(conns_dict[n]["syn_count"], float) for n in names}
+
+    totals_km, means_um = {}, {}
+    for n in names:
+        L = np.asarray(d_nm[n], float)
+        ww = w[n]
+        totals_km[n] = float(np.sum(L * ww) / 1e12)
+        means_um[n]  = float(np.average(L, weights=ww) / 1e3)
+
+    x_scale = 1.0 if x_unit == "nm" else 1e-3
+    x_label = f"Synapse length ({'nm' if x_unit=='nm' else 'µm'})"
+    d_plot = {n: np.asarray(d_nm[n], float) * x_scale for n in names}
+
+    # Límits i bins comuns
+    all_d = np.concatenate([d_plot[n] for n in names])
+    xmax  = np.percentile(all_d, xmax_percentile)
+    edges = np.linspace(0, xmax, int(bins)) if isinstance(bins, (int, float)) else \
+            np.histogram_bin_edges(all_d[all_d <= xmax], bins=bins)
+
+    # Helpers de color/etiqueta
+    def label_of(n):
+        return RANDOMIZATION_NAMES.get(n, n) if 'RANDOMIZATION_NAMES' in globals() else n
+
+    def color_of(n):
+        # Manté la paleta dels altres gràfics
+        if n == biological_key:
+            return "#000000"
+        return get_randomization_colors(n) if 'get_randomization_colors' in globals() else '0.3'
+
+    inches = fig_width_mm / 25.4
+    rc = {
+        "font.size": font_size,
+        "font.family": "Arial",
+        "axes.linewidth": 0.6,
+        "xtick.major.width": 0.6,
+        "ytick.major.width": 0.6,
+        "pdf.fonttype": 42, "ps.fonttype": 42,
+    }
+
+    with mpl.rc_context(rc):
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(inches, inches*0.6), constrained_layout=True)
+        else:
+            fig = ax.get_figure()
+
+        # 1) Biològic: àrea farcida en negre
+        if biological_key in d_plot:
+            ax.hist(d_plot[biological_key],
+                    bins=edges, weights=w[biological_key], density=use_density,
+                    histtype='stepfilled', color=color_of(biological_key),
+                    alpha=0.15, linewidth=0.8, edgecolor='none', zorder=0)
+
+        # 2) Altres ensembles: línia discontínua amb la seva paleta
+        for n in names:
+            if n == biological_key:
+                continue
+            ax.hist(d_plot[n],
+                    bins=edges, weights=w[n], density=use_density,
+                    histtype='step', linewidth=1.0,
+                    color=color_of(n), linestyle=(0, (4, 2)), alpha=0.95, zorder=2)
+
+        # Eixos i escala
+        ax.set_xlabel(x_label)
+        ax.set_ylabel("Density" if use_density else "Count")
+
+        if logy:
+            ax.set_yscale('log')
+            ax.yaxis.set_major_formatter(LogFormatterMathtext())
+            sx = ScalarFormatter(useMathText=True); sx.set_scientific(True); sx.set_powerlimits((0,0)); sx.set_useOffset(False)
+            ax.xaxis.set_major_formatter(sx)
+        else:
+            s = ScalarFormatter(useMathText=True); s.set_scientific(True); s.set_powerlimits((0,0)); s.set_useOffset(False)
+            ax.xaxis.set_major_formatter(s)
+            sy = ScalarFormatter(useMathText=True); sy.set_scientific(True); sy.set_powerlimits((0,0)); sy.set_useOffset(False)
+            ax.yaxis.set_major_formatter(sy)
+
+        if show_mean_lines:
+            fig.canvas.draw_idle()
+            y0, y1 = ax.get_ylim()
+            occupied_spaces = []
+            k = 0
+            
+            def space_is_occupied(space):
+                for occupied_space in occupied_spaces:
+                    if abs(space[0] - occupied_space[0]) < 2000 and abs(space[1] - occupied_space[1]) < 2000:
+                        return True
+                return False
+                
+            for n in names:
+                mean_x = (means_um[n] if x_unit == "um" else means_um[n]*1e3)
+                ax.vlines(mean_x, y0, y1, colors=color_of(n), linestyles='--',
+                          linewidth=0.7, alpha=0.6, zorder=1)
+
+                if mean_label:
+                    space = (mean_x + 5500, y1 * 0.98)
+                    while space_is_occupied(space):
+                        k += 1
+                        space = (mean_x + 5500, y1 * (0.98 - k * 0.06))
+
+                    k = 0
+                    occupied_spaces.append(space)
+                    txt = f"{means_um[n]:.1f} µm" if x_unit == "um" else f"{mean_x:,.0f} nm"
+                    ax.text(space[0], space[1], txt,
+                            ha='center', va='top', fontsize=font_size-1,
+                            color=color_of(n))
+
+        # 4) Llegenda amb totals (km) mantenint el codi de color
+        handles, texts = [], []
+        for n in names:
+            if n == biological_key:
+                fc = mpl.colors.to_rgba(color_of(n), 0.25) 
+                h = Patch(facecolor=fc, edgecolor='black', linewidth=0.8)
+            else:
+                h = Line2D([0], [0], color=color_of(n), lw=1.0, linestyle=(0, (4, 2)))
+            handles.append(h)
+            texts.append(f"{label_of(n)}: {totals_km[n]:.1f} km")
+        ax.legend(handles, texts, title="Total synapse lengths",
+                  loc="center right", bbox_to_anchor=(1.0, 0.55), 
+                  frameon=True, framealpha=0.85,
+                  borderpad=0.4, handlelength=1.4, fontsize=font_size,
+                  title_fontsize=font_size)
+
+        # Estètica minimalista
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
+    # --- anotació superior: "Means" + dues fletxes a dues mitjanes representatives ---
+    if show_mean_lines:
+        # (biològica i la més gran)
+        mean_x_vals = {n: (means_um[n] if x_unit == "um" else means_um[n]*1e3) for n in names}
+        x_left  = mean_x_vals.get(biological_key, min(mean_x_vals.values()))
+        x_right = max(mean_x_vals.values())
+
+        x_placement = 0.35
+        # text per sobre del gràfic
+        ax.text(x_placement, 1.02, "Average synapse lengths", transform=ax.transAxes, ha='center', va='bottom',
+                fontsize=font_size, color='0.2', clip_on=False)
+
+        # fletxes cap avall des del text cap a les dues línies de mitjana
+        for x_target in (x_left, x_right):
+            ax.annotate("", xy=(x_target, y1*0.99), xycoords="data",
+                        xytext=(x_placement, 1.02), textcoords=ax.transAxes,
+                        arrowprops=dict(linestyle='--', arrowstyle='->', lw=0.6, color='0.2'),
+                        annotation_clip=False)
+
+
+    metrics = {"total_km": totals_km, "mean_um": means_um}
+    return ax, metrics

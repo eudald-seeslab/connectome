@@ -1,8 +1,12 @@
 import os
+import glob
 import traceback
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
+
+from connectome.visualization.plot_config import apply_plot_style, RANDOMIZATION_NAMES, RANDOMIZATION_COLORS, get_randomization_colors
 
 pd.options.mode.chained_assignment = None
 
@@ -144,15 +148,157 @@ def guess_your_plots(config_):
             return ["point_num"]
     return []
 
-def plot_ans_accuracies_by_randomization(all_results: pd.DataFrame, out="ans_accuracy", dpi=300):
-    apply_plot_style()  # usa el teu estil
+
+########################################################
+# All of this needs to be moved
+########################################################
+
+ORDER = ["Biological", "Binned", "Neuron binned", "Unconstrained", "Connection-pruned"]
+NAME_ALIAS = {
+    "biological": "biological",
+    "binned": "random_binned",
+    "random_binned": "random_binned",
+    "neuron_binned": "neuron_binned",
+    "unconstrained": "unconstrained",
+    "connection_pruned": "connection_pruned",
+}
+
+def _prepare_results_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Parse filename, compute Weber ratio, equalized flag, and return tidy df."""
+    df = df.copy()
+
+    # Parse counts from "Image" name "..._<yellow>_<blue>_...":
+    df["yellow"] = df["Image"].apply(lambda x: os.path.basename(x).split("_")[1])
+    df["blue"]   = df["Image"].apply(lambda x: os.path.basename(x).split("_")[2])
+
+    # Compute Weber ratio robustly
+    def _weber(row):
+        try:
+            y = int(row["yellow"])
+            b = int(row["blue"])
+            lo, hi = sorted((y, b))
+            return np.inf if lo == 0 else hi / lo
+        except Exception:
+            return np.nan
+
+    df["weber_ratio"] = df.apply(_weber, axis=1)
+
+    # remove weber ratios smaller that 1.33
+    df = df[df["weber_ratio"] >= 1.33]
+    
+    df["equalized"] = df["Image"].str.lower().str.contains("equalized")
+    return df
+
+
+def _aggregate(df: pd.DataFrame) -> pd.DataFrame:
+    """Mean accuracy and standard error by Weber ratio (only equalized)."""
+    tidy = df[df["equalized"] == True].copy()
+
+    agg = (
+        tidy.groupby("weber_ratio")["Is correct"]
+        .agg(mean="mean", std="std", count="count")
+        .reset_index()
+        .dropna(subset=["weber_ratio"])
+    )
+    agg["mean"] *= 100
+    agg["std"]  *= 100
+    agg["se"]   = agg["std"] / np.sqrt(agg["count"].clip(lower=1))
+    agg["weber_ratio"] = agg["weber_ratio"].round(3)
+
+    return agg.sort_values("weber_ratio")
+
+
+def plot_weber_by_randomization(
+    folder: str,
+    files_to_keys: dict[str, str] | None = None,
+    *,
+    min_weber: float | None = None,
+    save_path: str | None = None,
+    ax=None,
+    show_legend=True,
+):
+    """
+    Compare classification accuracy vs. Weber ratio for biological connectome
+    and multiple randomizations (surface-equalized only).
+    """
+    if files_to_keys is None:
+        files_to_keys = {
+            "biological_results.csv":        "biological",
+            "binned_results.csv":            "random_binned",
+            "neuron_binned_results.csv":     "neuron_binned",
+            "unconstrained_results.csv":     "unconstrained",
+            "connection_pruned_results.csv": "connection_pruned",
+            "random_pruned_results.csv":     "random_pruned",
+        }
+
+    curves = []
+    for filename, key in files_to_keys.items():
+        candidates = [
+            os.path.join(folder, filename),
+            *glob.glob(os.path.join(folder, filename))
+        ]
+        csv_path = next((p for p in candidates if os.path.exists(p)), None)
+        if csv_path is None:
+            continue
+
+        df = pd.read_csv(csv_path)
+        df = _prepare_results_df(df)
+        agg = _aggregate(df)
+        if min_weber is not None:
+            agg = agg[agg["weber_ratio"] >= float(min_weber)]
+        if agg.empty:
+            continue
+
+        display = RANDOMIZATION_NAMES.get(key, key)
+        color = RANDOMIZATION_COLORS.get(key, "black")
+        curves.append((display, color, agg))
+
+    apply_plot_style()
+
+    if ax is None:
+        width_inches = 183 / 25.4
+        height_inches = width_inches * 0.75
+        fig, ax = plt.subplots(figsize=(width_inches, height_inches), dpi=300)
+    else:
+        fig = ax.get_figure()
+
+    for label, color, data in curves:
+        ax.errorbar(
+            data["weber_ratio"],
+            data["mean"],
+            yerr=data["se"],
+            label=label,
+            color=color,
+            marker="o",
+            linewidth=2,
+            capsize=3,
+            capthick=1,
+        )
+
+    ax.set_xlabel("Weber Ratio", fontsize=16)
+    ax.set_ylabel("Classification Accuracy (%)", fontsize=16)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.yaxis.grid(True, linestyle="--", alpha=0.3)
+    ax.xaxis.grid(True, linestyle="--", alpha=0.3)
+    ax.tick_params(labelsize=14)
+    ax.set_ylim(40, 105)
+    if show_legend:
+        ax.legend(frameon=False, loc="lower right", fontsize=14)
+
+    if save_path:
+        fig.savefig(save_path, dpi=300, bbox_inches="tight")
+
+    return ax
+
+def plot_ans_accuracies_by_randomization(all_results: pd.DataFrame, ax=None, save=False):
+    """Plot Weber fraction by randomization type."""
+    apply_plot_style()
 
     df = all_results.copy()
     df["key"] = df["dataframe"].map(lambda k: NAME_ALIAS.get(k, k))
     df["label"] = df["key"].map(RANDOMIZATION_NAMES)
     df["color"] = df["label"].map(get_randomization_colors)
 
-    # manté només els presents i ordena com a la llegenda
     df = df[df["label"].isin(ORDER)]
     df["label"] = pd.Categorical(df["label"], categories=ORDER, ordered=True)
     df = df.sort_values("label")
@@ -163,18 +309,19 @@ def plot_ans_accuracies_by_randomization(all_results: pd.DataFrame, out="ans_acc
     colors = df["color"].to_list()
     labels = df["label"].to_list()
 
-    width_inches = 183 / 25.4
-    height_inches = width_inches * 0.75
-    fig, ax = plt.subplots(figsize=(width_inches, height_inches), dpi=300)
+    if ax is None:
+        width_inches = 183 / 25.4
+        height_inches = width_inches * 0.75
+        fig, ax = plt.subplots(figsize=(width_inches, height_inches), dpi=300)
+    else:
+        fig = ax.get_figure()
 
     for i, (yi, sei, ci) in enumerate(zip(y, yerr, colors)):
         ax.errorbar(i, yi, yerr=sei, fmt="o", color=ci, capsize=4, elinewidth=2)
 
-    # eix X compacte, sense tallar punts
     ax.set_xlim(-0.5, len(x) - 0.5)
     ax.set_xticks(x, labels, rotation=35, ha="right")
 
-    # eix Y compacte (amb marge per a les barres d’error)
     pad = 5 * (np.nanmax(yerr) if len(yerr) else 0.0)
     ax.set_ylim(y.min() - pad, y.max() + pad)
 
@@ -183,11 +330,10 @@ def plot_ans_accuracies_by_randomization(all_results: pd.DataFrame, out="ans_acc
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    fig.tight_layout(pad=0.2)
-
-    plots_dir = os.path.join("../..", "plots")
-    os.makedirs(plots_dir, exist_ok=True)
-    fig.savefig(os.path.join(plots_dir, f"{out}.png"), dpi=300, bbox_inches="tight")
-    fig.savefig(os.path.join(plots_dir, f"{out}.pdf"), dpi=300, bbox_inches="tight")
+    if save:
+        plots_dir = os.path.join("../..", "plots")
+        os.makedirs(plots_dir, exist_ok=True)
+        fig.savefig(os.path.join(plots_dir, "ans_accuracy.png"), dpi=300, bbox_inches="tight")
+        fig.savefig(os.path.join(plots_dir, "ans_accuracy.pdf"), dpi=300, bbox_inches="tight")
     
-    return fig, ax
+    return ax

@@ -211,26 +211,22 @@ def grouped_accuracy_comparison_4groups(df: pd.DataFrame) -> plt.Figure:
 
 
 
-def task_accuracy_comparison():
-    # Task types (now on x-axis)
+def task_accuracy_comparison(ax=None, show_legend=True):
+    """Plot task accuracy comparison across network types."""
     tasks = [
         "Color\nDiscrimination",
         "Numerical\nDiscrimination", 
         "Shape\nRecognition",
     ]
 
-    # Network configurations (now as colors/legend)
     networks = [
         RANDOMIZATION_NAMES["biological"],
         RANDOMIZATION_NAMES["neuron_binned"],
         RANDOMIZATION_NAMES["random_binned"],
-        # RANDOMIZATION_NAMES["random_pruned"],
         RANDOMIZATION_NAMES["connection_pruned"],
         RANDOMIZATION_NAMES["unconstrained"],
     ]
 
-    # Made-up performance data for three tasks (percentage accuracy)
-    # Reorganized: each row is a task, each column is a network
     task_data = {
         "Color\nDiscrimination": [100, 100, 100, 100, 100],
         "Numerical\nDiscrimination": [84, 82, 82, 91, 92],
@@ -243,50 +239,47 @@ def task_accuracy_comparison():
         "Shape\nRecognition": [0, 0, 0, 0, 0]
     }
 
-    # Set width of bars
-    bar_width = 0.14  # Slightly smaller to accommodate 4 networks
-    capsize = 2
+    bar_width = 0.14
+    capsize = 3
     index = np.arange(len(tasks))
 
-    # Create the figure with Nature-compatible dimensions
-    fig3, ax = plt.subplots(figsize=(9, 6), dpi=300)
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(9, 6), dpi=300)
+    else:
+        fig = ax.get_figure()
 
-    # Create grouped bars - now grouped by task, colored by network
     for i, network in enumerate(networks):
-        # Get data for this network across all tasks
         network_data = [task_data[task][i] for task in tasks]
         network_errors = [task_errors[task][i] for task in tasks]
         
-        bars = ax.bar(
+        bar_color = get_randomization_colors(network)
+        ax.bar(
             index + i * bar_width,
             network_data,
             bar_width,
             yerr=network_errors,
             label=network,
-            color=get_randomization_colors(network),
+            color=bar_color,
             alpha=0.9,
             capsize=capsize,
-            ecolor="black",
-            error_kw={"elinewidth": 1},
+            ecolor=bar_color,
+            error_kw={"elinewidth": 1, "capthick": 1},
         )
 
-    # Add horizontal line for chance level (50% for binary classification)
     ax.axhline(y=50, linestyle="--", color="#666666", alpha=0.5, linewidth=1)
-
-    # Add text label for chance level
-    ax.text(len(tasks) - 1.35, 45, "Chance level", fontsize=10, color="#666666", 
+    ax.text(len(tasks) - 1.35, 45, "Chance level", fontsize=14, color="#666666", 
             bbox=dict(facecolor='white', edgecolor='#666666', boxstyle='round,pad=0.5', alpha=0.8))
 
-    # Add labels and custom x-axis tick labels
-    ax.set_ylabel("Accuracy (%)")
-    ax.set_ylim(0, 105)  # Slightly higher to accommodate error bars
-    ax.set_xticks(index + bar_width * 1.5)  # Center the labels between groups
-    ax.set_xticklabels(tasks, fontsize=12, rotation=0)  # No rotation needed now
+    ax.set_ylabel("Accuracy (%)", fontsize=16)
+    ax.set_ylim(0, 105)
+    ax.set_xticks(index + bar_width * 1.5)
+    ax.set_xticklabels(tasks, fontsize=14, rotation=0)
+    ax.tick_params(labelsize=14)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.yaxis.grid(True, linestyle="--", alpha=0.3)
+    ax.xaxis.grid(True, linestyle="--", alpha=0.3)
 
-    # Add a legend
-    ax.legend(fontsize=12, loc="lower right", framealpha=0.9)
+    if show_legend:
+        ax.legend(fontsize=14, loc="lower right", frameon=False)
 
-    # Adjust layout
-    plt.tight_layout()
-
-    return fig3
+    return ax

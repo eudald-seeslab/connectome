@@ -7,6 +7,7 @@ from notebooks.visualization.activations_funcs import (
     get_all_connections,
     get_activation_dictionnary,
 )
+from connectome.visualization import RANDOMIZATION_NAMES
 
 # ---------------------------------------------------------------------------
 # Joblib cache setup

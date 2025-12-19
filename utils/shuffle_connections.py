@@ -6,7 +6,6 @@ import argparse
 # Third-party
 
 # Local modules
-from notebooks.visualization.activation_plots.synapse_distributions import plot_synapse_length_distributions
 from paths import PROJECT_ROOT
 from utils.helpers import (
     load_connections,
@@ -135,7 +134,6 @@ if __name__ == "__main__":
             bins=20,
             min_connections_for_binning=10,
             random_state=1234,
-            tolerance=args.tolerance,
         )   
         random_mantain_neuron_wiring_length.to_csv(
             os.path.join(PROJECT_ROOT, "new_data", "connections_random_mantain_neuron_wiring_length.csv"),
@@ -147,6 +145,7 @@ if __name__ == "__main__":
 
     # Plot synapse length distributions
     if args.plot_results:
+        from connectome.visualization import plot_synapse_length_distributions
         conns_to_plot = {"Original": connections}
         if random_unconstrained is not None:
             conns_to_plot["Random unconstrained"] = random_unconstrained

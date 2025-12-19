@@ -36,6 +36,7 @@ setup(
     name="connectome",
     version="0.1.1",
     packages=find_packages(),
+    py_modules=["paths"],
     python_requires=">=3.10",
     install_requires=INSTALL_REQUIRES,
     extras_require={

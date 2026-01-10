@@ -250,7 +250,7 @@ def task_accuracy_comparison(ax=None, show_legend=True) -> plt.Figure:
     ax.axhline(y=50, linestyle="--", color="#666666", alpha=0.5, linewidth=1)
 
     ax.text(
-        len(tasks) - 1.35,
+        len(tasks) - 0.7,
         45,
         "Chance level",
         fontsize=10,
@@ -263,7 +263,7 @@ def task_accuracy_comparison(ax=None, show_legend=True) -> plt.Figure:
         ),
     )
 
-    ax.set_ylabel("Accuracy (%)")
+    ax.set_ylabel("Classification Accuracy (%)")
     ax.set_ylim(0, 105)
     ax.set_xticks(index + bar_width * 1.5)
     ax.set_xticklabels(tasks, fontsize=12, rotation=0)

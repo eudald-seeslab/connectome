@@ -280,6 +280,7 @@ def visualize_steps_separated_compact(
     smoothing=None,
     figsize=(20, 16),
     padding_percent=10,
+    short_version=False,
 ):
     """
     Create a compact grid of 3D visualizations with configurations as rows and steps as columns.
@@ -302,7 +303,8 @@ def visualize_steps_separated_compact(
         Figure size (width, height)
     padding_percent : float
         Percentage of padding to add around the active neurons
-
+    short_version : bool
+        Whether to only plot 2 randomizations instead of 4
     Returns
     -------
     fig : matplotlib.figure.Figure
@@ -312,6 +314,9 @@ def visualize_steps_separated_compact(
         raise ValueError("voxel_size must be provided if smoothing is provided")
     if voxel_size is not None and smoothing is None:
         raise ValueError("smoothing must be provided if voxel_size is provided")
+
+    if short_version:
+        propagations_dict = {k: v for k, v in propagations_dict.items() if k in ["Biological", "Neuron binned", "Connection-pruned"]}
 
     bounds = get_active_neuron_bounds(
         propagations_dict, neuron_position_data, padding_percent, num_steps
@@ -334,51 +339,41 @@ def visualize_steps_separated_compact(
 
         merged_data = pd.merge(prop_df, neuron_position_data, on="root_id")
 
-        # First column: Input visualization
+        # First column: Input visualization (only in middle row)
+        middle_row = len(propagations_dict) // 2
         if len(propagations_dict) > 1:
             ax = axes[i, 0]
         else:
             ax = axes[0]
 
-        _style_3d_axis(ax)
-
-        ax.text2D(
-            -0.2,
-            0.5,
-            config_name_display,
-            transform=ax.transAxes,
-            va="center",
-            ha="center",
-            rotation=90,
-            fontsize=16,
-        )
-
-        if i == 0:
+        if i == middle_row:
+            _style_3d_axis(ax)
             ax.set_title("Input", pad=5)
+            input_data = merged_data[merged_data["input"] > 0].copy()
 
-        input_data = merged_data[merged_data["input"] > 0].copy()
+            if len(input_data) > 0:
+                _plot_activation_step(
+                    ax,
+                    input_data,
+                    "input",
+                    "black",
+                    voxel_size,
+                    smoothing,
+                    max_neurons_percentage,
+                    x_min,
+                    x_max,
+                    y_min,
+                    y_max,
+                    z_min,
+                    z_max,
+                )
 
-        if len(input_data) > 0:
-            _plot_activation_step(
-                ax,
-                input_data,
-                "input",
-                config_color,
-                voxel_size,
-                smoothing,
-                max_neurons_percentage,
-                x_min,
-                x_max,
-                y_min,
-                y_max,
-                z_min,
-                z_max,
-            )
-
-        ax.view_init(elev=30, azim=45)
-        ax.set_xlim(x_min, x_max)
-        ax.set_ylim(y_min, y_max)
-        ax.set_zlim(z_min, z_max)
+            ax.view_init(elev=30, azim=45)
+            ax.set_xlim(x_min, x_max)
+            ax.set_ylim(y_min, y_max)
+            ax.set_zlim(z_min, z_max)
+        else:
+            ax.set_axis_off()
 
         # Process each activation step
         for step in range(1, num_steps + 1):
@@ -393,6 +388,19 @@ def visualize_steps_separated_compact(
                 ax.set_xlabel("X", labelpad=-10)
                 ax.set_ylabel("Y", labelpad=-10)
                 ax.set_zlabel("Z", labelpad=-10)
+
+            # Row labels on the right side (last step column)
+            if step == num_steps:
+                ax.text2D(
+                    1.15,
+                    0.5,
+                    config_name_display,
+                    transform=ax.transAxes,
+                    va="center",
+                    ha="center",
+                    rotation=-90,
+                    fontsize=16,
+                )
 
             act_col = f"activation_{step}"
             step_data = merged_data[merged_data[act_col] > 0].copy()
@@ -422,7 +430,7 @@ def visualize_steps_separated_compact(
             ax.set_ylim(y_min, y_max)
             ax.set_zlim(z_min, z_max)
 
-    plt.subplots_adjust(wspace=-0.5, hspace=-0.06)
+    plt.subplots_adjust(wspace=0.1, hspace=0.1)
     return fig
 
 

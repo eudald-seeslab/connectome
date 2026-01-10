@@ -1,12 +1,9 @@
-<<<<<<< HEAD
-=======
 """Configuration for randomization plots."""
 
 import matplotlib as mpl
 import seaborn as sns
 
 
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56
 RANDOMIZATION_NAMES = {
     "biological": "Biological",
     "neuron_binned": "Neuron binned",
@@ -14,11 +11,7 @@ RANDOMIZATION_NAMES = {
     "unconstrained": "Unconstrained",
     "random_pruned": "Random pruned",
     "connection_pruned": "Connection-pruned",
-<<<<<<< HEAD
-} 
-=======
 }
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56
 
 RANDOMIZATION_COLORS = {
     "biological": "black",
@@ -29,25 +22,13 @@ RANDOMIZATION_COLORS = {
     "connection_pruned": "#9467bd",
 }
 
-<<<<<<< HEAD
-def get_randomization_colors(randomization_name: str):
-    # reverse the randomization_names dictionary
-=======
 
 def get_randomization_colors(randomization_name: str) -> str:
     """Get the color for a randomization strategy by its display name."""
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56
     reverse_randomization_names = {v: k for k, v in RANDOMIZATION_NAMES.items()}
     return RANDOMIZATION_COLORS[reverse_randomization_names[randomization_name]]
 
 
-<<<<<<< HEAD
-# -----------------------------------------------------------------------------
-# Central plotting style (Nature-like). Apply via apply_plot_style() in plots.
-# -----------------------------------------------------------------------------
-
-=======
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56
 PLOT_STYLE_PARAMS = {
     "font.family": "sans-serif",
     "font.sans-serif": ["Arial", "Helvetica"],
@@ -65,24 +46,6 @@ PLOT_STYLE_PARAMS = {
 
 
 def apply_plot_style(overrides: dict | None = None):
-<<<<<<< HEAD
-    """Apply the centralized matplotlib rcParams style.
-
-    Parameters
-    ----------
-    overrides : dict, optional
-        Dictionary with rcParams that should override the defaults.
-    """
-    import matplotlib as mpl
-    import seaborn as sns
-
-    sns.set_theme(style="white", font_scale=1.4)
-
-    style = PLOT_STYLE_PARAMS.copy()
-    if overrides:
-        style.update(overrides)
-    mpl.rcParams.update(style)
-=======
     """Apply the centralized matplotlib rcParams style."""
     sns.set_theme(style="white", font_scale=1.4)
     style = PLOT_STYLE_PARAMS.copy()
@@ -97,4 +60,3 @@ def split_title(title: str, max_length: int = 15) -> str:
         return title.replace("-", "\n").replace(" ", "\n")
     return title
 
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56

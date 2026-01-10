@@ -311,7 +311,8 @@ def plot_overlay_wiring_distributions(neuron_coords, conns_dict,
     inches = fig_width_mm / 25.4
     rc = {
         "font.size": font_size,
-        "font.family": "Arial",
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Liberation Sans", "DejaVu Sans", "Arial", "Helvetica"],
         "axes.linewidth": 0.6,
         "xtick.major.width": 0.6,
         "ytick.major.width": 0.6,
@@ -396,7 +397,7 @@ def plot_overlay_wiring_distributions(neuron_coords, conns_dict,
             handles.append(h)
             texts.append(f"{label_of(n)}: {totals_km[n]:.1f} km")
         ax.legend(handles, texts, title="Total synapse lengths",
-                  loc="center right", bbox_to_anchor=(1.0, 0.55), 
+                  loc="center right", bbox_to_anchor=(1.0, 0.65), 
                   frameon=True, framealpha=0.85,
                   borderpad=0.4, handlelength=1.4, fontsize=font_size,
                   title_fontsize=font_size)
@@ -412,7 +413,7 @@ def plot_overlay_wiring_distributions(neuron_coords, conns_dict,
         x_left  = mean_x_vals.get(biological_key, min(mean_x_vals.values()))
         x_right = max(mean_x_vals.values())
 
-        x_placement = 0.35
+        x_placement = 0.36
         # text per sobre del gràfic
         ax.text(x_placement, 1.02, "Average synapse lengths", transform=ax.transAxes, ha='center', va='bottom',
                 fontsize=font_size, color='0.2', clip_on=False)

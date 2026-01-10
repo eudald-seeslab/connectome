@@ -41,12 +41,7 @@ def plot_activation_statistics(
     Returns
     -------
     tuple
-<<<<<<< HEAD:notebooks/visualization/random_networks_plots/activation_plots.py
         Three axes objects (or figures if axes not provided)
-=======
-        Three matplotlib.figure.Figure objects: activation percentages,
-        activation distances, and rational cell types activation percentages.
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56:connectome/visualization/activation_plots.py
     """
     apply_plot_style({
         "font.size": 12,
@@ -61,22 +56,13 @@ def plot_activation_statistics(
     })
 
     styles = {
-<<<<<<< HEAD:notebooks/visualization/random_networks_plots/activation_plots.py
-        "Biological":        dict(marker="o",  ls="-", lw=1.1, zorder=4, alpha=.8),
-        "Unconstrained":     dict(marker="s", ls="--", lw=2.2, alpha=.8),
-        "Connection-pruned": dict(marker="v", ls="--", lw=2.2, alpha=.8),
-        "Binned":   dict(marker="d", ls=":",  lw=2.2, alpha=.8),
-        "Neuron binned":     dict(marker="P", ls="--", lw=2.2, alpha=.8),
-    }   
-=======
         "Biological": dict(marker="o", ls="-", lw=1.1, zorder=4, alpha=0.8),
         "Unconstrained": dict(marker="s", ls="--", lw=2.2, alpha=0.8),
         "Random pruned": dict(marker="^", ls=":", lw=2.2, alpha=0.8),
         "Connection-pruned": dict(marker="v", ls="--", lw=2.2, alpha=0.8),
-        "Random bin-wise": dict(marker="d", ls=":", lw=2.2, alpha=0.8),
+        "Binned": dict(marker="d", ls=":", lw=2.2, alpha=0.8),
         "Neuron binned": dict(marker="P", ls="--", lw=2.2, alpha=0.8),
     }
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56:connectome/visualization/activation_plots.py
 
     configs = list(propagations_dict.keys())
     activation_percentages = {config: [] for config in configs}
@@ -84,11 +70,7 @@ def plot_activation_statistics(
     rational_percentages = {config: [] for config in configs}
 
     rational_cell_types = ["KCapbp-m", "KCapbp-ap2", "KCapbp-ap1"]
-<<<<<<< HEAD:notebooks/visualization/random_networks_plots/activation_plots.py
-    
-=======
 
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56:connectome/visualization/activation_plots.py
     total_rational_neurons = neuron_position_data[
         neuron_position_data["cell_type"].isin(rational_cell_types)
     ]["root_id"].nunique()
@@ -100,15 +82,8 @@ def plot_activation_statistics(
             act_col = f"activation_{step}"
             if act_col in prop_df.columns:
                 active_neurons = prop_df[prop_df[act_col] > 0]["root_id"].nunique()
-<<<<<<< HEAD:notebooks/visualization/random_networks_plots/activation_plots.py
-                activation_percentages[config].append(
-                    100 * active_neurons / total_neurons
-                )
-                
-=======
                 activation_percentages[config].append(100 * active_neurons / total_neurons)
 
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56:connectome/visualization/activation_plots.py
                 merged_rational = pd.merge(
                     prop_df[prop_df[act_col] > 0],
                     neuron_position_data[
@@ -143,7 +118,7 @@ def plot_activation_statistics(
                 if len(active) > 0:
                     positions = active[["pos_x", "pos_y", "pos_z"]].values
                     distances = np.sqrt(np.sum((positions - eye_position) ** 2, axis=1))
-                    activation_distances[config].append(np.mean(distances))
+                    activation_distances[config].append(np.mean(distances) / 1000)
                 else:
                     activation_distances[config].append(0)
             else:
@@ -152,7 +127,6 @@ def plot_activation_statistics(
     fig_width_in = fig_width * 0.0393701
     fig_height_in = fig_width_in / 1.4
 
-<<<<<<< HEAD:notebooks/visualization/random_networks_plots/activation_plots.py
     if axes is not None:
         ax1, ax2, ax3 = axes
     else:
@@ -160,11 +134,6 @@ def plot_activation_statistics(
         _, ax2 = plt.subplots(figsize=(fig_width_in, fig_height_in))
         _, ax3 = plt.subplots(figsize=(fig_width_in, fig_height_in))
 
-    # Plot activation percentages
-=======
-    # Figure 1: Activation percentages
-    fig1, ax1 = plt.subplots(figsize=(fig_width_in, fig_height_in))
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56:connectome/visualization/activation_plots.py
     for config in configs:
         ax1.plot(
             range(1, num_steps + 1),
@@ -185,12 +154,6 @@ def plot_activation_statistics(
     if show_legend:
         ax1.legend(loc="upper left", fontsize=9)
 
-<<<<<<< HEAD:notebooks/visualization/random_networks_plots/activation_plots.py
-    # Plot activation distances
-=======
-    # Figure 2: Activation distances
-    fig2, ax2 = plt.subplots(figsize=(fig_width_in, fig_height_in))
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56:connectome/visualization/activation_plots.py
     for config in configs:
         ax2.plot(
             range(1, num_steps + 1),
@@ -201,7 +164,7 @@ def plot_activation_statistics(
         )
 
     ax2.set_xlabel("Message Passing Step")
-    ax2.set_ylabel("Avg. Distance from Input (μm)")
+    ax2.set_ylabel("Avg. Distance from Input (mm)")
     if show_title:
         ax2.set_title("Activation Propagation Distance", pad=7)
     ax2.grid(True, linestyle="--", alpha=0.5, linewidth=0.5)
@@ -211,12 +174,6 @@ def plot_activation_statistics(
     if show_legend:
         ax2.legend(loc="lower right", fontsize=9)
 
-<<<<<<< HEAD:notebooks/visualization/random_networks_plots/activation_plots.py
-    # Plot rational cell types activation
-=======
-    # Figure 3: Rational cell types activation
-    fig3, ax3 = plt.subplots(figsize=(fig_width_in, fig_height_in))
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56:connectome/visualization/activation_plots.py
     for config in configs:
         ax3.plot(
             range(1, num_steps + 1),

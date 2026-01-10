@@ -187,20 +187,15 @@ def grouped_accuracy_comparison_4groups(df: pd.DataFrame) -> plt.Figure:
     return fig
 
 
-def task_accuracy_comparison() -> plt.Figure:
+def task_accuracy_comparison(ax=None, show_legend=True) -> plt.Figure:
     """
     Create a comparison plot of accuracy across different tasks and networks.
 
-<<<<<<< HEAD:notebooks/visualization/random_networks_plots/models_accuracy.py
-def task_accuracy_comparison(ax=None, show_legend=True):
-    """Plot task accuracy comparison across network types."""
-=======
     Returns
     -------
     matplotlib.figure.Figure
         A figure object with the comparison.
     """
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56:connectome/visualization/models_accuracy.py
     tasks = [
         "Color\nDiscrimination",
         "Numerical\nDiscrimination",
@@ -228,62 +223,31 @@ def task_accuracy_comparison(ax=None, show_legend=True):
     }
 
     bar_width = 0.14
-<<<<<<< HEAD:notebooks/visualization/random_networks_plots/models_accuracy.py
-    capsize = 3
+    capsize = 2
     index = np.arange(len(tasks))
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(9, 6), dpi=300)
     else:
         fig = ax.get_figure()
-=======
-    capsize = 2
-    index = np.arange(len(tasks))
-
-    fig, ax = plt.subplots(figsize=(9, 6), dpi=300)
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56:connectome/visualization/models_accuracy.py
 
     for i, network in enumerate(networks):
         network_data = [task_data[task][i] for task in tasks]
         network_errors = [task_errors[task][i] for task in tasks]
-<<<<<<< HEAD:notebooks/visualization/random_networks_plots/models_accuracy.py
-        
-        bar_color = get_randomization_colors(network)
-=======
-
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56:connectome/visualization/models_accuracy.py
         ax.bar(
             index + i * bar_width,
             network_data,
             bar_width,
             yerr=network_errors,
             label=network,
-            color=bar_color,
+            color=get_randomization_colors(network),
             alpha=0.9,
             capsize=capsize,
-            ecolor=bar_color,
+            ecolor=get_randomization_colors(network),
             error_kw={"elinewidth": 1, "capthick": 1},
         )
 
     ax.axhline(y=50, linestyle="--", color="#666666", alpha=0.5, linewidth=1)
-<<<<<<< HEAD:notebooks/visualization/random_networks_plots/models_accuracy.py
-    ax.text(len(tasks) - 1.35, 45, "Chance level", fontsize=14, color="#666666", 
-            bbox=dict(facecolor='white', edgecolor='#666666', boxstyle='round,pad=0.5', alpha=0.8))
-
-    ax.set_ylabel("Accuracy (%)", fontsize=16)
-    ax.set_ylim(0, 105)
-    ax.set_xticks(index + bar_width * 1.5)
-    ax.set_xticklabels(tasks, fontsize=14, rotation=0)
-    ax.tick_params(labelsize=14)
-    ax.spines[["top", "right"]].set_visible(False)
-    ax.yaxis.grid(True, linestyle="--", alpha=0.3)
-    ax.xaxis.grid(True, linestyle="--", alpha=0.3)
-
-    if show_legend:
-        ax.legend(fontsize=14, loc="lower right", frameon=False)
-
-    return ax
-=======
 
     ax.text(
         len(tasks) - 1.35,
@@ -303,9 +267,9 @@ def task_accuracy_comparison(ax=None, show_legend=True):
     ax.set_ylim(0, 105)
     ax.set_xticks(index + bar_width * 1.5)
     ax.set_xticklabels(tasks, fontsize=12, rotation=0)
-    ax.legend(fontsize=12, loc="lower right", framealpha=0.9)
+    if show_legend:
+        ax.legend(fontsize=12, loc="lower right", framealpha=0.9)
 
     plt.tight_layout()
     return fig
 
->>>>>>> f69e135240bd5d912e466299d91e44b16a63ff56:connectome/visualization/models_accuracy.py

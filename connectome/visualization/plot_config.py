@@ -14,12 +14,17 @@ RANDOMIZATION_NAMES = {
 }
 
 RANDOMIZATION_COLORS = {
-    "biological": "black",
-    "neuron_binned": "#2ca02c",
-    "random_binned": "#d62728",
-    "unconstrained": "#1f77b4",
-    "random_pruned": "#ff7f0e",
-    "connection_pruned": "#9467bd",
+    # Singular, destaca sobre grocs i vermells
+    "biological": "#4c6ef5",        # blau porpra profund
+
+    # Binned – paleta groguenca
+    "neuron_binned": "#e9c46a",     # groc mostassa clar
+    "random_binned": "#cfae3b",     # mostassa més fosc / daurat
+
+    # Unconstrained / pruned – paleta vermellosa
+    "unconstrained": "#8b1e1e",     # vermell fosc sobri
+    "random_pruned": "#b23a48",     # vermell gerd apagat
+    "connection_pruned": "#e07a5f", # vermell-terracota clar
 }
 
 
@@ -31,7 +36,7 @@ def get_randomization_colors(randomization_name: str) -> str:
 
 PLOT_STYLE_PARAMS = {
     "font.family": "sans-serif",
-    "font.sans-serif": ["Arial", "Helvetica"],
+    "font.sans-serif": ["Liberation Sans", "DejaVu Sans", "Arial", "Helvetica"],
     "font.size": 18,
     "axes.labelsize": 18,
     "axes.titlesize": 20,

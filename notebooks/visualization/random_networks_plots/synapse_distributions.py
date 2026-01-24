@@ -264,6 +264,7 @@ def plot_overlay_wiring_distributions(neuron_coords, conns_dict,
                                       font_size=8,
                                       show_mean_lines=True,
                                       mean_label=True,
+                                      show_legend=True,
                                       ax=None):
     """
     Overlay histogram of synapse lengths for multiple network types.
@@ -305,7 +306,7 @@ def plot_overlay_wiring_distributions(neuron_coords, conns_dict,
     def color_of(n):
         # Manté la paleta dels altres gràfics
         if n == biological_key:
-            return "#000000"
+            return "#4c6ef5"  # Light blue for biological
         return get_randomization_colors(n) if 'get_randomization_colors' in globals() else '0.3'
 
     inches = fig_width_mm / 25.4
@@ -374,37 +375,39 @@ def plot_overlay_wiring_distributions(neuron_coords, conns_dict,
                           linewidth=0.7, alpha=0.6, zorder=1)
 
                 if mean_label:
-                    space = (mean_x + 5500, y1 * 0.98)
+                    space = (mean_x + 8000, y1 * 0.98)
                     while space_is_occupied(space):
                         k += 1
-                        space = (mean_x + 5500, y1 * (0.98 - k * 0.06))
+                        space = (mean_x + 8000, y1 * (0.98 - k * 0.06))
 
                     k = 0
                     occupied_spaces.append(space)
                     txt = f"{means_um[n]:.1f} µm" if x_unit == "um" else f"{mean_x:,.0f} nm"
                     ax.text(space[0], space[1], txt,
-                            ha='center', va='top', fontsize=font_size-1,
+                            ha='center', va='top', fontsize=font_size,
                             color=color_of(n))
 
         # 4) Llegenda amb totals (km) mantenint el codi de color
-        handles, texts = [], []
-        for n in names:
-            if n == biological_key:
-                fc = mpl.colors.to_rgba(color_of(n), 0.25) 
-                h = Patch(facecolor=fc, edgecolor='black', linewidth=0.8)
-            else:
-                h = Line2D([0], [0], color=color_of(n), lw=1.0, linestyle=(0, (4, 2)))
-            handles.append(h)
-            texts.append(f"{label_of(n)}: {totals_km[n]:.1f} km")
-        ax.legend(handles, texts, title="Total synapse lengths",
-                  loc="center right", bbox_to_anchor=(1.0, 0.65), 
-                  frameon=True, framealpha=0.85,
-                  borderpad=0.4, handlelength=1.4, fontsize=font_size,
-                  title_fontsize=font_size)
+        if show_legend:
+            handles, texts = [], []
+            for n in names:
+                if n == biological_key:
+                    fc = mpl.colors.to_rgba(color_of(n), 0.25) 
+                    h = Patch(facecolor=fc, edgecolor=color_of(n), linewidth=0.8)
+                else:
+                    h = Line2D([0], [0], color=color_of(n), lw=1.0, linestyle=(0, (4, 2)))
+                handles.append(h)
+                texts.append(f"{label_of(n)}: {totals_km[n]:.1f} km")
+            ax.legend(handles, texts, title="Total synapse lengths",
+                      loc="center right", bbox_to_anchor=(1.0, 0.65), 
+                      frameon=True, framealpha=0.85,
+                      borderpad=0.4, handlelength=1.4, fontsize=font_size+2,
+                      title_fontsize=font_size+2)
 
         # Estètica minimalista
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
+        ax.yaxis.grid(True, linestyle='--', alpha=0.5, linewidth=0.5)
 
     # --- anotació superior: "Means" + dues fletxes a dues mitjanes representatives ---
     if show_mean_lines:
@@ -416,7 +419,7 @@ def plot_overlay_wiring_distributions(neuron_coords, conns_dict,
         x_placement = 0.36
         # text per sobre del gràfic
         ax.text(x_placement, 1.02, "Average synapse lengths", transform=ax.transAxes, ha='center', va='bottom',
-                fontsize=font_size, color='0.2', clip_on=False)
+                fontsize=font_size+2, color='0.2', clip_on=False)
 
         # fletxes cap avall des del text cap a les dues línies de mitjana
         for x_target in (x_left, x_right):

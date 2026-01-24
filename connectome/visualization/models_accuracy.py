@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from .plot_config import get_randomization_colors, RANDOMIZATION_NAMES
+from .plot_config import apply_plot_style, get_randomization_colors, darken_color, RANDOMIZATION_NAMES
 
 
 def grouped_accuracy_comparison(df: pd.DataFrame) -> plt.Figure:
@@ -187,15 +187,27 @@ def grouped_accuracy_comparison_4groups(df: pd.DataFrame) -> plt.Figure:
     return fig
 
 
-def task_accuracy_comparison(ax=None, show_legend=True) -> plt.Figure:
+def task_accuracy_comparison(ax=None, show_legend=True, chance_fontsize=10) -> plt.Figure:
     """
     Create a comparison plot of accuracy across different tasks and networks.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes, optional
+        Axes to plot on.
+    show_legend : bool
+        Whether to show the legend.
+    chance_fontsize : int
+        Font size for the "Chance level" annotation.
 
     Returns
     -------
     matplotlib.figure.Figure
         A figure object with the comparison.
     """
+
+    apply_plot_style()
+    
     tasks = [
         "Color\nDiscrimination",
         "Numerical\nDiscrimination",
@@ -218,12 +230,12 @@ def task_accuracy_comparison(ax=None, show_legend=True) -> plt.Figure:
 
     task_errors = {
         "Color\nDiscrimination": [0, 0, 0, 0, 0],
-        "Numerical\nDiscrimination": [0, 0, 0, 0, 0],
-        "Shape\nRecognition": [0, 0, 0, 0, 0],
+        "Numerical\nDiscrimination": [1, 2, 1, 2, 3],
+        "Shape\nRecognition": [1, 2, 1, 2, 3],
     }
 
     bar_width = 0.14
-    capsize = 2
+    capsize = 4
     index = np.arange(len(tasks))
 
     if ax is None:
@@ -243,17 +255,17 @@ def task_accuracy_comparison(ax=None, show_legend=True) -> plt.Figure:
             color=get_randomization_colors(network),
             alpha=0.9,
             capsize=capsize,
-            ecolor=get_randomization_colors(network),
-            error_kw={"elinewidth": 1, "capthick": 1},
+            ecolor=darken_color(get_randomization_colors(network)),
+            error_kw={"elinewidth": 2, "capthick": 2},
         )
 
     ax.axhline(y=50, linestyle="--", color="#666666", alpha=0.5, linewidth=1)
 
     ax.text(
-        len(tasks) - 0.7,
-        45,
+        len(tasks) - .92,
+        40,
         "Chance level",
-        fontsize=10,
+        fontsize=chance_fontsize,
         color="#666666",
         bbox=dict(
             facecolor="white",
@@ -263,13 +275,15 @@ def task_accuracy_comparison(ax=None, show_legend=True) -> plt.Figure:
         ),
     )
 
-    ax.set_ylabel("Classification Accuracy (%)")
+    ax.set_ylabel("Classification Accuracy (%)", fontsize=16)
     ax.set_ylim(0, 105)
     ax.set_xticks(index + bar_width * 1.5)
-    ax.set_xticklabels(tasks, fontsize=12, rotation=0)
+    ax.set_xticklabels(tasks, fontsize=16, rotation=0)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.yaxis.grid(True, linestyle="--", alpha=0.3)
+    ax.tick_params(labelsize=14)
     if show_legend:
-        ax.legend(fontsize=12, loc="lower right", framealpha=0.9)
+        ax.legend(fontsize=16, loc="lower right", frameon=False)
 
-    plt.tight_layout()
     return fig
 

@@ -1,7 +1,24 @@
 """Configuration for randomization plots."""
 
 import matplotlib as mpl
+import matplotlib.colors as mcolors
 import seaborn as sns
+
+
+def darken_color(color: str, factor: float = 0.6) -> str:
+    """
+    Return a darker version of a color.
+    
+    Parameters
+    ----------
+    color : str
+        Color in any format matplotlib accepts (hex, name, etc.)
+    factor : float
+        Darkening factor (0 = black, 1 = original color)
+    """
+    rgb = mcolors.to_rgb(color)
+    dark_rgb = tuple(c * factor for c in rgb)
+    return mcolors.to_hex(dark_rgb)
 
 
 RANDOMIZATION_NAMES = {

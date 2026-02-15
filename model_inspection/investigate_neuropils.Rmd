@@ -1,0 +1,29 @@
+---
+title: "Exploration"
+output: html_document
+date: "2024-06-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning = F, message = F)
+library(dplyr)
+library(readr)
+```
+
+```{r}
+df <- read_csv("adult_data/connections.csv", col_types = "cccic")
+```
+
+```{r}
+df |> 
+  filter(pre_root_id == "720575940597856265" & post_root_id == "720575940605842278") |> View()
+```
+
+```{r}
+df |> 
+  group_by(neuropil, nt_type) |> 
+  count() |> 
+  select(neuropil, nt_type) |> 
+  write_csv("neuropil_nt_type.csv")
+```
+

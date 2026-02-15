@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 
-from utils.helpers import add_coords
-from utils.randomizers import binned, connection_pruning, pruning, mantain_neuron_wiring_length
-from utils.randomizers.randomizers_helpers import compute_total_synapse_length
+from connectome.data_helpers import add_coords
+from connectome.randomizers import binned, connection_pruning, pruning, mantain_neuron_wiring_length
+from connectome.randomizers.randomizers_helpers import compute_total_synapse_length
 
 
 def _sample_network():

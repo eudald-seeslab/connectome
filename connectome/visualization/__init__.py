@@ -1,5 +1,16 @@
 """Visualization module for connectome analysis."""
 
+# Basic plot functions re-exported from trainyourfly
+from trainyourfly.plots.plots import (
+    plot_weber_fraction,
+    plot_accuracy_per_value,
+    plot_accuracy_per_colour,
+    plot_contingency_table,
+    plot_results,
+    guess_your_plots,
+)
+
+# Research-specific visualization
 from .plot_config import (
     RANDOMIZATION_NAMES,
     RANDOMIZATION_COLORS,
@@ -27,15 +38,6 @@ from .models_accuracy import (
     task_accuracy_comparison,
 )
 
-from .plots import (
-    plot_weber_fraction,
-    plot_accuracy_per_value,
-    plot_accuracy_per_colour,
-    plot_contingency_table,
-    plot_results,
-    guess_your_plots,
-)
-
 __all__ = [
     # plot_config
     "RANDOMIZATION_NAMES",
@@ -56,7 +58,7 @@ __all__ = [
     "grouped_accuracy_comparison",
     "grouped_accuracy_comparison_4groups",
     "task_accuracy_comparison",
-    # plots
+    # plots (from trainyourfly)
     "plot_weber_fraction",
     "plot_accuracy_per_value",
     "plot_accuracy_per_colour",
@@ -64,4 +66,3 @@ __all__ = [
     "plot_results",
     "guess_your_plots",
 ]
-

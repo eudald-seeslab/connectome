@@ -9,7 +9,7 @@ The goal is to keep *scripts/sweep.py* free of bulky configuration data so that
 execution logic and experiment definitions live in separate modules.
 """
 
-from utils.helpers import load_cell_type_lists
+from connectome.data_helpers import load_cell_type_lists
 
 # -----------------------------------------------------------------------------
 # Cell-type list from shared utils

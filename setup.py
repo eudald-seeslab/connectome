@@ -1,27 +1,20 @@
 from setuptools import setup, find_packages
 
-# Core dependencies
+# Core dependencies -- model / data / training deps are now provided by trainyourfly
 INSTALL_REQUIRES = [
-    "torch>=2.0.0",
-    "torch-geometric>=2.4.0",
-    "torch-scatter",
-    "torch-sparse",
-    "wandb",
-    "numpy>=1.26.0",
-    "pandas",
+    "train-your-fly[wandb]",
     "scipy>=1.11.4",
-    "pillow>=10.2.0",
-    "matplotlib>=3.8.2",
-    "networkx>=3.2.1",
-    "tqdm>=4.65.0",
-    "seaborn>=0.13.2",
     "imageio>=2.34.1",
 ]
 
-# Optional dependencies for visualization
-VIZ_REQUIRES = [
+# Research-specific dependencies
+RESEARCH_REQUIRES = [
     "plotly",
     "dash",
+    "joblib>=1.2.0",
+    "numba",
+    "umap-learn",
+    "scikit-learn",
 ]
 
 # Development dependencies
@@ -29,24 +22,23 @@ DEV_REQUIRES = [
     "black>=24.1.1",
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
-    "joblib>=1.2.0",
 ]
 
 setup(
     name="connectome",
-    version="0.1.1",
+    version="0.2.0",
     packages=find_packages(),
     py_modules=["paths"],
     python_requires=">=3.10",
     install_requires=INSTALL_REQUIRES,
     extras_require={
-        "viz": VIZ_REQUIRES,
+        "research": RESEARCH_REQUIRES,
         "dev": DEV_REQUIRES,
-        "all": VIZ_REQUIRES + DEV_REQUIRES,
+        "all": RESEARCH_REQUIRES + DEV_REQUIRES,
     },
-    author="Your Name",
+    author="Eudald Correig",
     author_email="eudald.correig@urv.cat",
-    description="A package for neural connectome analysis",
+    description="Research analysis tools for the Drosophila connectome project",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/eudald-seeslab/connectome",

@@ -1,0 +1,81 @@
+---
+title: "Untitled"
+author: "Eudald"
+date: "2025-01-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(dplyr)
+library(readr)
+library(tidyr)
+library(ggplot2)
+```
+
+```{r}
+df <- read_csv("wandb_export_2025-01-25T16_57_26.666+01_00.csv") |> 
+  mutate(file_name = basename(Image)) |> 
+  separate(
+    file_name,
+    into = c("shape", "surface", "distance", "angle", "iteration"),
+    sep = "_",
+    remove = FALSE,
+    extra = "drop"
+  ) |> 
+  mutate(across(c(surface, distance, angle), as.numeric))
+  
+```
+
+
+```{r}
+df |> 
+  filter(distance > 200) |> 
+  group_by(shape) |>
+  count()
+```
+
+```{r}
+df |> 
+  group_by(shape, distance) |> 
+  count() |> 
+  pivot_wider(names_from = shape, values_from = n, values_fill = 0) |> 
+  mutate(ratio = circle / star) |> 
+  ggplot(aes(x = distance, y = ratio)) +
+  xlim(c(0, 150)) +
+  ylim(c(-1, 1)) +
+  geom_point() +
+  geom_smooth() +
+  labs(title = "Ratio of circle to star by distance")
+```
+
+```{r}
+dir_ <- "../Desktop/doctorat/connectome/images/two_shapes3"
+# get all files in the subdirectories of dir_
+files <- list.files(dir_, recursive = TRUE, full.names = F) |> 
+  as_tibble() |> 
+  mutate(file_name = basename(value)) |> 
+  separate(
+    file_name,
+    into = c("shape", "surface", "distance", "angle", "iteration"),
+    sep = "_",
+    remove = FALSE,
+    extra = "drop"
+  ) |> 
+  mutate(across(c(surface, distance, angle), as.numeric))
+```
+
+```{r}
+files |> 
+  group_by(shape, distance) |> 
+  count() |> 
+  pivot_wider(names_from = shape, values_from = n, values_fill = 0) |> 
+  mutate(ratio = circle / star) |> 
+  ggplot(aes(x = distance, y = ratio)) +
+  xlim(c(0, 150)) +
+  ylim(c(0, 2)) +
+  geom_point() +
+  geom_smooth() +
+  labs(title = "Ratio of circle to star by distance")
+```
+

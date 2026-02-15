@@ -1,0 +1,72 @@
+---
+title: "Untitled"
+output: html_document
+date: "2024-04-30"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(nat)
+library(stringr)
+library(ggplot2)
+theme_set(theme_bw())
+library(plotly)
+```
+
+```{r}
+df <- read_csv("head_direction_propagation.csv", col_types = list(root_id = "c"))
+```
+
+```{r}
+center <- c(431700, 164000)
+```
+
+
+```{r}
+data <- df |> 
+  pivot_longer(-c(root_id, x, y, z)) |> 
+  mutate(
+    r = sqrt((x - center[1])^2 + (y - center[2])^2),
+    theta = atan2(y - center[2], x - center[1]),
+    bin_theta = cut(theta, 36, 1:36),
+    name = if_else(
+      nchar(name) == 12, gsub("_", "_0", name, fixed = T), name
+      )
+    ) |> 
+  group_by(name, bin_theta) |> 
+  summarize(activation = sum(value))
+data |> 
+  ggplot(aes(x = bin_theta, y = activation)) + 
+    geom_point() +
+    facet_wrap(~ name, ncol=7) +
+  scale_x_discrete(
+    breaks = seq(1, 36, by = 4)
+    )
+```
+
+```{r}
+data |> 
+  filter(!name %in% c("activation_01", "activation_02")) |> 
+  group_by(name) |> 
+  filter(activation == max(activation)) |> 
+  ggplot(aes(x = bin_theta, y = activation)) + 
+  geom_point()
+```
+
+
+```{r}
+df |> 
+  pivot_longer(-c(root_id, x, y, z)) |> 
+  ggplot(aes(x = x, y = y, colour = value)) + 
+  geom_point(size = 1, alpha = .5) + 
+  facet_wrap(~  name, ncol = 6)
+```
+
+
+```{r}
+
+```
+

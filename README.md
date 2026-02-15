@@ -102,8 +102,7 @@ Jupyter notebooks for analysis are in the notebooks/ directory:
 
 ## Contributing
 
-This project is in very early stages and highly unstable. If you would like to contribute, please write 
-me at eudald.correig@urv.cat and we'll see how to organize it.
+This project is in very early stages and highly unstable. If you would like to contribute, please write me at eudald.correig@urv.cat and we'll see how to organize it.
 
 ## TODOs
 

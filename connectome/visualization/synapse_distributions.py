@@ -3,7 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utils.randomizers.randomizers_helpers import compute_individual_synapse_lengths
+from connectome.randomizers.randomizers_helpers import compute_individual_synapse_lengths
 from .plot_config import RANDOMIZATIONS, get_randomization_colors
 
 

@@ -1,2 +1,0 @@
-"""Random networks plotting utilities."""
-

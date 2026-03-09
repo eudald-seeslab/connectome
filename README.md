@@ -1,49 +1,68 @@
 # _Drosophila melanogaster_'s connectome models
 
-This repository contains code for analyzing neural connectomes using machine learning techniques. 
-The work is associated with our paper [pending].
+Research analysis repository for studying neural connectomes using machine learning.
+The core model and training infrastructure live in the
+[train-your-fly](https://github.com/eudald-seeslab/train-your-fly) package;
+this repo contains experiment orchestration, analysis notebooks, and
+visualization code.
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/connectome.git
+git clone https://github.com/eudald-seeslab/connectome.git
 cd connectome
 ```
 
 2. Create and activate a virtual environment
 
-````bash
+```bash
 python -m venv venv
-source venv/bin/activate  
-# On Windows: 
-# venv\Scripts\activate
-````
+source venv/bin/activate
+```
 
-3. Install the packages
+3. Install `train-your-fly` (editable, from local clone):
 
-Basic install:
+```bash
+pip install -e /path/to/train-your-fly[wandb]
+```
 
-````bash
+4. Install this package:
+
+```bash
 pip install -e .
-````
-
-With visualization tools:
-
-```bash
-pip install .[viz]
 ```
 
-Development:
+With research tools (plotly, numba, umap, scikit-learn, etc.):
 
 ```bash
-pip install .[dev]
+pip install -e .[research]
 ```
 
-Full:
+Full (research + dev):
 
 ```bash
-pip install .[all]
+pip install -e .[all]
+```
+
+## Repository structure
+
+```
+connectome/
+├── connectome/              # Python package (importable library code)
+│   ├── visualization/       # All visualization code
+│   ├── model_inspection/    # Neuron-level inspection utilities
+│   ├── randomizers/         # Biological vs random circuit comparison
+│   └── data_helpers.py      # Data loading helpers
+│
+├── configs/                 # Experiment configuration
+├── training/                # Training scripts (train, multitask, sweep)
+├── random_networks/         # Random circuit analysis notebooks & scripts
+├── manifolds/               # Manifold / representation analysis
+├── model_inspection/        # Model introspection notebooks & scripts
+├── figures/                 # Paper figure generation
+├── data_processing/         # Data preparation notebooks
+└── tests/                   # Tests
 ```
 
 ## Data preparation
@@ -51,70 +70,44 @@ pip install .[all]
 Quick start:
 ```bash
 pip install cogstim
-# Shape recognition (circle vs star)
 cogstim shapes --train-num 60 --test-num 20
-# Colour recognition (yellow vs blue), no positional jitter
 cogstim colours --train-num 60 --test-num 20 --no-jitter
-# Approximate Number System (ANS), easy ratios
 cogstim ans --ratios easy --train-num 100 --test-num 40
-# Single-colour dot arrays (1–5), equalized total surface
-cogstim one-colour --train-num 50 --test-num 20 --min-point-num 1 --max-point-num 5
-# Rotated stripe patterns (lines)
-cogstim lines --train-num 50 --test-num 20 --angles 0 45 90 135 --min-stripes 3 --max-stripes 5
 ```
 
-For more information and all available tasks, see the [cogstim documentation](https://github.com/eudald-seeslab/cogstim).
-
-Output directory structure remains:
-```
-images/your_directory/
-├── train/
-│   ├── class_1/
-│   ├── class_2/
-│   └── class_n/
-└── test/
-    ├── class_1/
-    ├── class_2/
-    └── class_n/
-```
-
-Models will automatically infer the number of output classes from this structure.
+For more information and all available tasks, see the
+[cogstim documentation](https://github.com/eudald-seeslab/cogstim).
 
 ## Training
 
-For training, you first need to adjust the training parameters in `configs/config.py`. The explanation of what each
-parameter means will be given elsewhere.
+Adjust parameters in `configs/config.py`, then:
 
 ```bash
-python scripts/train.py
+python training/train.py
 ```
-If you want to multitask, you need to still adjust the main parameters in config.py, but you also need to
-specify the multiple sources of training data in `configs/config_multitasking_dirs.py`
 
-## Analysis
+For multitask training, also configure `configs/config_multitasking_dirs.py`:
 
-Jupyter notebooks for analysis are in the notebooks/ directory:
+```bash
+python training/train_multitask.py
+```
 
-- `analysis/`: Detailed analysis notebooks
-- `exploration/`: Exploratory data analysis
-- `visualization/`: Visualization notebooks
-- `manifolds/`: Manifold analysis of neuron activations
+For sweeps:
+
+```bash
+python training/sweep.py --sweep regularisation
+```
 
 ## Contributing
 
-This project is in very early stages and highly unstable. If you would like to contribute, please write 
-me at eudald.correig@urv.cat and we'll see how to organize it.
-
-## TODOs
-
-- Easier creation of ANS input images
+This project is in very early stages and highly unstable. If you would like to
+contribute, please write me at eudald.correig@urv.cat.
 
 ## Other
 
-These runs sometimes make cuda break (I don't know why). As a temporary patch, when this happens, run:
+These runs sometimes make CUDA break. As a temporary patch:
 
-```{bash}
+```bash
 sudo rmmod nvidia_uvm
 sudo modprobe nvidia_uvm
 ```
-

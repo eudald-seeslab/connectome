@@ -1,6 +1,7 @@
 """Visualization module for connectome analysis."""
 
 from .plot_config import (
+    RANDOMIZATIONS,
     RANDOMIZATION_NAMES,
     RANDOMIZATION_COLORS,
     PLOT_STYLE_PARAMS,
@@ -38,6 +39,7 @@ from .plots import (
 
 __all__ = [
     # plot_config
+    "RANDOMIZATIONS",
     "RANDOMIZATION_NAMES",
     "RANDOMIZATION_COLORS",
     "PLOT_STYLE_PARAMS",

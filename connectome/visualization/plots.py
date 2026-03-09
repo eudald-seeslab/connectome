@@ -6,7 +6,10 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from connectome.visualization.plot_config import apply_plot_style, RANDOMIZATION_NAMES, RANDOMIZATION_COLORS, get_randomization_colors
+from connectome.visualization.plot_config import (
+    RANDOMIZATIONS,
+    apply_plot_style,
+)
 
 pd.options.mode.chained_assignment = None
 
@@ -153,15 +156,7 @@ def guess_your_plots(config_):
 # All of this needs to be moved
 ########################################################
 
-ORDER = ["Biological", "Binned", "Neuron binned", "Unconstrained", "Connection-pruned"]
-NAME_ALIAS = {
-    "biological": "biological",
-    "binned": "random_binned",
-    "random_binned": "random_binned",
-    "neuron_binned": "neuron_binned",
-    "unconstrained": "unconstrained",
-    "connection_pruned": "connection_pruned",
-}
+ORDER = list(RANDOMIZATIONS.labels_in_order)
 
 def _prepare_results_df(df: pd.DataFrame) -> pd.DataFrame:
     """Parse filename, compute Weber ratio, equalized flag, and return tidy df."""
@@ -223,12 +218,12 @@ def plot_weber_by_randomization(
     """
     if files_to_keys is None:
         files_to_keys = {
-            "biological_results.csv":        "biological",
-            "binned_results.csv":            "random_binned",
-            "neuron_binned_results.csv":     "neuron_binned",
-            "unconstrained_results.csv":     "unconstrained",
+            "biological_results.csv": "biological",
+            "unconstrained_results.csv": "unconstrained",
             "connection_pruned_results.csv": "connection_pruned",
-            "random_pruned_results.csv":     "random_pruned",
+            "binned_results.csv": "random_binned",
+            "neuron_binned_results.csv": "neuron_binned",
+            "random_pruned_results.csv": "random_pruned",
         }
 
     curves = []
@@ -249,8 +244,8 @@ def plot_weber_by_randomization(
         if agg.empty:
             continue
 
-        display = RANDOMIZATION_NAMES.get(key, key)
-        color = RANDOMIZATION_COLORS.get(key, "black")
+        display = RANDOMIZATIONS.label_for(key)
+        color = RANDOMIZATIONS.color_for(key)
         curves.append((display, color, agg))
 
     apply_plot_style()
@@ -275,8 +270,39 @@ def plot_weber_by_randomization(
             capthick=1,
         )
 
-    ax.set_xlabel("Weber Ratio", fontsize=16)
-    ax.set_ylabel("Classification Accuracy (%)", fontsize=16)
+    if curves:
+        x_values = sorted(
+            {
+                float(value)
+                for _, _, data in curves
+                for value in data["weber_ratio"].to_numpy()
+            }
+        )
+
+        def _format_weber_tick(value: float) -> str:
+            fraction_labels = {
+                4 / 3: "4/3",
+                3 / 2: "3/2",
+                5 / 3: "5/3",
+                5 / 2: "5/2",
+            }
+            for fraction_value, label in fraction_labels.items():
+                if np.isclose(value, fraction_value, atol=1e-3):
+                    return label
+            return f"{value:.2f}".rstrip("0").rstrip(".")
+
+        staggered_labels = [
+            f"{_format_weber_tick(value)}\n" if idx % 2 == 0 else f"\n{_format_weber_tick(value)}"
+            for idx, value in enumerate(x_values)
+        ]
+        ax.set_xticks(x_values)
+        ax.set_xticklabels(staggered_labels)
+        if len(x_values) > 1:
+            step = min(np.diff(x_values))
+            ax.set_xlim(x_values[0] - step * 0.4, x_values[-1] + step * 0.4)
+
+    ax.set_xlabel("Weber ratio", fontsize=16)
+    ax.set_ylabel("Accuracy (%)", fontsize=16)
     ax.spines[["top", "right"]].set_visible(False)
     ax.yaxis.grid(True, linestyle="--", alpha=0.3)
     ax.xaxis.grid(True, linestyle="--", alpha=0.3)
@@ -290,14 +316,56 @@ def plot_weber_by_randomization(
 
     return ax
 
+
+def weber_accuracy_table(
+    folder: str,
+    files_to_keys: dict[str, str] | None = None,
+    *,
+    min_weber: float | None = None,
+    decimals: int = 2,
+) -> pd.DataFrame:
+    """Return the per-Weber-ratio accuracies shown in the Weber plot."""
+    if files_to_keys is None:
+        files_to_keys = {
+            "biological_results.csv": "biological",
+            "unconstrained_results.csv": "unconstrained",
+            "connection_pruned_results.csv": "connection_pruned",
+            "binned_results.csv": "random_binned",
+            "neuron_binned_results.csv": "neuron_binned",
+        }
+
+    per_model = {}
+    for filename, key in files_to_keys.items():
+        candidates = [
+            os.path.join(folder, filename),
+            *glob.glob(os.path.join(folder, filename))
+        ]
+        csv_path = next((p for p in candidates if os.path.exists(p)), None)
+        if csv_path is None:
+            continue
+
+        df = pd.read_csv(csv_path)
+        df = _prepare_results_df(df)
+        agg = _aggregate(df)
+        if min_weber is not None:
+            agg = agg[agg["weber_ratio"] >= float(min_weber)]
+        if agg.empty:
+            continue
+
+        per_model[RANDOMIZATIONS.label_for(key)] = agg.set_index("weber_ratio")["mean"]
+
+    table = pd.DataFrame(per_model)
+    table.index.name = "Weber Ratio"
+    return table.round(decimals)
+
 def plot_ans_accuracies_by_randomization(all_results: pd.DataFrame, ax=None, save=False):
     """Plot Weber fraction by randomization type."""
     apply_plot_style()
 
     df = all_results.copy()
-    df["key"] = df["dataframe"].map(lambda k: NAME_ALIAS.get(k, k))
-    df["label"] = df["key"].map(RANDOMIZATION_NAMES)
-    df["color"] = df["label"].map(get_randomization_colors)
+    df["key"] = df["dataframe"].map(RANDOMIZATIONS.resolve_key)
+    df["label"] = df["key"].map(RANDOMIZATIONS.label_for)
+    df["color"] = df["key"].map(RANDOMIZATIONS.color_for)
 
     df = df[df["label"].isin(ORDER)]
     df["label"] = pd.Categorical(df["label"], categories=ORDER, ordered=True)

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from utils.randomizers.randomizers_helpers import compute_individual_synapse_lengths
-from .plot_config import RANDOMIZATION_NAMES, get_randomization_colors
+from .plot_config import RANDOMIZATIONS, get_randomization_colors
 
 
 def plot_synapse_length_distributions(
@@ -96,7 +96,7 @@ def plot_synapse_length_distributions(
 
         ax.set_ylim(0, max_val)
         ax.set_ylabel("Density" if use_density else "Count")
-        ax.set_title(RANDOMIZATION_NAMES.get(title, title))
+        ax.set_title(RANDOMIZATIONS.label_for(title))
 
     axs1[-1].set_xlabel("Synapse Length (nm)")
 
@@ -151,7 +151,7 @@ def plot_synapse_length_distributions(
         )
 
         ax.set_ylabel("Avg. Synapse Count")
-        ax.set_title(RANDOMIZATION_NAMES.get(title, title))
+        ax.set_title(RANDOMIZATIONS.label_for(title))
         ax.grid(True, linestyle="--", alpha=0.3)
 
     axs2[-1].set_xlabel("Synapse Length (nm)")
@@ -230,7 +230,7 @@ def plot_synapse_counts_histogram(conns_dict, bins=30, figsize=None, log_scale=F
             bbox=dict(boxstyle="round", facecolor="white", alpha=0.7),
         )
 
-        ax.set_title(RANDOMIZATION_NAMES.get(title, title))
+        ax.set_title(RANDOMIZATIONS.label_for(title))
         ax.set_ylabel("Count")
 
         if log_scale:

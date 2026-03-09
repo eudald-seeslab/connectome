@@ -149,8 +149,6 @@ if __name__ == "__main__":
         conns_to_plot = {"Original": connections}
         if random_unconstrained is not None:
             conns_to_plot["Random unconstrained"] = random_unconstrained
-        if args.pruned or run_all:
-            conns_to_plot["Random pruned"] = random_pruned
         if args.conn_pruned or run_all:
             conns_to_plot["Random conn. pruned"] = random_conn_pruned
         if args.binned or run_all:

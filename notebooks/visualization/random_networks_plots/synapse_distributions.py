@@ -4,7 +4,7 @@ from utils.randomizers.randomizers_helpers import compute_individual_synapse_len
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .plot_config import RANDOMIZATION_NAMES, apply_plot_style, get_randomization_colors
+from .plot_config import RANDOMIZATIONS, apply_plot_style, get_randomization_colors
 
 
 def plot_synapse_length_distributions(neuron_coords, conns_dict, use_density=True, num_confidence_interval_se=1):
@@ -86,7 +86,7 @@ def plot_synapse_length_distributions(neuron_coords, conns_dict, use_density=Tru
 
         ax.set_ylim(0, max_val)
         ax.set_ylabel("Density" if use_density else "Count")
-        ax.set_title(RANDOMIZATION_NAMES.get(title, title))
+        ax.set_title(RANDOMIZATIONS.label_for(title))
 
     axs1[-1].set_xlabel("Synapse Length (nm)")
 
@@ -131,8 +131,8 @@ def plot_synapse_length_distributions(neuron_coords, conns_dict, use_density=Tru
         lower_bound = [m - e * num_confidence_interval_se for m, e in zip(means, errors)]
         ax.fill_between(bin_centers, lower_bound, upper_bound, color=get_randomization_colors(title), alpha=0.2)
 
-        ax.set_ylabel("Avg. Synapse Count")
-        ax.set_title(RANDOMIZATION_NAMES.get(title, title))
+        ax.set_ylabel("Avg. synapse count")
+        ax.set_title(RANDOMIZATIONS.label_for(title))
         ax.grid(True, linestyle='--', alpha=0.3)
 
     axs2[-1].set_xlabel("Synapse Length (nm)")
@@ -223,7 +223,7 @@ def plot_synapse_counts_histogram(conns_dict, bins=30, figsize=None, log_scale=F
                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.7))
 
         # Add title and labels
-        ax.set_title(RANDOMIZATION_NAMES.get(title, title))
+        ax.set_title(RANDOMIZATIONS.label_for(title))
         ax.set_ylabel("Count")
 
         # Set log or linear scale and unify ylim so the bars occupy the available
@@ -264,6 +264,7 @@ def plot_overlay_wiring_distributions(neuron_coords, conns_dict,
                                       font_size=8,
                                       show_mean_lines=True,
                                       mean_label=True,
+                                      show_mean_heading=True,
                                       show_legend=True,
                                       ax=None):
     """
@@ -301,7 +302,7 @@ def plot_overlay_wiring_distributions(neuron_coords, conns_dict,
 
     # Helpers de color/etiqueta
     def label_of(n):
-        return RANDOMIZATION_NAMES.get(n, n) if 'RANDOMIZATION_NAMES' in globals() else n
+        return RANDOMIZATIONS.label_for(n) if 'RANDOMIZATIONS' in globals() else n
 
     def color_of(n):
         # Manté la paleta dels altres gràfics
@@ -360,12 +361,14 @@ def plot_overlay_wiring_distributions(neuron_coords, conns_dict,
         if show_mean_lines:
             fig.canvas.draw_idle()
             y0, y1 = ax.get_ylim()
+            x0, x1 = ax.get_xlim()
+            x_offset = 0.1 * (x1 - x0)
             occupied_spaces = []
             k = 0
             
             def space_is_occupied(space):
                 for occupied_space in occupied_spaces:
-                    if abs(space[0] - occupied_space[0]) < 2000 and abs(space[1] - occupied_space[1]) < 2000:
+                    if abs(space[0] - occupied_space[0]) < x_offset and abs(space[1] - occupied_space[1]) < 0.05 * (y1 - y0):
                         return True
                 return False
                 
@@ -375,10 +378,10 @@ def plot_overlay_wiring_distributions(neuron_coords, conns_dict,
                           linewidth=0.7, alpha=0.6, zorder=1)
 
                 if mean_label:
-                    space = (mean_x + 8000, y1 * 0.98)
+                    space = (mean_x + x_offset, y1 * 0.95)
                     while space_is_occupied(space):
                         k += 1
-                        space = (mean_x + 8000, y1 * (0.98 - k * 0.06))
+                        space = (mean_x + x_offset, y1 * (0.95 - k * 0.06))
 
                     k = 0
                     occupied_spaces.append(space)
@@ -410,21 +413,22 @@ def plot_overlay_wiring_distributions(neuron_coords, conns_dict,
         ax.yaxis.grid(True, linestyle='--', alpha=0.5, linewidth=0.5)
 
     # --- anotació superior: "Means" + dues fletxes a dues mitjanes representatives ---
-    if show_mean_lines:
+    if show_mean_lines and show_mean_heading:
         # (biològica i la més gran)
         mean_x_vals = {n: (means_um[n] if x_unit == "um" else means_um[n]*1e3) for n in names}
         x_left  = mean_x_vals.get(biological_key, min(mean_x_vals.values()))
         x_right = max(mean_x_vals.values())
 
         x_placement = 0.36
+        heading_y = 1.02
         # text per sobre del gràfic
-        ax.text(x_placement, 1.02, "Average synapse lengths", transform=ax.transAxes, ha='center', va='bottom',
+        ax.text(x_placement, heading_y, "Average synapse lengths", transform=ax.transAxes, ha='center', va='bottom',
                 fontsize=font_size+2, color='0.2', clip_on=False)
 
         # fletxes cap avall des del text cap a les dues línies de mitjana
         for x_target in (x_left, x_right):
             ax.annotate("", xy=(x_target, y1*0.99), xycoords="data",
-                        xytext=(x_placement, 1.02), textcoords=ax.transAxes,
+                        xytext=(x_placement, heading_y), textcoords=ax.transAxes,
                         arrowprops=dict(linestyle='--', arrowstyle='->', lw=0.6, color='0.2'),
                         annotation_clip=False)
 

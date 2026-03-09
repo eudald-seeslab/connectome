@@ -6,7 +6,7 @@ import numpy as np
 from scipy.spatial import cKDTree
 
 from paths import PROJECT_ROOT
-from connectome.visualization.plot_config import RANDOMIZATION_NAMES
+from connectome.visualization.plot_config import RANDOMIZATIONS
 from utils.model_inspection_utils import propagate_data_with_steps
 
 
@@ -57,10 +57,11 @@ def get_all_connections() -> dict[str, pd.DataFrame]:
     """
     connections = {}
     
-    for key, file_name in CONNECTION_FILES.items():
+    for key in RANDOMIZATIONS.order:
+        file_name = CONNECTION_FILES[key]
         df = _load_single_connections(file_name)
         if df is not None:
-            display_name = RANDOMIZATION_NAMES[key]
+            display_name = RANDOMIZATIONS.label_for(key)
             connections[display_name] = df
     
     return connections

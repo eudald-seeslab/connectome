@@ -9,7 +9,7 @@ from scipy.ndimage import gaussian_filter
 from .plot_config import (
     apply_plot_style,
     get_randomization_colors,
-    RANDOMIZATION_NAMES,
+    RANDOMIZATIONS,
     split_title,
 )
 
@@ -138,15 +138,15 @@ def plot_activation_statistics(
         ax1.plot(
             range(1, num_steps + 1),
             activation_percentages[config],
-            label=RANDOMIZATION_NAMES.get(config, config),
+            label=RANDOMIZATIONS.label_for(config),
             color=get_randomization_colors(config),
             **styles[config],
         )
 
-    ax1.set_xlabel("Message Passing Step")
-    ax1.set_ylabel("Neurons Active (%)")
+    ax1.set_xlabel("Message passing step")
+    ax1.set_ylabel("Active neurons (%)")
     if show_title:
-        ax1.set_title("Neural Activation", pad=7)
+        ax1.set_title("Neural activation", pad=7)
     ax1.grid(True, linestyle="--", alpha=0.5, linewidth=0.5)
     ax1.set_xticks(range(1, num_steps + 1))
     ymax1 = max([max(vals) for vals in activation_percentages.values()]) * 1.1
@@ -158,15 +158,15 @@ def plot_activation_statistics(
         ax2.plot(
             range(1, num_steps + 1),
             activation_distances[config],
-            label=RANDOMIZATION_NAMES.get(config, config),
+            label=RANDOMIZATIONS.label_for(config),
             color=get_randomization_colors(config),
             **styles[config],
         )
 
-    ax2.set_xlabel("Message Passing Step")
-    ax2.set_ylabel("Avg. Distance from Input (mm)")
+    ax2.set_xlabel("Message passing step")
+    ax2.set_ylabel("Mean distance from input (nm)")
     if show_title:
-        ax2.set_title("Activation Propagation Distance", pad=7)
+        ax2.set_title("Activation propagation distance", pad=7)
     ax2.grid(True, linestyle="--", alpha=0.5, linewidth=0.5)
     ax2.set_xticks(range(1, num_steps + 1))
     ymax2 = max([max(vals) for vals in activation_distances.values()]) * 1.1
@@ -178,15 +178,15 @@ def plot_activation_statistics(
         ax3.plot(
             range(1, num_steps + 1),
             rational_percentages[config],
-            label=RANDOMIZATION_NAMES.get(config, config),
+            label=RANDOMIZATIONS.label_for(config),
             color=get_randomization_colors(config),
             **styles[config],
         )
 
-    ax3.set_xlabel("Message Passing Step")
-    ax3.set_ylabel("Kenyon Neurons Active (%)")
+    ax3.set_xlabel("Message passing step")
+    ax3.set_ylabel("Active Kenyon neurons (%)")
     if show_title:
-        ax3.set_title("Kenyon Cell Types Activation", pad=7)
+        ax3.set_title("Kenyon cell types activation", pad=7)
     ax3.grid(True, linestyle="--", alpha=0.5, linewidth=0.5)
     ax3.set_xticks(range(1, num_steps + 1))
     ymax3 = (
@@ -281,6 +281,13 @@ def visualize_steps_separated_compact(
     figsize=(20, 16),
     padding_percent=10,
     short_version=False,
+    container=None,
+    wspace=0.1,
+    hspace=0.1,
+    step_title_fontsize=20,
+    row_label_fontsize=20,
+    coordinate_label_fontsize=16,
+    show_row_labels=True,
 ):
     """
     Create a compact grid of 3D visualizations with configurations as rows and steps as columns.
@@ -305,18 +312,41 @@ def visualize_steps_separated_compact(
         Percentage of padding to add around the active neurons
     short_version : bool
         Whether to only plot 2 randomizations instead of 4
+    container : matplotlib.figure.Figure or matplotlib.figure.SubFigure, optional
+        Figure-like container to draw into. If None, create a new figure.
+    wspace : float
+        Horizontal spacing between subplots
+    hspace : float
+        Vertical spacing between subplots
+    step_title_fontsize : int
+        Font size for step titles
+    row_label_fontsize : int
+        Font size for row labels
+    coordinate_label_fontsize : int
+        Font size for the X/Y/Z labels on the last panel
+    show_row_labels : bool
+        Whether to display randomization labels on the right side
     Returns
     -------
     fig : matplotlib.figure.Figure
         Figure with the grid of visualizations
     """
-    if voxel_size is None and smoothing is not None:
-        raise ValueError("voxel_size must be provided if smoothing is provided")
-    if voxel_size is not None and smoothing is None:
-        raise ValueError("smoothing must be provided if voxel_size is provided")
+    ordered_propagations = {}
+    for key in RANDOMIZATIONS.order:
+        label = RANDOMIZATIONS.label_for(key)
+        if label in propagations_dict:
+            ordered_propagations[label] = propagations_dict[label]
+
+    for key, value in propagations_dict.items():
+        if key not in ordered_propagations:
+            ordered_propagations[key] = value
+
+    propagations_dict = ordered_propagations
 
     if short_version:
-        propagations_dict = {k: v for k, v in propagations_dict.items() if k in ["Biological", "Neuron binned", "Connection-pruned"]}
+        short_keys = ["biological", "neuron_binned", "connection_pruned", "unconstrained"]
+        short_labels = {RANDOMIZATIONS.label_for(key) for key in short_keys}
+        propagations_dict = {k: v for k, v in propagations_dict.items() if k in short_labels}
 
     bounds = get_active_neuron_bounds(
         propagations_dict, neuron_position_data, padding_percent, num_steps
@@ -325,17 +355,35 @@ def visualize_steps_separated_compact(
     y_min, y_max = bounds["y_min"], bounds["y_max"]
     z_min, z_max = bounds["z_min"], bounds["z_max"]
 
-    fig, axes = plt.subplots(
-        len(propagations_dict),
-        num_steps + 1,
-        figsize=figsize,
-        subplot_kw={"projection": "3d"},
-    )
+    apply_plot_style()
+
+    subplot_kwargs = {"projection": "3d"}
+    gridspec_kwargs = {"wspace": wspace, "hspace": hspace}
+
+    if container is None:
+        fig, axes = plt.subplots(
+            len(propagations_dict),
+            num_steps + 1,
+            figsize=figsize,
+            subplot_kw=subplot_kwargs,
+            gridspec_kw=gridspec_kwargs,
+        )
+    else:
+        fig = container
+        axes = fig.subplots(
+            len(propagations_dict),
+            num_steps + 1,
+            subplot_kw=subplot_kwargs,
+            gridspec_kw=gridspec_kwargs,
+        )
 
     for i, (config_name, prop_df) in enumerate(propagations_dict.items()):
-        display_label = RANDOMIZATION_NAMES.get(config_name, config_name)
+        display_label = RANDOMIZATIONS.label_for(config_name)
         config_color = get_randomization_colors(display_label)
-        config_name_display = split_title(display_label, 10)
+        if display_label == "Unconstrained":
+            config_name_display = "Uncon\nstrained"
+        else:
+            config_name_display = split_title(display_label, 10)
 
         merged_data = pd.merge(prop_df, neuron_position_data, on="root_id")
 
@@ -348,7 +396,7 @@ def visualize_steps_separated_compact(
 
         if i == middle_row:
             _style_3d_axis(ax)
-            ax.set_title("Input", pad=5)
+            ax.set_title("Input", pad=5, fontsize=step_title_fontsize)
             input_data = merged_data[merged_data["input"] > 0].copy()
 
             if len(input_data) > 0:
@@ -385,12 +433,12 @@ def visualize_steps_separated_compact(
             _style_3d_axis(ax)
 
             if i == len(propagations_dict) - 1 and step == num_steps:
-                ax.set_xlabel("X", labelpad=-10)
-                ax.set_ylabel("Y", labelpad=-10)
-                ax.set_zlabel("Z", labelpad=-10)
+                ax.set_xlabel("X", labelpad=-10, fontsize=coordinate_label_fontsize)
+                ax.set_ylabel("Y", labelpad=-10, fontsize=coordinate_label_fontsize)
+                ax.set_zlabel("Z", labelpad=-10, fontsize=coordinate_label_fontsize)
 
             # Row labels on the right side (last step column)
-            if step == num_steps:
+            if show_row_labels and step == num_steps:
                 ax.text2D(
                     1.15,
                     0.5,
@@ -399,14 +447,14 @@ def visualize_steps_separated_compact(
                     va="center",
                     ha="center",
                     rotation=-90,
-                    fontsize=16,
+                    fontsize=row_label_fontsize,
                 )
 
             act_col = f"activation_{step}"
             step_data = merged_data[merged_data[act_col] > 0].copy()
 
             if i == 0:
-                ax.set_title(f"Step {step}", pad=5)
+                ax.set_title(f"Step {step}", pad=5, fontsize=step_title_fontsize)
 
             if len(step_data) > 0:
                 _plot_activation_step(
@@ -430,7 +478,6 @@ def visualize_steps_separated_compact(
             ax.set_ylim(y_min, y_max)
             ax.set_zlim(z_min, z_max)
 
-    plt.subplots_adjust(wspace=0.1, hspace=0.1)
     return fig
 
 

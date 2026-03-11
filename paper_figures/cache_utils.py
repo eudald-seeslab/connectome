@@ -4,7 +4,7 @@ from pathlib import Path
 
 from joblib import Memory
 
-from notebooks.visualization.activations_funcs import (
+from connectome.visualization.activations_funcs import (
     get_activation_dictionnary,
     get_all_connections,
 )

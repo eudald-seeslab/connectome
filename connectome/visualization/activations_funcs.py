@@ -7,7 +7,7 @@ from scipy.spatial import cKDTree
 
 from paths import PROJECT_ROOT
 from connectome.visualization.plot_config import RANDOMIZATIONS
-from utils.model_inspection_utils import propagate_data_with_steps
+from connectome.model_inspection.inspection_utils import propagate_data_with_steps
 
 
 DATA_DIR = os.path.join(PROJECT_ROOT, "new_data")

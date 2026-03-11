@@ -6,6 +6,10 @@ The core model and training infrastructure live in the
 this repo contains experiment orchestration, analysis notebooks, and
 visualization code.
 
+This repo is organized to fit the needs for the experiments I'm running, so it's not worth reusing it. If you want to experiment with the training of the fruit fly, I would advise to study how it's done here, but create a new repo that better fits your needs. 
+
+**Note:** If you are a reviewer and would like to replicate a paper results, here are the install instructions and code organization:
+
 ## Installation
 
 1. Clone the repository:
@@ -98,14 +102,9 @@ For sweeps:
 python training/sweep.py --sweep regularisation
 ```
 
-## Contributing
-
-This project is in very early stages and highly unstable. If you would like to
-contribute, please write me at eudald.correig@urv.cat.
-
 ## Other
 
-These runs sometimes make CUDA break. As a temporary patch:
+Some weird bug sometimes make CUDA break. You can fix it with:
 
 ```bash
 sudo rmmod nvidia_uvm

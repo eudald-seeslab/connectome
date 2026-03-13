@@ -201,9 +201,9 @@ NUMERICAL_DISCRIMINATION_FILES = OrderedDict([
 ])
 
 TASK_IMAGE_FILES = {
-    "Color\nDiscrimination": ("t5.png", "t6.png"),
-    "Shape\nRecognition": ("t3.png", "t4.png"),
-    "Numerical\nDiscrimination": ("t1.png", "t2.png"),
+    "Color\ndiscrimination": ("t5.png", "t6.png"),
+    "Shape\nrecognition": ("t3.png", "t4.png"),
+    "Numerical\ndiscrimination": ("t1.png", "t2.png"),
 }
 
 
@@ -276,9 +276,9 @@ def _load_numerical_discrimination_summary(min_weber: float = 1.33) -> tuple[dic
 def _task_accuracy_specs() -> tuple[list[str], list[str], dict[str, dict[str, float]], dict[str, dict[str, float]]]:
     """Return the task/network order and the accuracy values used in panel g."""
     tasks = [
-        "Color\nDiscrimination",
-        "Shape\nRecognition",
-        "Numerical\nDiscrimination",
+        "Color\ndiscrimination",
+        "Shape\nrecognition",
+        "Numerical\ndiscrimination",
     ]
 
     networks = [RANDOMIZATIONS.label_for(key) for key in RANDOMIZATIONS.order]
@@ -286,27 +286,27 @@ def _task_accuracy_specs() -> tuple[list[str], list[str], dict[str, dict[str, fl
     numerical_means, numerical_errors = _load_numerical_discrimination_summary()
 
     task_data = {
-        "Color\nDiscrimination": {network: 100 for network in networks},
-        "Shape\nRecognition": {
+        "Color\ndiscrimination": {network: 100 for network in networks},
+        "Shape\nrecognition": {
             RANDOMIZATIONS.label_for("biological"): 64,
             RANDOMIZATIONS.label_for("unconstrained"): 70,
             RANDOMIZATIONS.label_for("connection_pruned"): 69,
             RANDOMIZATIONS.label_for("random_binned"): 63,
             RANDOMIZATIONS.label_for("neuron_binned"): 60,
         },
-        "Numerical\nDiscrimination": numerical_means,
+        "Numerical\ndiscrimination": numerical_means,
     }
 
     task_errors = {
-        "Color\nDiscrimination": {network: 0 for network in networks},
-        "Shape\nRecognition": {
+        "Color\ndiscrimination": {network: 0 for network in networks},
+        "Shape\nrecognition": {
             RANDOMIZATIONS.label_for("biological"): 1,
             RANDOMIZATIONS.label_for("unconstrained"): 3,
             RANDOMIZATIONS.label_for("connection_pruned"): 2,
             RANDOMIZATIONS.label_for("random_binned"): 1,
             RANDOMIZATIONS.label_for("neuron_binned"): 2,
         },
-        "Numerical\nDiscrimination": numerical_errors,
+        "Numerical\ndiscrimination": numerical_errors,
     }
 
     return tasks, networks, task_data, task_errors

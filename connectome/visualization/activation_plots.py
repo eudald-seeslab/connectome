@@ -70,7 +70,6 @@ def plot_activation_statistics(
     rational_percentages = {config: [] for config in configs}
 
     rational_cell_types = ["KCapbp-m", "KCapbp-ap2", "KCapbp-ap1"]
-
     total_rational_neurons = neuron_position_data[
         neuron_position_data["cell_type"].isin(rational_cell_types)
     ]["root_id"].nunique()

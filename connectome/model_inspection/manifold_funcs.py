@@ -2,7 +2,7 @@ import re
 import torch
 import numpy as np
 from tqdm import tqdm
-from connectome import (
+from trainyourfly.utils.utils import (
     clean_model_outputs,
     get_image_paths,
     get_iteration_number,

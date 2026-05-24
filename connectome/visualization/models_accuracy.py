@@ -217,7 +217,7 @@ def _add_task_image_insets(
     height: float = 0.74,
 ) -> None:
     """Draw task example images inside the low-accuracy region of the plot."""
-    task_images_dir = os.path.join(PROJECT_ROOT, "notebooks", "visualization", "task_images")
+    task_images_dir = os.path.join(PROJECT_ROOT, "paper_figures", "task_images")
 
     for y_center, task in zip(task_positions, tasks):
         image_names = TASK_IMAGE_FILES[task]
@@ -346,11 +346,11 @@ def _add_single_task_image_inset(
     *,
     x0: float = 4,
     width: float = 43,
-    y0: float = -0.22,
-    height: float = 0.42,
+    y0: float = -0.203,
+    height: float = 0.385,
 ) -> None:
     """Draw the paired task images inside one task row."""
-    task_images_dir = os.path.join(PROJECT_ROOT, "notebooks", "visualization", "task_images")
+    task_images_dir = os.path.join(PROJECT_ROOT, "paper_figures", "task_images")
     container = ax.inset_axes([x0, y0, width, height], transform=ax.transData, zorder=6)
     container.set_axis_off()
     frame = FancyBboxPatch(
@@ -367,8 +367,14 @@ def _add_single_task_image_inset(
     )
     container.add_patch(frame)
 
+    pad_x = 0.05
+    pad_y = 0.02
+    img_w = (1 - 3 * pad_x) / 2
+    img_h = 1 - 2 * pad_y
     for idx, image_name in enumerate(TASK_IMAGE_FILES[task]):
-        image_ax = container.inset_axes([0.02 + idx * 0.5, 0.03, 0.45, 0.94], zorder=1)
+        image_ax = container.inset_axes(
+            [pad_x + idx * (img_w + pad_x), pad_y, img_w, img_h], zorder=1
+        )
         image_ax.imshow(imread(os.path.join(task_images_dir, image_name)))
         image_ax.set_axis_off()
         image_ax.set_aspect("equal")

@@ -212,7 +212,7 @@ def plot_weber_by_randomization(
         )
 
     ax.set_xlabel("Weber Ratio", fontsize=16)
-    ax.set_ylabel("Classification Accuracy (%)", fontsize=16)
+    ax.set_ylabel("Classification accuracy (%)", fontsize=16)
     ax.spines[["top", "right"]].set_visible(False)
     ax.yaxis.grid(True, linestyle="--", alpha=0.3)
     ax.xaxis.grid(True, linestyle="--", alpha=0.3)

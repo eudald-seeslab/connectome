@@ -36,10 +36,17 @@ setup(
         "dev": DEV_REQUIRES,
         "all": RESEARCH_REQUIRES + DEV_REQUIRES,
     },
-    author="Eudald Correig",
+    author="Eudald Correig-Fraga",
     author_email="eudald.correig@urv.cat",
+    license="MIT",
     description="Research analysis tools for the Drosophila connectome project",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/eudald-seeslab/connectome",
+    classifiers=[
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3 :: Only",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    ],
 )

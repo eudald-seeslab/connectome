@@ -268,3 +268,6 @@ CLAUDE.md
 
 # cache
 .joblib_cache/
+
+# manuscript stuff
+manuscript/

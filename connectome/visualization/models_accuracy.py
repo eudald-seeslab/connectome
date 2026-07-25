@@ -200,6 +200,9 @@ NUMERICAL_DISCRIMINATION_FILES = OrderedDict([
     ("neuron_binned_results.csv", "neuron_binned"),
 ])
 
+SHAPE_TEST_IMAGES_PER_CLASS = 5_000
+SHAPE_TEST_N = 2 * SHAPE_TEST_IMAGES_PER_CLASS
+
 TASK_IMAGE_FILES = {
     "Color\ndiscrimination": ("t5.png", "t6.png"),
     "Shape\nrecognition": ("t3.png", "t4.png"),
@@ -273,6 +276,12 @@ def _load_numerical_discrimination_summary(min_weber: float = 1.33) -> tuple[dic
     return means, errors
 
 
+def _shape_binomial_sem_percent(mean_accuracy_percent: float) -> float:
+    """Estimate shape-task SEM across the 10,000 held-out binary trials."""
+    p = mean_accuracy_percent / 100
+    return float(np.sqrt(p * (1 - p) / (SHAPE_TEST_N - 1)) * 100)
+
+
 def _task_accuracy_specs() -> tuple[list[str], list[str], dict[str, dict[str, float]], dict[str, dict[str, float]]]:
     """Return the task/network order and the accuracy values used in panel g."""
     tasks = [
@@ -300,11 +309,11 @@ def _task_accuracy_specs() -> tuple[list[str], list[str], dict[str, dict[str, fl
     task_errors = {
         "Color\ndiscrimination": {network: 0 for network in networks},
         "Shape\nrecognition": {
-            RANDOMIZATIONS.label_for("biological"): 1,
-            RANDOMIZATIONS.label_for("unconstrained"): 3,
-            RANDOMIZATIONS.label_for("connection_pruned"): 2,
-            RANDOMIZATIONS.label_for("random_binned"): 1,
-            RANDOMIZATIONS.label_for("neuron_binned"): 2,
+            RANDOMIZATIONS.label_for("biological"): _shape_binomial_sem_percent(64),
+            RANDOMIZATIONS.label_for("unconstrained"): _shape_binomial_sem_percent(70),
+            RANDOMIZATIONS.label_for("connection_pruned"): _shape_binomial_sem_percent(69),
+            RANDOMIZATIONS.label_for("random_binned"): _shape_binomial_sem_percent(63),
+            RANDOMIZATIONS.label_for("neuron_binned"): _shape_binomial_sem_percent(60),
         },
         "Numerical\ndiscrimination": numerical_errors,
     }
@@ -537,4 +546,3 @@ def task_accuracy_comparison(ax=None, show_legend=True, chance_fontsize=10) -> p
         ax.legend(fontsize=16, loc="lower right", frameon=False)
 
     return fig
-

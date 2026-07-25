@@ -1,10 +1,6 @@
 # _Drosophila melanogaster_'s connectome models
 
-Research analysis repository for studying neural connectomes using machine learning.
-The core model and training infrastructure live in the
-[train-your-fly](https://github.com/eudald-seeslab/train-your-fly) package;
-this repo contains experiment orchestration, analysis notebooks, and
-visualization code.
+Research analysis repository for studying neural connectomes using machine learning. The core model and training infrastructure live in the [train-your-fly](https://github.com/eudald-seeslab/train-your-fly) package. This repo contains experiment orchestration, analysis notebooks, and visualization code.
 
 This repo is organized to fit the needs for the experiments I'm running, so it's not worth reusing it. If you want to experiment with the training of the fruit fly, I would advise to study how it's done here, but create a new repo that better fits your needs. 
 

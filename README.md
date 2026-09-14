@@ -41,6 +41,18 @@ To test whether precise connectivity matters under a wiring budget, we compare t
 
 At matched wiring cost, the biological network is consistently the most accurate. Rewirings that ignore spatial constraints surpass it, but only by inflating the wiring budget or by favouring long-range connections that let activity reach the Kenyon cells in fewer steps. The measured connectivity and the eye geometry therefore jointly set an efficient operating point for visual computation.
 
+## Looking inside the model
+
+Beyond task accuracy, the notebooks in `model_inspection/` and `manifolds/` open trained models and look at what the network does with a stimulus:
+
+- **Activity propagation.** Which neurons, cell types, and neuropils become active at each message-passing step, how far activity travels from the retina, and 3D renderings of the active neurons (`brain_activation_plots.ipynb`, `network_inspection_3D.ipynb`, `investigate_neuropils.Rmd`). The same kind of analysis as Fig. 2g–j.
+- **Decision-relevant neurons.** Searching for neurons and cell types whose activity predicts the decision, and testing untrained or pruned models (`find_thinking_neurons.ipynb`, `find_thinking_cell_types.ipynb`, `no_training.ipynb`, `test_with_pruned_model.ipynb`).
+- **Representation manifolds.** A forward hook captures the Kenyon-cell activity vector of every test image, and t-SNE, UMAP, PCA, or Isomap reduce it to two or three dimensions. Colouring the embedding by shape, colour, radius, or position shows which stimulus attributes the internal representation separates. The Dash apps in `connectome/visualization/manifold_plots.py` add sliders for radius, distance, and angle so you can watch where a given stimulus lands (`manifolds/*.ipynb`).
+
+![Kenyon-cell manifold](plots/kenyon_manifold.png)
+
+*Exploratory example, not part of the paper: t-SNE embedding of the Kenyon-cell activity for 60,000 test images of a model trained on circles vs. stars (77% test accuracy), coloured by shape and by the angular position of the stimulus in the image (from `results/manifolds.csv`). Shape splits the embedding in two; position organizes the fine structure within each half.*
+
 ## Repository structure
 
 ```

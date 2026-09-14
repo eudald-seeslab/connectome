@@ -18,11 +18,11 @@ We use the FlyWire whole-brain connectome, version 783, with 139,255 proofread n
 
 ## What the fly can do
 
-The model learns three visual tasks from synthetic 512×512 images: **colour discrimination** (yellow vs. blue), **shape recognition** (circle vs. star, trained on the left half of the visual field and tested on the right half), and **numerical discrimination** (which colour has more dots, with total surface area equalized so that area cannot be used as a cue).
+The model learns three visual tasks from synthetic 512×512 images: **colour discrimination** (yellow vs. blue), **shape recognition** (circle vs. star, at random positions and sizes), and **numerical discrimination** (which colour has more dots, with total surface area equalized so that area cannot be used as a cue).
 
 ![Task accuracy](plots/figure_3.png)
 
-*Performance of the biological connectome and four randomized ensembles. **a,** All models solve colour discrimination. **b,** Shape recognition transfers across the visual field above chance. **c–d,** The shape task is trained on one half of the visual field and tested on the other. **e–f,** Numerical discrimination improves with the Weber ratio between the two dot counts, the signature of an approximate number system. Bars show mean ± 95% CI; the dashed line is chance.*
+*Performance of the biological connectome and four randomized ensembles. **a,** All models solve colour discrimination. **b,** Shape recognition is harder: the unconstrained and connection-pruned ensembles lead, followed by the biological graph and the two distance-binned ensembles. **c,** Numerical discrimination on area-controlled images follows the same ordering. **d,** Accuracy improves with the Weber ratio between the two dot counts, the signature of an approximate number system. Bars show mean ± 95% CI; the dashed line is chance.*
 
 ## Is the real wiring special?
 
